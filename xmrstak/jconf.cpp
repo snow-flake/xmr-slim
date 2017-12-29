@@ -173,7 +173,7 @@ const std::string jconf::GetCurrency()
 		currency = prv->configValues[sCurrency]->GetString();
 	if(
 			// if aeon is disabled at compile time, enable error message if selected currency is `aeon`
-			!xmrstak::strcmp_i(currency, "aeon")
+			!xmrstak::strcmp_i(currency, "monero")
 	)
 	{
 		printer::inst()->print_msg(L0, "ERROR: Wrong currency selected - '%s'.", currency.c_str());

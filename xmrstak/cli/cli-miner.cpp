@@ -33,10 +33,6 @@
 #include "xmrstak/version.hpp"
 #include "xmrstak/misc/utility.hpp"
 
-#ifndef CONF_NO_HTTPD
-#	include "xmrstak/http/httpd.hpp"
-#endif
-
 #include <stdlib.h>
 #include <stdio.h>
 #include <string>
@@ -498,17 +494,6 @@ int main(int argc, char *argv[])
 		win_exit();
 		return 1;
 	}
-
-#ifndef CONF_NO_HTTPD
-	if(jconf::inst()->GetHttpdPort() != 0)
-	{
-		if (!httpd::inst()->start_daemon())
-		{
-			win_exit();
-			return 1;
-		}
-	}
-#endif
 
 	printer::inst()->print_str("-------------------------------------------------------------------\n");
 	printer::inst()->print_str(get_version_str_short().c_str());
