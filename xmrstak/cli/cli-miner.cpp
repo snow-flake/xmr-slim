@@ -71,9 +71,6 @@ void help()
 #ifdef _WIN32
 	cout<<"  --noUAC               disable the UAC dialog"<<endl;
 #endif
-#if (!defined(CONF_NO_AEON)) && (!defined(CONF_NO_MONERO))
-	cout<<"  --currency NAME       currency to mine: monero or aeon"<<endl;
-#endif
 	cout<<" "<<endl;
 	cout<<"The following options can be used for automatic start without a guided config,"<<endl;
 	cout<<"If config exists then this pool will be top priority."<<endl;
@@ -182,12 +179,7 @@ void do_guided_config()
 	{
 		prompt_once(prompted);
 
-		std::string tmp;
-#if defined(CONF_NO_AEON)
-		tmp = "monero";
-#elif defined(CONF_NO_MONERO)
-		tmp = "aeon";
-#endif
+		std::string tmp = "monero";
 		while(tmp != "monero" && tmp != "aeon")
 		{
 			std::cout<<"- Currency: 'monero' or 'aeon'"<<std::endl;

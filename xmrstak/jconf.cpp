@@ -172,19 +172,8 @@ const std::string jconf::GetCurrency()
 	if(currency.empty())
 		currency = prv->configValues[sCurrency]->GetString();
 	if(
-#ifndef CONF_NO_MONERO
-			// if monero is disabled at compile time, enable error message if selected currency is `monero`
-			!xmrstak::strcmp_i(currency, "monero")
-#else
-			true
-#endif
-			&&
-#ifndef CONF_NO_AEON
 			// if aeon is disabled at compile time, enable error message if selected currency is `aeon`
 			!xmrstak::strcmp_i(currency, "aeon")
-#else
-			true
-#endif
 	)
 	{
 		printer::inst()->print_msg(L0, "ERROR: Wrong currency selected - '%s'.", currency.c_str());

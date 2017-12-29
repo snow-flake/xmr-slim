@@ -337,39 +337,18 @@ minethd::cn_hash_fun minethd::func_selector(bool bHaveAes, bool bNoPrefetch, boo
 	// Digit order SOFT_AES, NO_PREFETCH, MINER_ALGO
 
 	static const cn_hash_fun func_table[] = {
-		/* there will be 8 function entries if `CONF_NO_MONERO` and `CONF_NO_AEON`
-		 * is not defined. If one is defined there will be 4 entries.
-		 */
-#ifndef CONF_NO_MONERO
 		cryptonight_hash<MONERO_MASK, MONERO_ITER, MONERO_MEMORY, false, false>,
 		cryptonight_hash<MONERO_MASK, MONERO_ITER, MONERO_MEMORY, false, true>,
 		cryptonight_hash<MONERO_MASK, MONERO_ITER, MONERO_MEMORY, true, false>,
 		cryptonight_hash<MONERO_MASK, MONERO_ITER, MONERO_MEMORY, true, true>
-#endif
-#if (!defined(CONF_NO_AEON)) && (!defined(CONF_NO_MONERO))
-		// comma will be added only if Monero and Aeon is build
-		,
-#endif
-#ifndef CONF_NO_AEON
-		cryptonight_hash<AEON_MASK, AEON_ITER, AEON_MEMORY, false, false>,
-		cryptonight_hash<AEON_MASK, AEON_ITER, AEON_MEMORY, false, true>,
-		cryptonight_hash<AEON_MASK, AEON_ITER, AEON_MEMORY, true, false>,
-		cryptonight_hash<AEON_MASK, AEON_ITER, AEON_MEMORY, true, true>
-#endif
 	};
 
 	std::bitset<3> digit;
 	digit.set(0, !bNoPrefetch);
 	digit.set(1, !bHaveAes);
 
-	// define aeon settings
-#if defined(CONF_NO_AEON) || defined(CONF_NO_MONERO)
 	// ignore 3rd bit if only one currency is active
 	digit.set(2, 0);
-#else
-	digit.set(2, !mineMonero);
-#endif
-
 	return func_table[digit.to_ulong()];
 }
 
@@ -461,10 +440,6 @@ minethd::cn_hash_fun_multi minethd::func_multi_selector(size_t N, bool bHaveAes,
 	// Digit order SOFT_AES, NO_PREFETCH
 
 	static const cn_hash_fun_multi func_table[] = {
-		/* there will be 8*(MAX_N-1) function entries if `CONF_NO_MONERO` and `CONF_NO_AEON`
-		 * is not defined. If one is defined there will be 4*(MAX_N-1) entries.
-		 */
-#ifndef CONF_NO_MONERO
 		cryptonight_double_hash<MONERO_MASK, MONERO_ITER, MONERO_MEMORY, false, false>,
 		cryptonight_double_hash<MONERO_MASK, MONERO_ITER, MONERO_MEMORY, false, true>,
 		cryptonight_double_hash<MONERO_MASK, MONERO_ITER, MONERO_MEMORY, true, false>,
@@ -481,42 +456,14 @@ minethd::cn_hash_fun_multi minethd::func_multi_selector(size_t N, bool bHaveAes,
 		cryptonight_penta_hash<MONERO_MASK, MONERO_ITER, MONERO_MEMORY, false, true>,
 		cryptonight_penta_hash<MONERO_MASK, MONERO_ITER, MONERO_MEMORY, true, false>,
 		cryptonight_penta_hash<MONERO_MASK, MONERO_ITER, MONERO_MEMORY, true, true>
-#endif
-#if (!defined(CONF_NO_AEON)) && (!defined(CONF_NO_MONERO))
-		// comma will be added only if Monero and Aeon is build
-		,
-#endif
-#ifndef CONF_NO_AEON
-		cryptonight_double_hash<AEON_MASK, AEON_ITER, AEON_MEMORY, false, false>,
-		cryptonight_double_hash<AEON_MASK, AEON_ITER, AEON_MEMORY, false, true>,
-		cryptonight_double_hash<AEON_MASK, AEON_ITER, AEON_MEMORY, true, false>,
-		cryptonight_double_hash<AEON_MASK, AEON_ITER, AEON_MEMORY, true, true>,
-		cryptonight_triple_hash<AEON_MASK, AEON_ITER, AEON_MEMORY, false, false>,
-		cryptonight_triple_hash<AEON_MASK, AEON_ITER, AEON_MEMORY, false, true>,
-		cryptonight_triple_hash<AEON_MASK, AEON_ITER, AEON_MEMORY, true, false>,
-		cryptonight_triple_hash<AEON_MASK, AEON_ITER, AEON_MEMORY, true, true>,
-		cryptonight_quad_hash<AEON_MASK, AEON_ITER, AEON_MEMORY, false, false>,
-		cryptonight_quad_hash<AEON_MASK, AEON_ITER, AEON_MEMORY, false, true>,
-		cryptonight_quad_hash<AEON_MASK, AEON_ITER, AEON_MEMORY, true, false>,
-		cryptonight_quad_hash<AEON_MASK, AEON_ITER, AEON_MEMORY, true, true>,
-		cryptonight_penta_hash<AEON_MASK, AEON_ITER, AEON_MEMORY, false, false>,
-		cryptonight_penta_hash<AEON_MASK, AEON_ITER, AEON_MEMORY, false, true>,
-		cryptonight_penta_hash<AEON_MASK, AEON_ITER, AEON_MEMORY, true, false>,
-		cryptonight_penta_hash<AEON_MASK, AEON_ITER, AEON_MEMORY, true, true>
-#endif
 	};
 
 	std::bitset<2> digit;
 	digit.set(0, !bNoPrefetch);
 	digit.set(1, !bHaveAes);
 
-	// define aeon settings
-#if defined(CONF_NO_AEON) || defined(CONF_NO_MONERO)
 	// ignore miner algo if only one currency is active
 	size_t miner_algo_base = 0;
-#else
-	size_t miner_algo_base = mineMonero ? 0 : 4*(MAX_N-1);
-#endif
 
 	N = (N<2) ? 2 : (N>MAX_N) ? MAX_N : N;
 	return func_table[miner_algo_base + 4*(N-2) + digit.to_ulong()];
