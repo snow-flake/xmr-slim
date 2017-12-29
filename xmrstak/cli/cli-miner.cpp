@@ -74,10 +74,6 @@ void help()
 #if (!defined(CONF_NO_AEON)) && (!defined(CONF_NO_MONERO))
 	cout<<"  --currency NAME       currency to mine: monero or aeon"<<endl;
 #endif
-#ifndef CONF_NO_CPU
-	cout<<"  --noCPU               disable the CPU miner backend"<<endl;
-	cout<<"  --cpu FILE            CPU backend miner config file"<<endl;
-#endif
 	cout<<" "<<endl;
 	cout<<"The following options can be used for automatic start without a guided config,"<<endl;
 	cout<<"If config exists then this pool will be top priority."<<endl;
@@ -527,9 +523,6 @@ int main(int argc, char *argv[])
 	printer::inst()->print_str("\n\n");
 	printer::inst()->print_str("Brought to you by fireice_uk and psychocrypt under GPLv3.\n");
 	printer::inst()->print_str("Based on CPU mining code by wolf9466 (heavily optimized by fireice_uk).\n");
-#ifndef CONF_NO_OPENCL
-	printer::inst()->print_str("Based on OpenCL mining code by wolf9466.\n");
-#endif
 	char buffer[64];
 	snprintf(buffer, sizeof(buffer), "\nConfigurable dev donation level is set to %.1f%%\n\n", fDevDonationLevel * 100.0);
 	printer::inst()->print_str(buffer);

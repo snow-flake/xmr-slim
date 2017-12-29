@@ -71,17 +71,6 @@ list(APPEND CMAKE_PREFIX_PATH "$ENV{AMDAPPSDKROOT}")
 # allow user to extent CMAKE_PREFIX_PATH via environment variable
 list(APPEND CMAKE_PREFIX_PATH "$ENV{CMAKE_PREFIX_PATH}")
 
-###############################################################################
-# CPU backend
-###############################################################################
-
-option(CPU_ENABLE "Enable or disable CPU support" ON)
-if(NOT CPU_ENABLE)
-    add_definitions("-DCONF_NO_CPU")
-else()
-    list(APPEND BACKEND_TYPES "cpu")
-endif()
-
 ################################################################################
 # Find PThreads
 ################################################################################
@@ -90,6 +79,7 @@ if(NOT WIN32)
     find_package(Threads REQUIRED)
     set(LIBS ${LIBS} ${CMAKE_THREAD_LIBS_INIT})
 endif()
+
 ################################################################################
 # Find microhttpd
 ################################################################################
