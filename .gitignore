@@ -19,3 +19,7 @@ config-debug.txt
 xmr-stak.kdev4
 cmake-build-debug
 .idea
+CMakeCache.txt
+CMakeFiles
+Makefile
+cmake_install.cmake
