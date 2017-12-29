@@ -72,59 +72,6 @@ list(APPEND CMAKE_PREFIX_PATH "$ENV{AMDAPPSDKROOT}")
 list(APPEND CMAKE_PREFIX_PATH "$ENV{CMAKE_PREFIX_PATH}")
 
 ###############################################################################
-# Find OpenCL
-###############################################################################
-
-option(OpenCL_ENABLE "Enable or disable OpenCL spport (AMD GPU support)" ON)
-if(OpenCL_ENABLE)
-    # try to find AMD OpenCL before NVIDIA OpenCL
-    find_path(OpenCL_INCLUDE_DIR
-        NAMES
-            CL/cl.h
-            OpenCL/cl.h
-        NO_DEFAULT_PATH
-        PATHS
-            ENV "OpenCL_ROOT"
-            ENV AMDAPPSDKROOT
-            ENV ATISTREAMSDKROOT
-            ENV "PROGRAMFILES(X86)"
-            /usr
-        PATH_SUFFIXES
-            include
-            OpenCL/common/inc
-            "AMD APP/include")
-
-    find_library(OpenCL_LIBRARY
-        NAMES 
-            OpenCL
-            OpenCL.lib
-        NO_DEFAULT_PATH
-        PATHS
-            ENV "OpenCL_ROOT"
-            ENV AMDAPPSDKROOT
-            ENV ATISTREAMSDKROOT
-            ENV "PROGRAMFILES(X86)"
-        PATH_SUFFIXES
-            "AMD APP/lib/x86_64"
-            lib/x86_64
-            lib/x86_64-linux-gnu
-            lib/x64
-            OpenCL/common/lib/x64)
-    # find package will use the previews searched path variables
-    find_package(OpenCL)
-    if(OpenCL_FOUND)
-        list(APPEND BACKEND_TYPES "amd")
-        include_directories(SYSTEM ${OpenCL_INCLUDE_DIRS})
-        #set(LIBS ${LIBS} ${OpenCL_LIBRARY})
-        link_directories(${OpenCL_LIBRARY})
-    else()
-        message(FATAL_ERROR "OpenCL NOT found: use `-DOpenCL_ENABLE=OFF` to build without OpenCL support for AMD gpu's")
-    endif()
-else()
-    add_definitions("-DCONF_NO_OPENCL")
-endif()
-
-###############################################################################
 # CPU backend
 ###############################################################################
 
@@ -331,20 +278,6 @@ add_library(xmr-stak-backend
 )
 target_link_libraries(xmr-stak-backend xmr-stak-c ${CMAKE_DL_LIBS})
 
-
-# compile AMD backend
-if(OpenCL_FOUND)
-    file(GLOB OPENCLSRCFILES  
-        "xmrstak/backend/amd/amd_gpu/*.cpp"
-        "xmrstak/backend/amd/*.cpp")
-    add_library(xmrstak_opencl_backend
-        SHARED
-        ${OPENCLSRCFILES}
-    )
-    target_link_libraries(xmrstak_opencl_backend ${OpenCL_LIBRARY} )
-    target_link_libraries(xmrstak_opencl_backend xmr-stak-backend)
-endif()
-
 # compile final binary
 file(GLOB SRCFILES_CPP "xmrstak/cli/*.cpp")
 set_source_files_properties(${SRCFILES_CPP} PROPERTIES LANGUAGE CXX)
@@ -367,24 +300,6 @@ target_link_libraries(xmr-stak ${LIBS} xmr-stak-c xmr-stak-backend)
 if( NOT CMAKE_INSTALL_PREFIX STREQUAL PROJECT_BINARY_DIR )
     install(TARGETS xmr-stak
             RUNTIME DESTINATION "${CMAKE_INSTALL_PREFIX}/bin")
-    if(CUDA_FOUND)
-        if(WIN32)
-            install(TARGETS xmrstak_cuda_backend
-                RUNTIME DESTINATION "${CMAKE_INSTALL_PREFIX}/bin")
-        else()
-            install(TARGETS xmrstak_cuda_backend
-                LIBRARY DESTINATION "${CMAKE_INSTALL_PREFIX}/bin")
-        endif()
-    endif()
-    if(OpenCL_FOUND)
-        if(WIN32)
-            install(TARGETS xmrstak_opencl_backend
-                RUNTIME DESTINATION "${CMAKE_INSTALL_PREFIX}/bin")
-        else()
-            install(TARGETS xmrstak_opencl_backend
-                LIBRARY DESTINATION "${CMAKE_INSTALL_PREFIX}/bin")
-        endif()
-    endif()
 else()
     # this rule is used if the install prefix is the build directory
     install(CODE "MESSAGE(\"xmr-stak installed to folder 'bin'\")")

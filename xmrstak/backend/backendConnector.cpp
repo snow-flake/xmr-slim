@@ -31,9 +31,6 @@
 #include "xmrstak/params.hpp"
 
 #include "cpu/minethd.hpp"
-#ifndef CONF_NO_OPENCL
-#	include "amd/minethd.hpp"
-#endif
 
 #include <cstdlib>
 #include <assert.h>

@@ -78,10 +78,6 @@ void help()
 	cout<<"  --noCPU               disable the CPU miner backend"<<endl;
 	cout<<"  --cpu FILE            CPU backend miner config file"<<endl;
 #endif
-#ifndef CONF_NO_OPENCL
-	cout<<"  --noAMD               disable the AMD miner backend"<<endl;
-	cout<<"  --amd FILE            AMD backend miner config file"<<endl;
-#endif
 	cout<<" "<<endl;
 	cout<<"The following options can be used for automatic start without a guided config,"<<endl;
 	cout<<"If config exists then this pool will be top priority."<<endl;
@@ -347,6 +343,7 @@ int main(int argc, char *argv[])
 			pool_url_set = true;
 	}
 
+	params::inst().useAMD = false;
 	params::inst().useNVIDIA = false;
 
 	for(size_t i = 1; i < argc; ++i)
@@ -374,10 +371,6 @@ int main(int argc, char *argv[])
 		{
 			params::inst().useCPU = false;
 		}
-		else if(opName.compare("--noAMD") == 0)
-		{
-			params::inst().useAMD = false;
-		}
 		else if(opName.compare("--cpu") == 0)
 		{
 			++i;
@@ -388,28 +381,6 @@ int main(int argc, char *argv[])
 				return 1;
 			}
 			params::inst().configFileCPU = argv[i];
-		}
-		else if(opName.compare("--amd") == 0)
-		{
-			++i;
-			if( i >=argc )
-			{
-				printer::inst()->print_msg(L0, "No argument for parameter '--amd' given");
-				win_exit();
-				return 1;
-			}
-			params::inst().configFileAMD = argv[i];
-		}
-		else if(opName.compare("--nvidia") == 0)
-		{
-			++i;
-			if( i >=argc )
-			{
-				printer::inst()->print_msg(L0, "No argument for parameter '--nvidia' given");
-				win_exit();
-				return 1;
-			}
-			params::inst().configFileNVIDIA = argv[i];
 		}
 		else if(opName.compare("--currency") == 0)
 		{
