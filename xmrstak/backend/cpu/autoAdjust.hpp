@@ -38,16 +38,8 @@ public:
 
 	autoAdjust()
 	{
-		if(::jconf::inst()->IsCurrencyMonero())
-		{
-			hashMemSize = MONERO_MEMORY;
-			halfHashMemSize = hashMemSize / 2u;
-		}
-		else
-		{
-			hashMemSize = AEON_MEMORY;
-			halfHashMemSize = hashMemSize / 2u;
-		}
+		hashMemSize = MONERO_MEMORY;
+		halfHashMemSize = hashMemSize / 2u;
 	}
 
 	bool printConfig()

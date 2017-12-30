@@ -23,14 +23,14 @@ public:
 
 	typedef void (*cn_hash_fun)(const void*, size_t, void*, cryptonight_ctx*);
 
-	static cn_hash_fun func_selector(bool bHaveAes, bool bNoPrefetch, bool mineMonero);
+	static cn_hash_fun func_selector(bool bHaveAes, bool bNoPrefetch	);
 	static bool thd_setaffinity(std::thread::native_handle_type h, uint64_t cpu_id);
 
 	static cryptonight_ctx* minethd_alloc_ctx();
 
 private:
 	typedef void (*cn_hash_fun_multi)(const void*, size_t, void*, cryptonight_ctx**);
-	static cn_hash_fun_multi func_multi_selector(size_t N, bool bHaveAes, bool bNoPrefetch, bool mineMonero);
+	static cn_hash_fun_multi func_multi_selector(size_t N, bool bHaveAes, bool bNoPrefetch);
 
 	minethd(miner_work& pWork, size_t iNo, int iMultiway, bool no_prefetch, int64_t affinity);
 

@@ -508,10 +508,7 @@ int main(int argc, char *argv[])
 	printer::inst()->print_str("'r' - results\n");
 	printer::inst()->print_str("'c' - connection\n");
 	printer::inst()->print_str("-------------------------------------------------------------------\n");
-	if(::jconf::inst()->IsCurrencyMonero())
-		printer::inst()->print_msg(L0,"Start mining: MONERO");
-	else
-		printer::inst()->print_msg(L0,"Start mining: AEON");
+	printer::inst()->print_msg(L0,"Start mining: MONERO");
 
 	if(strlen(jconf::inst()->GetOutputFile()) != 0)
 		printer::inst()->open_logfile(jconf::inst()->GetOutputFile());
