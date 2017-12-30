@@ -11,8 +11,6 @@ if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
     set(CMAKE_INSTALL_PREFIX "${CMAKE_BINARY_DIR}" CACHE PATH "install prefix" FORCE)
 endif(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
 
-# help to find cuda on systems with a software module system
-list(APPEND CMAKE_PREFIX_PATH "$ENV{CUDA_ROOT}")
 # allow user to extent CMAKE_PREFIX_PATH via environment variable
 list(APPEND CMAKE_PREFIX_PATH "$ENV{CMAKE_PREFIX_PATH}")
 
@@ -36,9 +34,6 @@ if(NOT CMAKE_BUILD_TYPE)
 endif()
 set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "${BUILD_TYPE}")
 
-set(XMR-STAK_CURRENCY "all" CACHE STRING "select miner currency")
-set_property(CACHE XMR-STAK_CURRENCY PROPERTY STRINGS "monero")
-
 
 set(XMR-STAK_COMPILE "native" CACHE STRING "select CPU compute architecture")
 set_property(CACHE XMR-STAK_COMPILE PROPERTY STRINGS "native;generic")
@@ -56,8 +51,6 @@ endif()
 # option to add static libgcc and libstdc++
 option(CMAKE_LINK_STATIC "link as much as possible libraries static" OFF)
 
-# help to find AMD app SDK on systems with a software module system
-list(APPEND CMAKE_PREFIX_PATH "$ENV{AMDAPPSDKROOT}")
 # allow user to extent CMAKE_PREFIX_PATH via environment variable
 list(APPEND CMAKE_PREFIX_PATH "$ENV{CMAKE_PREFIX_PATH}")
 
@@ -196,9 +189,7 @@ endif()
 # compile C files
 file(GLOB SRCFILES_C "xmrstak/backend/cpu/crypto/*.c")
 
-add_library(xmr-stak-c
-    STATIC
-    ${SRCFILES_C}
+add_library(xmr-stak-c STATIC ${SRCFILES_C}
 )
 set_property(TARGET xmr-stak-c PROPERTY C_STANDARD 99)
 target_link_libraries(xmr-stak-c ${LIBS})
@@ -212,19 +203,14 @@ file(GLOB BACKEND_CPP
     "xmrstak/misc/*.cpp"
     "xmrstak/net/*.cpp")
 
-add_library(xmr-stak-backend
-    STATIC
-    ${BACKEND_CPP}
-)
+add_library(xmr-stak-backend STATIC ${BACKEND_CPP})
 target_link_libraries(xmr-stak-backend xmr-stak-c ${CMAKE_DL_LIBS})
 
 # compile final binary
 file(GLOB SRCFILES_CPP "xmrstak/cli/*.cpp")
 set_source_files_properties(${SRCFILES_CPP} PROPERTIES LANGUAGE CXX)
 
-add_executable(xmr-stak
-    ${SRCFILES_CPP}
-)
+add_executable(xmr-stak ${SRCFILES_CPP})
 
 set(EXECUTABLE_OUTPUT_PATH "bin")
 set(LIBRARY_OUTPUT_PATH "bin")
@@ -235,11 +221,9 @@ target_link_libraries(xmr-stak ${LIBS} xmr-stak-c xmr-stak-backend)
 # Install
 ################################################################################
 
-
 # do not install the binary if the project and install are equal
 if( NOT CMAKE_INSTALL_PREFIX STREQUAL PROJECT_BINARY_DIR )
-    install(TARGETS xmr-stak
-            RUNTIME DESTINATION "${CMAKE_INSTALL_PREFIX}/bin")
+    install(TARGETS xmr-stak RUNTIME DESTINATION "${CMAKE_INSTALL_PREFIX}/bin")
 else()
     # this rule is used if the install prefix is the build directory
     install(CODE "MESSAGE(\"xmr-stak installed to folder 'bin'\")")
