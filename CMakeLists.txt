@@ -48,9 +48,6 @@ else()
     message(FATAL_ERROR "XMR-STAK_COMPILE is set to an unknown value '${XMR-STAK_COMPILE}'")
 endif()
 
-# option to add static libgcc and libstdc++
-option(CMAKE_LINK_STATIC "link as much as possible libraries static" OFF)
-
 # allow user to extent CMAKE_PREFIX_PATH via environment variable
 list(APPEND CMAKE_PREFIX_PATH "$ENV{CMAKE_PREFIX_PATH}")
 
@@ -172,13 +169,11 @@ else()
 endif()
 
 # activate static libgcc and libstdc++ linking
-if(CMAKE_LINK_STATIC)
-    set(BUILD_SHARED_LIBRARIES OFF)
-    set(DL_LIB ${CMAKE_DL_LIBS})
-    set(CMAKE_FIND_LIBRARY_SUFFIXES ".a")
-    if(${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU" OR ${CMAKE_C_COMPILER_ID} STREQUAL "GNU")
-        set(LIBS "-static-libgcc -static-libstdc++ ${LIBS}")
-    endif()
+set(BUILD_SHARED_LIBRARIES OFF)
+set(DL_LIB ${CMAKE_DL_LIBS})
+set(CMAKE_FIND_LIBRARY_SUFFIXES ".a")
+if(${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU" OR ${CMAKE_C_COMPILER_ID} STREQUAL "GNU")
+    set(LIBS "-static-libgcc -static-libstdc++ ${LIBS}")
 endif()
 
 # compile C files
