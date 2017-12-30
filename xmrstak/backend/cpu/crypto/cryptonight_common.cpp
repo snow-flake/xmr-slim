@@ -24,7 +24,6 @@
 extern "C"
 {
 #include "c_groestl.h"
-#include "c_blake256.h"
 #include "c_jh.h"
 #include "c_skein.h"
 }
@@ -49,23 +48,26 @@ extern "C"
 #include <errno.h>
 #include <string.h>
 
-void do_blake_hash(const void* input, size_t len, char* output) {
-	blake256_hash((uint8_t*)output, (const uint8_t*)input, len);
-}
+#include <cassert>
 
-void do_groestl_hash(const void* input, size_t len, char* output) {
+#include "c_blake/do_blake_hash.hpp"
+
+void do_groestl_hash(const uint8_t* input, size_t len, uint8_t* output) {
+	assert(sizeof(char) == sizeof(uint8_t));
 	groestl((const uint8_t*)input, len * 8, (uint8_t*)output);
 }
 
-void do_jh_hash(const void* input, size_t len, char* output) {
+void do_jh_hash(const uint8_t* input, size_t len, uint8_t* output) {
+	assert(sizeof(char) == sizeof(uint8_t));
 	jh_hash(32 * 8, (const uint8_t*)input, 8 * len, (uint8_t*)output);
 }
 
-void do_skein_hash(const void* input, size_t len, char* output) {
+void do_skein_hash(const uint8_t* input, size_t len, uint8_t* output) {
+	assert(sizeof(char) == sizeof(uint8_t));
 	skein_hash(8 * 32, (const uint8_t*)input, 8 * len, (uint8_t*)output);
 }
 
-void (* const extra_hashes[4])(const void *, size_t, char *) = {do_blake_hash, do_groestl_hash, do_jh_hash, do_skein_hash};
+void (* const extra_hashes[4])(const uint8_t *, size_t, uint8_t *) = {do_blake_hash, do_groestl_hash, do_jh_hash, do_skein_hash};
 
 size_t cryptonight_init(size_t use_fast_mem, size_t use_mlock, alloc_msg* msg)
 {

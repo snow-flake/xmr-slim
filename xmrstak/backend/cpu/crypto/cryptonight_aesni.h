@@ -42,7 +42,7 @@ extern "C"
 {
 	void keccak(const uint8_t *in, int inlen, uint8_t *md, int mdlen);
 	void keccakf(uint64_t st[25], int rounds);
-	extern void(*const extra_hashes[4])(const void *, size_t, char *);
+	extern void(*const extra_hashes[4])(const uint8_t *, size_t, uint8_t *);
 }
 
 // This will shift and xor tmp1 into itself as 4 32-bit vals such as
@@ -346,7 +346,7 @@ void cryptonight_hash(const void* input, size_t len, void* output, cryptonight_c
 	// Optim - 99% time boundary
 
 	keccakf((uint64_t*)ctx0->hash_state, 24);
-	extra_hashes[ctx0->hash_state[0] & 3](ctx0->hash_state, 200, (char*)output);
+	extra_hashes[ctx0->hash_state[0] & 3](ctx0->hash_state, 200, (uint8_t*)output);
 }
 
 // This lovely creation will do 2 cn hashes at a time. We have plenty of space on silicon
@@ -450,9 +450,9 @@ void cryptonight_double_hash(const void* input, size_t len, void* output, crypto
 	// Optim - 99% time boundary
 
 	keccakf((uint64_t*)ctx[0]->hash_state, 24);
-	extra_hashes[ctx[0]->hash_state[0] & 3](ctx[0]->hash_state, 200, (char*)output);
+	extra_hashes[ctx[0]->hash_state[0] & 3](ctx[0]->hash_state, 200, (uint8_t*)output);
 	keccakf((uint64_t*)ctx[1]->hash_state, 24);
-	extra_hashes[ctx[1]->hash_state[0] & 3](ctx[1]->hash_state, 200, (char*)output + 32);
+	extra_hashes[ctx[1]->hash_state[0] & 3](ctx[1]->hash_state, 200, (uint8_t*)output + 32);
 }
 
 #define CN_STEP1(a, b, c, l, ptr, idx)				\
@@ -554,7 +554,7 @@ void cryptonight_triple_hash(const void* input, size_t len, void* output, crypto
 	{
 		cn_implode_scratchpad<MEM, SOFT_AES, PREFETCH>((__m128i*)ctx[i]->long_state, (__m128i*)ctx[i]->hash_state);
 		keccakf((uint64_t*)ctx[i]->hash_state, 24);
-		extra_hashes[ctx[i]->hash_state[0] & 3](ctx[i]->hash_state, 200, (char*)output + 32 * i);
+		extra_hashes[ctx[i]->hash_state[0] & 3](ctx[i]->hash_state, 200, (uint8_t*)output + 32 * i);
 	}
 }
 
@@ -642,7 +642,7 @@ void cryptonight_quad_hash(const void* input, size_t len, void* output, cryptoni
 	{
 		cn_implode_scratchpad<MEM, SOFT_AES, PREFETCH>((__m128i*)ctx[i]->long_state, (__m128i*)ctx[i]->hash_state);
 		keccakf((uint64_t*)ctx[i]->hash_state, 24);
-		extra_hashes[ctx[i]->hash_state[0] & 3](ctx[i]->hash_state, 200, (char*)output + 32 * i);
+		extra_hashes[ctx[i]->hash_state[0] & 3](ctx[i]->hash_state, 200, (uint8_t*)output + 32 * i);
 	}
 }
 
@@ -743,6 +743,6 @@ void cryptonight_penta_hash(const void* input, size_t len, void* output, crypton
 	{
 		cn_implode_scratchpad<MEM, SOFT_AES, PREFETCH>((__m128i*)ctx[i]->long_state, (__m128i*)ctx[i]->hash_state);
 		keccakf((uint64_t*)ctx[i]->hash_state, 24);
-		extra_hashes[ctx[i]->hash_state[0] & 3](ctx[i]->hash_state, 200, (char*)output + 32 * i);
+		extra_hashes[ctx[i]->hash_state[0] & 3](ctx[i]->hash_state, 200, (uint8_t*)output + 32 * i);
 	}
 }

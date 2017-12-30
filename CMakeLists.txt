@@ -128,6 +128,8 @@ set_source_files_properties(${SRCFILES_C} PROPERTY C_STANDARD 99)
 
 # compile generic backend files
 file(GLOB BACKEND_CPP
+    "c_blake/*.hpp"
+    "c_blake/*.cpp"
     "xmrstak/backend/cpu/crypto/*.h"
     "xmrstak/backend/cpu/crypto/*.hpp"
     "xmrstak/backend/cpu/crypto/*.c"
