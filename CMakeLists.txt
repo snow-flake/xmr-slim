@@ -142,17 +142,9 @@ include_directories(BEFORE .)
 
 set (CMAKE_POSITION_INDEPENDENT_CODE TRUE)
 
-if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
-    # remove warnings that f_open() is not save and f_open_s should be used
-    add_definitions(-D_CRT_SECURE_NO_DEPRECATE)
-    # disable min define to allow usage of std::min
-    add_definitions(-DNOMINMAX)
-else()
-    # activate sse2 and aes-ni
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -msse2 -maes")
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -msse2 -maes")
-
-endif()
+# activate sse2 and aes-ni
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -msse2 -maes")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -msse2 -maes")
 
 # activate static libgcc and libstdc++ linking
 set(BUILD_SHARED_LIBRARIES OFF)
@@ -165,8 +157,7 @@ endif()
 # compile C files
 file(GLOB SRCFILES_C "xmrstak/backend/cpu/crypto/*.c")
 
-add_library(xmr-stak-c STATIC ${SRCFILES_C}
-)
+add_library(xmr-stak-c STATIC ${SRCFILES_C})
 set_property(TARGET xmr-stak-c PROPERTY C_STANDARD 99)
 target_link_libraries(xmr-stak-c ${LIBS})
 

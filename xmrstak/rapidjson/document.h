@@ -30,12 +30,8 @@ RAPIDJSON_DIAG_PUSH
 RAPIDJSON_DIAG_OFF(4127) // conditional expression is constant
 RAPIDJSON_DIAG_OFF(4244) // conversion from kXxxFlags to 'uint16_t', possible loss of data
 #ifdef _MINWINDEF_       // see: http://stackoverflow.com/questions/22744262/cant-call-stdmax-because-minwindef-h-defines-max
-#ifndef NOMINMAX
 #pragma push_macro("min")
 #pragma push_macro("max")
-#undef min
-#undef max
-#endif
 #endif
 #endif
 
@@ -2592,10 +2588,8 @@ private:
 
 RAPIDJSON_NAMESPACE_END
 #ifdef _MINWINDEF_       // see: http://stackoverflow.com/questions/22744262/cant-call-stdmax-because-minwindef-h-defines-max
-#ifndef NOMINMAX
 #pragma pop_macro("min")
 #pragma pop_macro("max")
-#endif
 #endif
 RAPIDJSON_DIAG_POP
 
