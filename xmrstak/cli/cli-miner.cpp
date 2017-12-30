@@ -110,10 +110,7 @@ std::string get_multipool_entry(bool& final)
 	std::cout<<std::endl<<"- Next Pool:"<<std::endl<<std::endl;
 
 	std::string pool;
-	if(xmrstak::params::inst().currency == "monero")
-		std::cout<<"- Pool address: e.g. pool.usxmrpool.com:3333"<<std::endl;
-	else
-		std::cout<<"- Pool address: e.g. mine.aeon-pool.com:5555"<<std::endl;
+	std::cout<<"- Pool address: e.g. pool.usxmrpool.com:3333"<<std::endl;
 	std::cin >> pool;
 
 	std::string userName;
@@ -173,16 +170,7 @@ void do_guided_config()
 	auto& currency = params::inst().currency;
 	if(currency.empty())
 	{
-		prompt_once(prompted);
-
-		std::string tmp = "monero";
-		while(tmp != "monero" && tmp != "aeon")
-		{
-			std::cout<<"- Currency: 'monero' or 'aeon'"<<std::endl;
-			std::cin >> tmp;
-			std::transform(tmp.begin(), tmp.end(), tmp.begin(), ::tolower);
-		} 
-		currency = tmp;
+		currency = "monero";
 	}
 
 	auto& pool = params::inst().poolURL;
@@ -192,10 +180,7 @@ void do_guided_config()
 		prompt_once(prompted);
 
 		userSetPool = false;
-		if(currency == "monero")
-			std::cout<<"- Pool address: e.g. pool.usxmrpool.com:3333"<<std::endl;
-		else
-			std::cout<<"- Pool address: e.g. mine.aeon-pool.com:5555"<<std::endl;
+		std::cout<<"- Pool address: e.g. pool.usxmrpool.com:3333"<<std::endl;
 		std::cin >> pool;
 	}
 

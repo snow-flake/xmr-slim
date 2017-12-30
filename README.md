@@ -1,7 +1,7 @@
 ###### fireice-uk's and psychocrypt's
-# XMR-Stak - Monero/Aeon All-in-One Mining Software
+# XMR-Stak - Monero All-in-One Mining Software
 
-XMR-Stak is a universal Stratum pool miner. This miner supports CPUs, AMD and NVIDIA gpus and can be used to mine the crypto currency Monero and Aeon.
+XMR-Stak is a universal Stratum pool miner. This miner supports CPUs, AMD and NVIDIA gpus and can be used to mine the crypto currency Monero.
 
 ## HTML reports
 <img src="https://gist.githubusercontent.com/fireice-uk/2da301131ac01695ff79539a27b81d68/raw/4c09cdeee86f94df2e9dd86b927e64aded6184f5/xmr-stak-cpu-hashrate.png" width="260"> <img src="https://gist.githubusercontent.com/fireice-uk/2da301131ac01695ff79539a27b81d68/raw/4c09cdeee86f94df2e9dd86b927e64aded6184f5/xmr-stak-cpu-results.png" width="260"> <img src="https://gist.githubusercontent.com/fireice-uk/2da301131ac01695ff79539a27b81d68/raw/4c09cdeee86f94df2e9dd86b927e64aded6184f5/xmr-stak-cpu-connection.png" width="260">
@@ -22,7 +22,7 @@ XMR-Stak is a universal Stratum pool miner. This miner supports CPUs, AMD and NV
 
 - support all common backends (CPU/x86, AMD-GPU and NVIDIA-GPU)
 - support all common OS (Linux, Windows and MacOS)
-- supports algorithm cryptonight for Monero (XMR) and cryptonight-light (AEON)
+- supports algorithm cryptonight for Monero (XMR)
 - easy to use
   - guided start (no need to edit a config file for the first start)
   - auto configuration for each backend
@@ -35,12 +35,9 @@ XMR-Stak is a universal Stratum pool miner. This miner supports CPUs, AMD and NV
 
 Besides Monero, following coins can be mined using this miner:
 
-- [Aeon](http://www.aeon.cash/)
 - [Electroneum](https://electroneum.com)
 - [Intense](https://intensecoin.com)
 - [Sumokoin](https://www.sumokoin.org)
-
-For all coins, except Aeon, you can use Monero settings.
 
 Please note, this list is not complete, and is not an endorsement.
 

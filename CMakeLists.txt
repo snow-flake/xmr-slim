@@ -37,7 +37,7 @@ endif()
 set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "${BUILD_TYPE}")
 
 set(XMR-STAK_CURRENCY "all" CACHE STRING "select miner currency")
-set_property(CACHE XMR-STAK_CURRENCY PROPERTY STRINGS "all;monero;aeon")
+set_property(CACHE XMR-STAK_CURRENCY PROPERTY STRINGS "monero")
 
 
 set(XMR-STAK_COMPILE "native" CACHE STRING "select CPU compute architecture")

@@ -168,30 +168,14 @@ bool jconf::TlsSecureAlgos()
 
 const std::string jconf::GetCurrency()
 {
-	auto& currency = xmrstak::params::inst().currency;
-	if(currency.empty())
-		currency = prv->configValues[sCurrency]->GetString();
-	if(
-			// if aeon is disabled at compile time, enable error message if selected currency is `aeon`
-			!xmrstak::strcmp_i(currency, "monero")
-	)
-	{
-		printer::inst()->print_msg(L0, "ERROR: Wrong currency selected - '%s'.", currency.c_str());
-		win_exit();
-	}
-	return currency;
+	//	TODO: remove me
+	//	auto& currency = xmrstak::params::inst().currency;
+	return "monero";
 }
 
 bool jconf::IsCurrencyMonero()
 {
-	if(xmrstak::strcmp_i(GetCurrency(), "monero"))
-	{
-		return true;
-	}
-	else
-	{
-		return false;
-	}
+	return true;
 }
 
 bool jconf::PreferIpv4()
