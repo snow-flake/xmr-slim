@@ -1,7 +1,5 @@
 #include "xmrstak/backend/cpu/hwlocMemory.hpp"
 
-#ifndef CONF_NO_HWLOC
-
 #include "xmrstak/misc/console.hpp"
 
 #include <hwloc.h>
@@ -55,10 +53,3 @@ void bindMemoryToNUMANode( size_t puId )
 
 	hwloc_topology_destroy(topology);
 }
-#else
-
-void bindMemoryToNUMANode( size_t )
-{
-}
-
-#endif

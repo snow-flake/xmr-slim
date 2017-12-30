@@ -37,11 +37,7 @@
 #include "hwlocMemory.hpp"
 #include "xmrstak/backend/miner_work.hpp"
 
-#ifndef CONF_NO_HWLOC
-#   include "autoAdjustHwloc.hpp"
-#else
-#   include "autoAdjust.hpp"
-#endif
+#include "autoAdjustHwloc.hpp"
 
 #include <assert.h>
 #include <cmath>
