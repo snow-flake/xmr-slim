@@ -47,7 +47,7 @@ list(APPEND CMAKE_PREFIX_PATH "$ENV{CMAKE_PREFIX_PATH}")
 
 find_package(Threads REQUIRED)
 set(LIBS ${LIBS} ${CMAKE_THREAD_LIBS_INIT})
-
+    
 ###############################################################################
 # Find OpenSSL
 ###############################################################################
@@ -118,35 +118,47 @@ if(${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU" OR ${CMAKE_C_COMPILER_ID} STREQUAL "G
     set(LIBS "-static-libgcc -static-libstdc++ ${LIBS}")
 endif()
 
-# compile C files
-file(GLOB SRCFILES_C "xmrstak/backend/cpu/crypto/*.c")
-
-add_library(xmr-stak-c STATIC ${SRCFILES_C})
-set_property(TARGET xmr-stak-c PROPERTY C_STANDARD 99)
-target_link_libraries(xmr-stak-c ${LIBS})
+## compile C files
+file(GLOB SRCFILES_C "xmrstak/backend/cpu/crypto/*.h" "xmrstak/backend/cpu/crypto/*.hpp" "xmrstak/backend/cpu/crypto/*.c")
+set_source_files_properties(${SRCFILES_C} PROPERTY C_STANDARD 99)
+#
+#add_library(xmr-stak-c STATIC ${SRCFILES_C})
+#set_property(TARGET xmr-stak-c PROPERTY C_STANDARD 99)
+#target_link_libraries(xmr-stak-c ${LIBS})
 
 # compile generic backend files
 file(GLOB BACKEND_CPP
+    "xmrstak/backend/cpu/crypto/*.h"
+    "xmrstak/backend/cpu/crypto/*.hpp"
+    "xmrstak/backend/cpu/crypto/*.c"
+    "xmrstak/*.hpp"
     "xmrstak/*.cpp"
+    "xmrstak/backend/cpu/*.hpp"
     "xmrstak/backend/cpu/*.cpp"
+    "xmrstak/backend/*.hpp"
     "xmrstak/backend/*.cpp"
     "xmrstak/backend/cpu/crypto/*.cpp"
+    "xmrstak/misc/*.hpp"
     "xmrstak/misc/*.cpp"
-    "xmrstak/net/*.cpp")
+    "xmrstak/rapidjson/*/*"
+    "xmrstak/rapidjson/*"
+    "xmrstak/net/*.hpp"
+    "xmrstak/net/*.cpp"
+)
 
-add_library(xmr-stak-backend STATIC ${BACKEND_CPP})
-target_link_libraries(xmr-stak-backend xmr-stak-c ${CMAKE_DL_LIBS})
+#add_library(xmr-stak-backend STATIC ${BACKEND_CPP})
+#target_link_libraries(xmr-stak-backend xmr-stak-c ${CMAKE_DL_LIBS})
 
 # compile final binary
 file(GLOB SRCFILES_CPP "xmrstak/cli/*.cpp")
 set_source_files_properties(${SRCFILES_CPP} PROPERTIES LANGUAGE CXX)
 
-add_executable(xmr-stak ${SRCFILES_CPP})
+add_executable(xmr-stak ${SRCFILES_CPP} ${BACKEND_CPP} ${SRCFILES_C})
 
 set(EXECUTABLE_OUTPUT_PATH "bin")
 set(LIBRARY_OUTPUT_PATH "bin")
 
-target_link_libraries(xmr-stak ${LIBS} xmr-stak-c xmr-stak-backend)
+target_link_libraries(xmr-stak ${LIBS})
 
 ################################################################################
 # Install
