@@ -144,10 +144,6 @@ if(NOT GIT_BRANCH STREQUAL "")
 	add_definitions("-DGIT_BRANCH=${GIT_BRANCH}")
 endif()
 
-# generate backend string
-string(REPLACE ";" "-" STR_BACKEND_TYPES "${BACKEND_TYPES}")
-add_definitions("-DBACKEND_TYPE=${STR_BACKEND_TYPES}")
-
 ################################################################################
 # Compile & Link
 ################################################################################

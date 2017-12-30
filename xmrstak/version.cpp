@@ -13,9 +13,7 @@
 #define GIT_BRANCH unknown
 #endif
 
-#ifndef BACKEND_TYPE
-#define BACKEND_TYPE unknown
-#endif
+#define BACKEND_TYPE cpu
 
 #define XMR_STAK_NAME "xmr-stak"
 #define XMR_STAK_VERSION "2.2.0"
