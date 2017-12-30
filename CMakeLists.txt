@@ -34,16 +34,9 @@ if(NOT CMAKE_BUILD_TYPE)
 endif()
 set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "${BUILD_TYPE}")
 
-set(XMR-STAK_COMPILE "native" CACHE STRING "select CPU compute architecture")
-set_property(CACHE XMR-STAK_COMPILE PROPERTY STRINGS "native;generic")
-if(XMR-STAK_COMPILE STREQUAL "native")
-    set(CMAKE_CXX_FLAGS "-march=native -mtune=native ${CMAKE_CXX_FLAGS}")
-    set(CMAKE_C_FLAGS "-march=native -mtune=native ${CMAKE_C_FLAGS}")
-elseif(XMR-STAK_COMPILE STREQUAL "generic")
-    add_definitions("-DCONF_ENFORCE_OpenCL_1_2=1")
-else()
-    message(FATAL_ERROR "XMR-STAK_COMPILE is set to an unknown value '${XMR-STAK_COMPILE}'")
-endif()
+# Set the CPU type to native architecture
+set(CMAKE_CXX_FLAGS "-march=native -mtune=native ${CMAKE_CXX_FLAGS}")
+set(CMAKE_C_FLAGS "-march=native -mtune=native ${CMAKE_C_FLAGS}")
 
 # allow user to extent CMAKE_PREFIX_PATH via environment variable
 list(APPEND CMAKE_PREFIX_PATH "$ENV{CMAKE_PREFIX_PATH}")
