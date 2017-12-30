@@ -44,11 +44,6 @@
 #include <assert.h>
 #include <time.h>
 
-
-#ifdef _WIN32
-#define strncasecmp _strnicmp
-#endif // _WIN32
-
 executor::executor()
 {
 }
@@ -457,8 +452,6 @@ void executor::on_miner_result(size_t pool_id, job_result& oResult)
 	}
 }
 
-#ifndef _WIN32
-
 #include <signal.h>
 void disable_sigpipe()
 {
@@ -469,10 +462,6 @@ void disable_sigpipe()
 	if (sigaction(SIGPIPE, &sa, 0) == -1)
 		printer::inst()->print_msg(L1, "ERROR: Call to sigaction failed!");
 }
-
-#else
-inline void disable_sigpipe() {}
-#endif
 
 void executor::ex_main()
 {
@@ -805,14 +794,8 @@ char* time_format(char* buf, size_t len, std::chrono::system_clock::time_point t
 	 * and don't get me started on lack strcpy_s because NIH - use non-standard strlcpy...
 	 * And of course C++ implements unsafe version because... reasons
 	 */
-
-#ifdef _WIN32
-	localtime_s(&stime, &ctime);
-#else
 	localtime_r(&ctime, &stime);
-#endif // __WIN32
 	strftime(buf, len, "%F %T", &stime);
-
 	return buf;
 }
 

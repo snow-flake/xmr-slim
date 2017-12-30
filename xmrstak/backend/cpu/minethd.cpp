@@ -46,9 +46,6 @@
 #include <thread>
 #include <bitset>
 
-#ifdef _WIN32
-#include <windows.h>
-#else
 #include <pthread.h>
 
 #if defined(__APPLE__)
@@ -59,8 +56,6 @@
 #include <pthread_np.h>
 #endif //__APPLE__
 
-#endif //_WIN32
-
 namespace xmrstak
 {
 namespace cpu
@@ -68,9 +63,7 @@ namespace cpu
 
 bool minethd::thd_setaffinity(std::thread::native_handle_type h, uint64_t cpu_id)
 {
-#if defined(_WIN32)
-	return SetThreadAffinityMask(h, 1ULL << cpu_id) != 0;
-#elif defined(__APPLE__)
+#if defined(__APPLE__)
 	thread_port_t mach_thread;
 	thread_affinity_policy_data_t policy = { static_cast<integer_t>(cpu_id) };
 	mach_thread = pthread_mach_thread_np(h);

@@ -18,9 +18,7 @@
 #define XMR_STAK_NAME "xmr-stak"
 #define XMR_STAK_VERSION "2.2.0"
 
-#if defined(_WIN32)
-#define OS_TYPE "win"
-#elif defined(__APPLE__)
+#if defined(__APPLE__)
 #define OS_TYPE "mac"
 #elif defined(__FreeBSD__)
 #define OS_TYPE "bsd"

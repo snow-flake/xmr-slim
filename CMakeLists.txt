@@ -55,10 +55,8 @@ list(APPEND CMAKE_PREFIX_PATH "$ENV{CMAKE_PREFIX_PATH}")
 # Find PThreads
 ################################################################################
 
-if(NOT WIN32)
-    find_package(Threads REQUIRED)
-    set(LIBS ${LIBS} ${CMAKE_THREAD_LIBS_INIT})
-endif()
+find_package(Threads REQUIRED)
+set(LIBS ${LIBS} ${CMAKE_THREAD_LIBS_INIT})
 
 ###############################################################################
 # Find OpenSSL
@@ -107,14 +105,6 @@ if(HWLOC STREQUAL "HWLOC-NOTFOUND" OR ${HWLOC_INCLUDE_DIR} STREQUAL "HWLOC_INCLU
 else()
     set(LIBS ${LIBS} ${HWLOC})
     include_directories(AFTER ${HWLOC_INCLUDE_DIR})
-endif()
-
-################################################################################
-# Windows Sockets
-################################################################################
-
-if(WIN32)
-    set(LIBS ${LIBS} wsock32 ws2_32)
 endif()
 
 ################################################################################

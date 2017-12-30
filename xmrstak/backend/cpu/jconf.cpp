@@ -24,18 +24,11 @@
 #include "jconf.hpp"
 #include "xmrstak/misc/console.hpp"
 #include "xmrstak/misc/jext.hpp"
-
 #include <iostream>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string>
-
-#ifdef _WIN32
-#define strcasecmp _stricmp
-#include <intrin.h>
-#else
 #include <cpuid.h>
-#endif
 
 
 namespace xmrstak

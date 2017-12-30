@@ -5,11 +5,7 @@
 #include "xmrstak/params.hpp"
 #include "xmrstak/backend/cryptonight.hpp"
 
-#ifdef _WIN32
-#include <windows.h>
-#else
 #include <unistd.h>
-#endif // _WIN32
 
 #include <string>
 

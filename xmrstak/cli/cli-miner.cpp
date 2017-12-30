@@ -45,12 +45,6 @@
 #include <openssl/err.h>
 #endif
 
-#ifdef _WIN32
-#	define strcasecmp _stricmp
-#	include <windows.h>
-#	include "xmrstak/misc/uac.hpp"
-#endif // _WIN32
-
 void do_benchmark();
 
 void help()
@@ -64,9 +58,6 @@ void help()
 	cout<<"  -v, --version         show version number"<<endl;
 	cout<<"  -V, --version-long    show long version number"<<endl;
 	cout<<"  -c, --config FILE     common miner configuration file"<<endl;
-#ifdef _WIN32
-	cout<<"  --noUAC               disable the UAC dialog"<<endl;
-#endif
 	cout<<" "<<endl;
 	cout<<"The following options can be used for automatic start without a guided config,"<<endl;
 	cout<<"If config exists then this pool will be top priority."<<endl;
@@ -76,12 +67,6 @@ void help()
 	cout<<"  -p, --pass PASSWD     pool password, in the most cases x or empty \"\""<<endl;
 	cout<<"  --use-nicehash        the pool should run in nicehash mode"<<endl;
 	cout<<" \n"<<endl;
-#ifdef _WIN32
-	cout<<"Environment variables:\n"<<endl;
-	cout<<"  XMRSTAK_NOWAIT        disable the dialog `Press any key to exit."<<std::endl;
-	cout<<"                	       for non UAC execution"<<endl;
-	cout<<" \n"<<endl;
-#endif
 	cout<< "Version: " << get_version_str_short() << endl;
 	cout<<"Brought to by fireice_uk and psychocrypt under GPLv3."<<endl;
 }
@@ -303,7 +288,6 @@ int main(int argc, char *argv[])
 		params::inst().executablePrefix += seperator;
 	}
 
-	bool uacDialog = true;
 	bool pool_url_set = false;
 	for(size_t i = 1; i < argc-1; i++)
 	{
@@ -438,10 +422,6 @@ int main(int argc, char *argv[])
 			}
 			params::inst().configFile = argv[i];
 		}
-		else if(opName.compare("--noUAC") == 0)
-		{
-			uacDialog = false;
-		}
 		else
 		{
 			printer::inst()->print_msg(L0, "Parameter unknown '%s'",argv[i]);
@@ -450,20 +430,6 @@ int main(int argc, char *argv[])
 		}
 	}
 
-#ifdef _WIN32
-	if(uacDialog && !IsElevated())
-	{
-		std::string minerArgs;
-		for(int i = 1; i < argc; i++)
-		{
-			minerArgs += " ";
-			minerArgs += argv[i];
-		}
-
-		SelfElevate(argv[0], minerArgs);
-	}
-#endif
-	
 	// check if we need a guided start
 	if(!configEditor::file_exist(params::inst().configFile))
 		do_guided_config();

@@ -45,14 +45,9 @@ extern "C"
 #include <mach/vm_statistics.h>
 #endif
 
-#ifdef _WIN32
-#include <windows.h>
-#include <ntsecapi.h>
-#else
 #include <sys/mman.h>
 #include <errno.h>
 #include <string.h>
-#endif // _WIN32
 
 void do_blake_hash(const void* input, size_t len, char* output) {
 	blake256_hash((uint8_t*)output, (const uint8_t*)input, len);
@@ -72,126 +67,9 @@ void do_skein_hash(const void* input, size_t len, char* output) {
 
 void (* const extra_hashes[4])(const void *, size_t, char *) = {do_blake_hash, do_groestl_hash, do_jh_hash, do_skein_hash};
 
-#ifdef _WIN32
-BOOL bRebootDesirable = FALSE; //If VirtualAlloc fails, suggest a reboot
-
-BOOL AddPrivilege(TCHAR* pszPrivilege)
-{
-	HANDLE           hToken;
-	TOKEN_PRIVILEGES tp;
-	BOOL             status;
-
-	if (!OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken))
-		return FALSE;
-
-	if (!LookupPrivilegeValue(NULL, pszPrivilege, &tp.Privileges[0].Luid))
-		return FALSE;
-
-	tp.PrivilegeCount = 1;
-	tp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
-	status = AdjustTokenPrivileges(hToken, FALSE, &tp, 0, (PTOKEN_PRIVILEGES)NULL, 0);
-
-	if (!status || (GetLastError() != ERROR_SUCCESS))
-		return FALSE;
-
-	CloseHandle(hToken);
-	return TRUE;
-}
-
-BOOL AddLargePageRights()
-{
-	HANDLE hToken;
-	PTOKEN_USER user = NULL;
-
-	if (OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &hToken) == TRUE)
-	{
-		TOKEN_ELEVATION Elevation;
-		DWORD cbSize = sizeof(TOKEN_ELEVATION);
-		BOOL bIsElevated = FALSE;
-
-		if (GetTokenInformation(hToken, TokenElevation, &Elevation, sizeof(Elevation), &cbSize))
-			bIsElevated = Elevation.TokenIsElevated;
-
-		DWORD size = 0;
-		GetTokenInformation(hToken, TokenUser, NULL, 0, &size);
-		
-		if (size > 0 && bIsElevated)
-		{
-			user = (PTOKEN_USER)LocalAlloc(LPTR, size);
-			GetTokenInformation(hToken, TokenUser, user, size, &size);
-		}
-
-		CloseHandle(hToken);
-	}
-
-	if (!user)
-		return FALSE;
-
-	LSA_HANDLE handle;
-	LSA_OBJECT_ATTRIBUTES attributes;
-	ZeroMemory(&attributes, sizeof(attributes));
-
-	BOOL result = FALSE;
-	if (LsaOpenPolicy(NULL, &attributes, POLICY_ALL_ACCESS, &handle) == 0) 
-	{
-		LSA_UNICODE_STRING lockmem;
-		lockmem.Buffer = L"SeLockMemoryPrivilege";
-		lockmem.Length = 42;
-		lockmem.MaximumLength = 44;
-
-		PLSA_UNICODE_STRING rights = NULL;
-		ULONG cnt = 0;
-		BOOL bHasRights = FALSE;
-		if (LsaEnumerateAccountRights(handle, user->User.Sid, &rights, &cnt) == 0)
-		{
-			for (size_t i = 0; i < cnt; i++)
-			{
-				if (rights[i].Length == lockmem.Length &&
-					memcmp(rights[i].Buffer, lockmem.Buffer, 42) == 0)
-				{
-					bHasRights = TRUE;
-					break;
-				}
-			}
-
-			LsaFreeMemory(rights);
-		}
-
-		if(!bHasRights)
-			result = LsaAddAccountRights(handle, user->User.Sid, &lockmem, 1) == 0;
-
-		LsaClose(handle);
-	}
-
-	LocalFree(user);
-	return result;
-}
-#endif
-
 size_t cryptonight_init(size_t use_fast_mem, size_t use_mlock, alloc_msg* msg)
 {
-#ifdef _WIN32
-	if(use_fast_mem == 0)
-		return 1;
-
-	if(AddPrivilege(TEXT("SeLockMemoryPrivilege")) == 0)
-	{
-		if(AddLargePageRights())
-		{
-			msg->warning = "Added SeLockMemoryPrivilege to the current account. You need to reboot for it to work";
-			bRebootDesirable = TRUE;
-		}
-		else
-			msg->warning = "Obtaning SeLockMemoryPrivilege failed.";
-
-		return 0;
-	}
-
-	bRebootDesirable = TRUE;
 	return 1;
-#else
-	return 1;
-#endif // _WIN32
 }
 
 cryptonight_ctx* cryptonight_alloc_ctx(size_t use_fast_mem, size_t use_mlock, alloc_msg* msg)
@@ -207,31 +85,6 @@ cryptonight_ctx* cryptonight_alloc_ctx(size_t use_fast_mem, size_t use_mlock, al
 		ptr->ctx_info[1] = 0;
 		return ptr;
 	}
-
-#ifdef _WIN32
-	SIZE_T iLargePageMin = GetLargePageMinimum();
-
-	if(hashMemSize > iLargePageMin)
-		iLargePageMin *= 2;
-
-	ptr->long_state = (uint8_t*)VirtualAlloc(NULL, iLargePageMin,
-		MEM_COMMIT | MEM_RESERVE | MEM_LARGE_PAGES, PAGE_READWRITE);
-
-	if(ptr->long_state == NULL)
-	{
-		_mm_free(ptr);
-		if(bRebootDesirable)
-			msg->warning = "VirtualAlloc failed. Reboot might help.";
-		else
-			msg->warning = "VirtualAlloc failed.";
-		return NULL;
-	}
-	else
-	{
-		ptr->ctx_info[0] = 1;
-		return ptr;
-	}
-#else
 
 #if defined(__APPLE__)
 	ptr->long_state  = (uint8_t*)mmap(0, hashMemSize, PROT_READ | PROT_WRITE,
@@ -263,7 +116,6 @@ cryptonight_ctx* cryptonight_alloc_ctx(size_t use_fast_mem, size_t use_mlock, al
 		ptr->ctx_info[1] = 1;
 
 	return ptr;
-#endif // _WIN32
 }
 
 void cryptonight_free_ctx(cryptonight_ctx* ctx)
@@ -272,13 +124,9 @@ void cryptonight_free_ctx(cryptonight_ctx* ctx)
 
 	if(ctx->ctx_info[0] != 0)
 	{
-#ifdef _WIN32
-		VirtualFree(ctx->long_state, 0, MEM_RELEASE);
-#else
 		if(ctx->ctx_info[1] != 0)
 			munlock(ctx->long_state, hashMemSize);
 		munmap(ctx->long_state, hashMemSize);
-#endif // _WIN32
 	}
 	else
 		_mm_free(ctx->long_state);
