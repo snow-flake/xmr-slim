@@ -207,21 +207,6 @@ uint64_t jconf::GetAutohashTime()
 	return prv->configValues[iAutohashTime]->GetUint64();
 }
 
-uint16_t jconf::GetHttpdPort()
-{
-	return prv->configValues[iHttpdPort]->GetUint();
-}
-
-const char* jconf::GetHttpUsername()
-{
-	return prv->configValues[sHttpLogin]->GetString();
-}
-
-const char* jconf::GetHttpPassword()
-{
-	return prv->configValues[sHttpPass]->GetString();
-}
-
 bool jconf::DaemonMode()
 {
 	return prv->configValues[bDaemonMode]->GetBool();
