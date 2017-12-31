@@ -57,7 +57,6 @@ std::vector<iBackend*>* BackendConnector::thread_starter(miner_work& pWork)
 
 	std::vector<iBackend*>* pvThreads = new std::vector<iBackend*>;
 
-	if(/*params::inst().useCPU*/ true)
 	{
 		auto cpuThreads = cpu::minethd::thread_starter(static_cast<uint32_t>(pvThreads->size()), pWork);
 		pvThreads->insert(std::end(*pvThreads), std::begin(cpuThreads), std::end(cpuThreads));

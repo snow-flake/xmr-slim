@@ -295,9 +295,6 @@ int main(int argc, char *argv[])
 			pool_url_set = true;
 	}
 
-	params::inst().useAMD = false;
-	params::inst().useNVIDIA = false;
-
 	for(size_t i = 1; i < argc; ++i)
 	{
 		std::string opName(argv[i]);
@@ -318,10 +315,6 @@ int main(int argc, char *argv[])
 			std::cout<< "Version: " << get_version_str() << std::endl;
 			win_exit();
 			return 0;
-		}
-		else if(opName.compare("--noCPU") == 0)
-		{
-			params::inst().useCPU = false;
 		}
 		else if(opName.compare("--cpu") == 0)
 		{

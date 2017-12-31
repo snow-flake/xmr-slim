@@ -20,9 +20,6 @@ struct params
 
 	std::string executablePrefix;
 	std::string binaryName;
-	bool useAMD;
-	bool useNVIDIA;
-	bool useCPU;
 
 	bool poolUseTls = false;
 	std::string poolURL;
@@ -41,9 +38,6 @@ struct params
 	params() :
 		binaryName("xmr-stak"),
 		executablePrefix(""),
-		useAMD(true),
-		useNVIDIA(true),
-		useCPU(true),
 		configFile("config.txt"),
 		configFileAMD("amd.txt"),
 		configFileCPU("cpu.txt"),
