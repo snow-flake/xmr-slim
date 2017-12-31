@@ -27,21 +27,25 @@
 **                                1: return SKEIN_FAIL to flag errors
 **
 ***************************************************************************/
-#include "skein_port.h"                      /* get platform-specific definitions */
+#include "skein_port.hpp"                      /* get platform-specific definitions */
 
-typedef enum
-{
-  SKEIN_SUCCESS         =      0,          /* return codes from Skein calls */
-  SKEIN_FAIL            =      1,
-  SKEIN_BAD_HASHLEN     =      2
-}
-SkeinHashReturn;
+namespace c_skein {
+	enum HashReturn {
+		SUCCESS = 0, FAIL = 1, BAD_HASHLEN = 2
+	};
 
-typedef size_t   SkeinDataLength;                /* bit count  type */
-typedef u08b_t   SkeinBitSequence;               /* bit stream type */
+	typedef enum {
+		SKEIN_SUCCESS = 0,          /* return codes from Skein calls */
+		SKEIN_FAIL = 1,
+		SKEIN_BAD_HASHLEN = 2
+	}
+			SkeinHashReturn;
+
+	typedef size_t SkeinDataLength;                /* bit count  type */
+	typedef u08b_t SkeinBitSequence;               /* bit stream type */
 
 /* "all-in-one" call */
-SkeinHashReturn skein_hash(int hashbitlen,   const SkeinBitSequence *data,
-		SkeinDataLength databitlen, SkeinBitSequence *hashval);
+	HashReturn skein_hash(int hashbitlen, const SkeinBitSequence *data, SkeinDataLength databitlen, SkeinBitSequence *hashval);
 
+}
 #endif  /* ifndef _SKEIN_H_ */

@@ -130,6 +130,8 @@ set_source_files_properties(${SRCFILES_C} PROPERTY C_STANDARD 99)
 file(GLOB BACKEND_CPP
     "c_blake/*.hpp"
     "c_blake/*.cpp"
+    "c_skein/*.hpp"
+    "c_skein/*.cpp"
     "xmrstak/backend/cpu/crypto/*.h"
     "xmrstak/backend/cpu/crypto/*.hpp"
     "xmrstak/backend/cpu/crypto/*.c"

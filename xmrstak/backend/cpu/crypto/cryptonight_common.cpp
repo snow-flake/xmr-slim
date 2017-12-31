@@ -25,7 +25,6 @@ extern "C"
 {
 #include "c_groestl.h"
 #include "c_jh.h"
-#include "c_skein.h"
 }
 #include "cryptonight.h"
 #include "cryptonight_aesni.h"
@@ -51,6 +50,7 @@ extern "C"
 #include <cassert>
 
 #include "c_blake/do_blake_hash.hpp"
+#include "c_skein/do_skein_hash.hpp"
 
 void do_groestl_hash(const uint8_t* input, size_t len, uint8_t* output) {
 	assert(sizeof(char) == sizeof(uint8_t));
@@ -60,11 +60,6 @@ void do_groestl_hash(const uint8_t* input, size_t len, uint8_t* output) {
 void do_jh_hash(const uint8_t* input, size_t len, uint8_t* output) {
 	assert(sizeof(char) == sizeof(uint8_t));
 	jh_hash(32 * 8, (const uint8_t*)input, 8 * len, (uint8_t*)output);
-}
-
-void do_skein_hash(const uint8_t* input, size_t len, uint8_t* output) {
-	assert(sizeof(char) == sizeof(uint8_t));
-	skein_hash(8 * 32, (const uint8_t*)input, 8 * len, (uint8_t*)output);
 }
 
 void (* const extra_hashes[4])(const uint8_t *, size_t, uint8_t *) = {do_blake_hash, do_groestl_hash, do_jh_hash, do_skein_hash};
