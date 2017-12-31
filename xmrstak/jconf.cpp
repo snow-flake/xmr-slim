@@ -25,6 +25,7 @@
 
 #include "xmrstak/misc/console.hpp"
 #include <cpuid.h>
+#include <string.h>
 
 
 jconf::jconf() {}
