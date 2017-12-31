@@ -25,7 +25,6 @@
 #include "backendConnector.hpp"
 #include "miner_work.hpp"
 #include "globalStates.hpp"
-#include "plugin.hpp"
 #include "xmrstak/misc/environment.hpp"
 #include "xmrstak/misc/console.hpp"
 #include "xmrstak/params.hpp"
