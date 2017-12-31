@@ -21,10 +21,6 @@
   *
   */
 
-extern "C"
-{
-#include "c_jh.h"
-}
 #include "cryptonight.h"
 #include "cryptonight_aesni.h"
 #include "xmrstak/backend/cryptonight.hpp"
@@ -51,11 +47,7 @@ extern "C"
 #include "c_blake/do_blake_hash.hpp"
 #include "c_skein/do_skein_hash.hpp"
 #include "c_groestl/do_groestl_hash.hpp"
-
-void do_jh_hash(const uint8_t* input, size_t len, uint8_t* output) {
-	assert(sizeof(char) == sizeof(uint8_t));
-	jh_hash(32 * 8, (const uint8_t*)input, 8 * len, (uint8_t*)output);
-}
+#include "c_jh/do_jh_hash.hpp"
 
 void (* const extra_hashes[4])(const uint8_t *, size_t, uint8_t *) = {do_blake_hash, do_groestl_hash, do_jh_hash, do_skein_hash};
 

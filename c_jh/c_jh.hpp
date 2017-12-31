@@ -12,8 +12,18 @@
    --------------------------------
    Last Modified: January 16, 2011
 */
-#pragma once
+#ifndef MONERO_CPU_MINER_JH_JH_H
+#define MONERO_CPU_MINER_JH_JH_H
+#include <stdint.h>
 
-#include "hash.h"
+namespace c_jh {
+	typedef unsigned char BitSequence;
+	typedef unsigned long long DataLength;
+	typedef enum {
+		SUCCESS = 0, FAIL = 1, BAD_HASHLEN = 2
+	} HashReturn;
 
-HashReturn jh_hash(int hashbitlen, const BitSequence *data, DataLength databitlen, BitSequence *hashval);
+	HashReturn jh_hash(int hashbitlen, const BitSequence *data, DataLength databitlen, BitSequence *hashval);
+}
+
+#endif //MONERO_CPU_MINER_JH_JH_H
