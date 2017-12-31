@@ -1,10 +1,10 @@
 #include "autoAdjust.hpp"
 
-#include "jconf.hpp"
+//#include "jconf.hpp"
 
-#include "xmrstak/misc/console.hpp"
+//#include "xmrstak/misc/console.hpp"
 #include "xmrstak/jconf.hpp"
-#include "xmrstak/misc/configEditor.hpp"
+//#include "xmrstak/misc/configEditor.hpp"
 #include "xmrstak/params.hpp"
 #include "c_cryptonight/cryptonight.hpp"
 #include <string>
@@ -22,7 +22,7 @@ inline int32_t get_masked(int32_t val, int32_t h, int32_t l) {
 	return val >> l;
 }
 
-xmrstak::cpu::autoAdjust::autoAdjust() :
+xmrstak::cpu::auto_threads::auto_threads() :
 		hashMemSize(MONERO_MEMORY),
 		halfHashMemSize(MONERO_MEMORY / 2u),
 		processors_count(sysconf(_SC_NPROCESSORS_ONLN)),
@@ -51,7 +51,7 @@ xmrstak::cpu::autoAdjust::autoAdjust() :
 	const bool isMoreThan100u = L3KB_size > (halfHashMemSize * 100u);
 	if (isLessThanMem || isMoreThan100u) {
 		std::cerr << __FILE__ << ":" << __LINE__ << ":" << "Autoconf failed: L3 size sanity check failed " << L3KB_size << " KB" << std::endl;
-		throw new std::runtime_error("L3 size sanity check failed");
+		// throw new std::runtime_error("L3 size sanity check failed");
 	}
 
 	std::cout << __FILE__ << ":" << __LINE__ << ":" << " Autoconf core count detected as " << processors_count << " on Linux" << std::endl;
@@ -86,7 +86,7 @@ xmrstak::cpu::autoAdjust::autoAdjust() :
 	}
 }
 
-int32_t xmrstak::cpu::autoAdjust::calc_genuine_intel(int32_t *cpu_info) {
+int32_t xmrstak::cpu::auto_threads::calc_genuine_intel(int32_t *cpu_info) {
 	::jconf::cpuid(4, 3, cpu_info);
 
 	if (get_masked(cpu_info[0], 7, 5) != 3) {
@@ -98,13 +98,13 @@ int32_t xmrstak::cpu::autoAdjust::calc_genuine_intel(int32_t *cpu_info) {
 	return l3cache;
 }
 
-int32_t xmrstak::cpu::autoAdjust::calc_authentic_amd(int32_t *cpu_info) {
+int32_t xmrstak::cpu::auto_threads::calc_authentic_amd(int32_t *cpu_info) {
 	::jconf::cpuid(0x80000006, 0, cpu_info);
 	int32_t l3cache = get_masked(cpu_info[3], 31, 18) * 512;
 	return l3cache;
 }
 
-bool xmrstak::cpu::autoAdjust::is_old_amd(int32_t *cpu_info) {
+bool xmrstak::cpu::auto_threads::is_old_amd(int32_t *cpu_info) {
 	::jconf::cpuid(0x80000006, 0, cpu_info);
 	::jconf::cpuid(1, 0, cpu_info);
 	if (get_masked(cpu_info[0], 11, 8) < 0x17) //0x17h is Zen

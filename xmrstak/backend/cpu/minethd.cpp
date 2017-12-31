@@ -227,21 +227,15 @@ std::vector<iBackend*> minethd::thread_starter(uint32_t threadOffset, miner_work
 			return pvThreads;
 	}
 
-	if(!jconf::inst()->parse_config())
-	{
-		win_exit();
-	}
-
-
 	//Launch the requested number of single and double threads, to distribute
 	//load evenly we need to alternate single and double threads
-	size_t i, n = jconf::inst()->GetThreadCount();
+	size_t i, n = xmrstak::cpu::jconf::GetThreadCount();
 	pvThreads.reserve(n);
 
 	jconf::thd_cfg cfg;
 	for (i = 0; i < n; i++)
 	{
-		jconf::inst()->GetThreadConfig(i, cfg);
+		xmrstak::cpu::jconf::GetThreadConfig(i, cfg);
 
 		if(cfg.iCpuAff >= 0)
 		{

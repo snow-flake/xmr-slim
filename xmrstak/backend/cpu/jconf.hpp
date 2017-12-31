@@ -1,44 +1,36 @@
 #pragma once
 
 #include "xmrstak/params.hpp"
-
+#include "autoAdjust.hpp"
 #include <stdlib.h>
 #include <string>
 
-namespace xmrstak
-{
-namespace cpu
-{
+namespace xmrstak {
+	namespace cpu {
+		namespace jconf {
 
-class jconf
-{
-public:
-	static jconf* inst()
-	{
-		if (oInst == nullptr) oInst = new jconf;
-		return oInst;
-	};
+			struct thd_cfg {
+				int iMultiway;  // low_power_mode
+				bool bNoPrefetch; // no_prefetch
+				long long iCpuAff; // affine_to_cpu
+				thd_cfg() : iMultiway(1), bNoPrefetch(true), iCpuAff(-1) {}
+			};
 
-	bool parse_config(const char* sFilename = params::inst().configFileCPU.c_str());
 
-	struct thd_cfg {
-		int iMultiway;  // low_power_mode
-		bool bNoPrefetch; // no_prefetch
-		long long iCpuAff; // affine_to_cpu
-		thd_cfg(): iMultiway(1), bNoPrefetch(true), iCpuAff(-1)  {}
-	};
+			static inline bool GetThreadConfig(size_t id, thd_cfg &cfg) {
+				auto auto_config = auto_threads().configs[id];
 
-	size_t GetThreadCount();
-	bool GetThreadConfig(size_t id, thd_cfg &cfg);
-	bool NeedsAutoconf();
+				cfg.iMultiway = auto_config.low_power_mode;
+				cfg.bNoPrefetch = auto_config.no_prefetch;
+				cfg.iCpuAff = auto_config.affine_to_cpu;
 
-private:
-	jconf();
-	static jconf* oInst;
+				return true;
+			}
 
-	struct opaque_private;
-	opaque_private* prv;
-};
+			static inline size_t GetThreadCount() {
+				return auto_threads().processors_count;
+			}
 
-} // namespace cpu
-} // namepsace xmrstak
+		}
+	}
+}
