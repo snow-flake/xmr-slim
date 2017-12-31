@@ -31,17 +31,13 @@ struct params
 	std::string currency;
 
 	std::string configFile;
-	std::string configFileAMD;
-	std::string configFileNVIDIA;
 	std::string configFileCPU;
 
 	params() :
 		binaryName("xmr-stak"),
 		executablePrefix(""),
 		configFile("config.txt"),
-		configFileAMD("amd.txt"),
-		configFileCPU("cpu.txt"),
-		configFileNVIDIA("nvidia.txt")
+		configFileCPU("cpu.txt")
 	{}
 
 };

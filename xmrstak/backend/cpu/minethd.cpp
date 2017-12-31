@@ -83,7 +83,6 @@ bool minethd::thd_setaffinity(std::thread::native_handle_type h, uint64_t cpu_id
 
 minethd::minethd(miner_work& pWork, size_t iNo, int iMultiway, bool no_prefetch, int64_t affinity)
 {
-	this->backendType = iBackend::CPU;
 	oWork = pWork;
 	bQuit = 0;
 	iThreadNo = (uint8_t)iNo;

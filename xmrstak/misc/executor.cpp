@@ -699,22 +699,15 @@ void executor::hashrate_report(std::string& out)
 	char num[32];
 	double fTotal[3] = { 0.0, 0.0, 0.0};
 
-	for( uint32_t b = 0; b < 4u; ++b)
 	{
 		std::vector<xmrstak::iBackend*> backEnds;
-		std::copy_if(pvThreads->begin(), pvThreads->end(), std::back_inserter(backEnds),
-			[&](xmrstak::iBackend* backend)
-			{
-				return backend->backendType == b;
-			}
-		);
+		std::copy_if(pvThreads->begin(), pvThreads->end(), std::back_inserter(backEnds), [&](xmrstak::iBackend* backend) { return true; });
 
 		size_t nthd = backEnds.size();
 		if(nthd != 0)
 		{
 			size_t i;
-			auto bType = static_cast<xmrstak::iBackend::BackendType>(b);
-			std::string name(xmrstak::iBackend::getName(bType));
+			std::string name("cpu");
 			std::transform(name.begin(), name.end(), name.begin(), ::toupper);
 			
 			out.append("HASHRATE REPORT - ").append(name).append("\n");
