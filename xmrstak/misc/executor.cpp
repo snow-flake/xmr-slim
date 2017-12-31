@@ -480,14 +480,13 @@ void executor::ex_main()
 	telem = new xmrstak::telemetry(pvThreads->size());
 
 	set_timestamp();
-	size_t pc = jconf::inst()->GetPoolCount();
+	size_t pc = 1;
 	bool dev_tls = true;
 	bool already_have_cli_pool = false;
 	size_t i=0;
 	for(; i < pc; i++)
 	{
 		jconf::pool_cfg cfg;
- 		jconf::inst()->GetPoolConfig(i, cfg);
 #ifdef CONF_NO_TLS
 		if(cfg.tls)
 		{

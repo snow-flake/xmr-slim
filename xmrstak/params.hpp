@@ -30,13 +30,11 @@ struct params
 
 	std::string currency;
 
-	std::string configFile;
 	std::string configFileCPU;
 
 	params() :
 		binaryName("xmr-stak"),
 		executablePrefix(""),
-		configFile("config.txt"),
 		configFileCPU("cpu.txt")
 	{}
 

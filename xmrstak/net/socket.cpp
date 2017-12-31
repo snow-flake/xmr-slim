@@ -81,37 +81,30 @@ bool plain_socket::set_hostname(const char* sAddr)
 	std::vector<addrinfo*> ipv4;
 	std::vector<addrinfo*> ipv6;
 
-	while (ptr != nullptr)
-	{
-		if (ptr->ai_family == AF_INET)
+	while (ptr != nullptr) {
+		if (ptr->ai_family == AF_INET) {
 			ipv4.push_back(ptr);
-		if (ptr->ai_family == AF_INET6)
+		}
+		if (ptr->ai_family == AF_INET6) {
 			ipv6.push_back(ptr);
+		}
 		ptr = ptr->ai_next;
 	}
 
-	if (ipv4.empty() && ipv6.empty())
-	{
+	if (ipv4.empty() && ipv6.empty()) {
 		freeaddrinfo(pAddrRoot);
 		pAddrRoot = nullptr;
 		return pCallback->set_socket_error("CONNECT error: I found some DNS records but no IPv4 or IPv6 addresses.");
-	}
-	else if (!ipv4.empty() && ipv6.empty())
+	} else if (!ipv4.empty() && ipv6.empty()) {
 		pSockAddr = ipv4[rand() % ipv4.size()];
-	else if (ipv4.empty() && !ipv6.empty())
+	} else if (ipv4.empty() && !ipv6.empty()) {
 		pSockAddr = ipv6[rand() % ipv6.size()];
-	else if (!ipv4.empty() && !ipv6.empty())
-	{
-		if(jconf::inst()->PreferIpv4())
-			pSockAddr = ipv4[rand() % ipv4.size()];
-		else
-			pSockAddr = ipv6[rand() % ipv6.size()];
+	} else if (!ipv4.empty() && !ipv6.empty()) {
+		pSockAddr = ipv4[rand() % ipv4.size()];
 	}
 
 	hSocket = socket(pSockAddr->ai_family, pSockAddr->ai_socktype, pSockAddr->ai_protocol);
-
-	if (hSocket == INVALID_SOCKET)
-	{
+	if (hSocket == INVALID_SOCKET) {
 		freeaddrinfo(pAddrRoot);
 		pAddrRoot = nullptr;
 		return pCallback->set_socket_error_strerr("CONNECT error: Socket creation failed ");

@@ -5,7 +5,7 @@
 
 #include <stdlib.h>
 #include <string>
-
+#include <iostream>
 
 class jconf
 {
@@ -18,24 +18,37 @@ public:
 		return env.pJconfConfig;
 	};
 
-	bool parse_config(const char* sFilename = xmrstak::params::inst().configFile.c_str());
+	bool parse_config();
 
 	struct pool_cfg {
 		const char* sPoolAddr;
 		const char* sWalletAddr;
 		const char* sPasswd;
-		bool nicehash;
-		bool tls;
+		const bool nicehash;
+		const bool tls;
 		const char* tls_fingerprint;
-		size_t raw_weight;
-		double weight;
+		const size_t raw_weight;
+		const double weight;
+		pool_cfg():
+			sPoolAddr(CONFIG_POOL_POOL_ADDRESS),
+			sWalletAddr(CONFIG_POOL_WALLET_ADDRESS),
+			sPasswd(CONFIG_POOL_POOL_PASSWORD),
+			nicehash(CONFIG_POOL_USE_NICEHASH),
+			tls(CONFIG_POOL_USE_TLS),
+			tls_fingerprint(CONFIG_POOL_TLS_FINGERPRINT),
+			raw_weight(CONFIG_POOL_POOL_WEIGHT),
+			weight(CONFIG_POOL_POOL_WEIGHT)
+		{
+			// std::cout << "CONFIG_POOL_POOL_ADDRESS:    " << sPoolAddr << std::endl;
+			// std::cout << "CONFIG_POOL_WALLET_ADDRESS:  " << sWalletAddr << std::endl;
+			// std::cout << "CONFIG_POOL_POOL_PASSWORD:   " << sPasswd << std::endl;
+			// std::cout << "CONFIG_POOL_USE_NICEHASH:    " << nicehash << std::endl;
+			// std::cout << "CONFIG_POOL_USE_TLS:         " << tls << std::endl;
+			// std::cout << "CONFIG_POOL_TLS_FINGERPRINT: " << tls_fingerprint << std::endl;
+			// std::cout << "CONFIG_POOL_POOL_WEIGHT:     " << raw_weight << std::endl;
+			// std::cout << "CONFIG_POOL_POOL_WEIGHT:     " << weight << std::endl;
+		}
 	};
-
-	size_t wt_max;
-	size_t wt_min;
-
-	uint64_t GetPoolCount();
-	bool GetPoolConfig(size_t id, pool_cfg& cfg);
 
 	enum slow_mem_cfg {
 		always_use,
@@ -45,34 +58,27 @@ public:
 		unknown_value
 	};
 
-	bool TlsSecureAlgos();
+	inline bool TlsSecureAlgos() { return CONFIG_TLS_SECURE_ALGO; }
+	inline uint64_t GetVerboseLevel() { return CONFIG_VERBOSE_LEVEL; }
+	inline bool PrintMotd() { return CONFIG_PRINT_MOTD; }
+	inline uint64_t GetAutohashTime() { return CONFIG_H_PRINT_TIME; }
+	inline const char* GetOutputFile() { return CONFIG_OUTPUT_FILE; }
+	inline uint64_t GetCallTimeout() { return CONFIG_CALL_TIMEOUT; }
+	inline uint64_t GetNetRetry() { return CONFIG_RETRY_TIME; }
+	inline uint64_t GetGiveUpLimit() { return CONFIG_GIVEUP_LIMIT; }
 
-	uint64_t GetVerboseLevel();
-	bool PrintMotd();
-	uint64_t GetAutohashTime();
+	inline bool DaemonMode() { return CONFIG_DAEMON_MODE; }
 
-	const char* GetOutputFile();
-
-	uint64_t GetCallTimeout();
-	uint64_t GetNetRetry();
-	uint64_t GetGiveUpLimit();
-
-	bool DaemonMode();
-
-	bool PreferIpv4();
-
-	inline bool HaveHardwareAes() { return bHaveAes; }
+	inline bool HaveHardwareAes() { return CONFIG_AES_OVERRIDE; }
 
 	static void cpuid(uint32_t eax, int32_t ecx, int32_t val[4]);
 
-	slow_mem_cfg GetSlowMemSetting();
+	inline slow_mem_cfg GetSlowMemSetting() { return CONFIG_USE_SLOW_MEMORY; }
 
 private:
 	jconf();
 
-	bool check_cpu_features();
+	void check_cpu_features(bool & haveAes, bool & haveSse2);
 	struct opaque_private;
 	opaque_private* prv;
-
-	bool bHaveAes;
 };

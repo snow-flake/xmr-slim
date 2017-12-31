@@ -89,45 +89,6 @@ inline const char* bool_to_str(bool v)
 	return v ? "true" : "false";
 }
 
-std::string get_multipool_entry(bool& final)
-{
-	std::cout<<std::endl<<"- Next Pool:"<<std::endl<<std::endl;
-
-	std::string pool;
-	std::cout<<"- Pool address: e.g. pool.usxmrpool.com:3333"<<std::endl;
-	std::cin >> pool;
-
-	std::string userName;
-	std::cout<<"- Username (wallet address or pool login):"<<std::endl;
-	std::cin >> userName;
-
-	std::string passwd;
-	std::cin.clear(); std::cin.ignore(INT_MAX,'\n');
-	std::cout<<"- Password (mostly empty or x):"<<std::endl;
-	getline(std::cin, passwd);
-
-#ifdef CONF_NO_TLS
-	bool tls = false;
-#else
-	bool tls = read_yes_no("- Does this pool port support TLS/SSL? Use no if unknown. (y/N)");
-#endif
-	bool nicehash = read_yes_no("- Do you want to use nicehash on this pool? (y/n)");
-
-	int64_t pool_weight;
-	std::cout << "- Please enter a weight for this pool: "<<std::endl;
-	while(!(std::cin >> pool_weight) || pool_weight <= 0)
-	{
-		std::cin.clear();
-		std::cin.ignore(INT_MAX, '\n');
-		std::cout << "Invalid weight.  Try 1, 10, 100, etc:" << std::endl;
-	}
-
-	final = !read_yes_no("- Do you want to add another pool? (y/n)");
-
-	return "\t{\"pool_address\" : \"" + pool +"\", \"wallet_address\" : \"" + userName +  "\", \"pool_password\" : \"" + 
-		passwd + "\", \"use_nicehash\" : " + bool_to_str(nicehash) + ", \"use_tls\" : " + bool_to_str(tls) + 
-		", \"tls_fingerprint\" : \"\", \"pool_weight\" : " + std::to_string(pool_weight) + " },\n";
-}
 
 inline void prompt_once(bool& prompted)
 {
@@ -136,123 +97,6 @@ inline void prompt_once(bool& prompted)
 		std::cout<<"Please enter:"<<std::endl;
 		prompted = true;
 	}
-}
-
-void do_guided_config()
-{
-	using namespace xmrstak;
-
-	// load the template of the backend config into a char variable
-	const char *tpl =
-		#include "../config.tpl"
-	;
-
-	configEditor configTpl{};
-	configTpl.set(std::string(tpl));
-	bool prompted = false;
-	
-	auto& currency = params::inst().currency;
-	if(currency.empty())
-	{
-		currency = "monero";
-	}
-
-	auto& pool = params::inst().poolURL;
-	bool userSetPool = true;
-	if(pool.empty())
-	{
-		prompt_once(prompted);
-
-		userSetPool = false;
-		std::cout<<"- Pool address: e.g. pool.usxmrpool.com:3333"<<std::endl;
-		std::cin >> pool;
-	}
-
-	auto& userName = params::inst().poolUsername;
-	if(userName.empty())
-	{
-		prompt_once(prompted);
-
-		std::cout<<"- Username (wallet address or pool login):"<<std::endl;
-		std::cin >> userName;
-	}
-
-	auto& passwd = params::inst().poolPasswd;
-	if(passwd.empty() && !params::inst().userSetPwd)
-	{
-		prompt_once(prompted);
-
-		// clear everything from stdin to allow an empty password
-		std::cin.clear(); std::cin.ignore(INT_MAX,'\n');
-		std::cout<<"- Password (mostly empty or x):"<<std::endl;
-		getline(std::cin, passwd);
-	}
-
-	bool tls;
-#ifdef CONF_NO_TLS
-	tls = false;
-#else
-	if(!userSetPool)
-	{
-		prompt_once(prompted);
-		tls = read_yes_no("- Does this pool port support TLS/SSL? Use no if unknown. (y/N)");
-	}
-	else
-		tls = params::inst().poolUseTls;
-#endif
-
-	bool nicehash;
-	if(!userSetPool)
-	{
-		prompt_once(prompted);
-		nicehash = read_yes_no("- Do you want to use nicehash on this pool? (y/n)");
-	}
-	else
-		nicehash = params::inst().nicehashMode;
-
-	bool multipool;
-	if(!userSetPool)
-		multipool = read_yes_no("- Do you want to use multiple pools? (y/n)");
-	else
-		multipool = false;
-
-	int64_t pool_weight;
-	if(multipool)
-	{
-		std::cout << "Pool weight is a number telling the miner how important the pool is." << std::endl;
-		std::cout << "Miner will mine mostly at the pool with the highest weight, unless the pool fails." << std::endl;
-		std::cout << "Weight must be an integer larger than 0." << std::endl;
-		std::cout << "- Please enter a weight for this pool: "<<std::endl;
-		
-		while(!(std::cin >> pool_weight) || pool_weight <= 0)
-		{
-			std::cin.clear();
-			std::cin.ignore(INT_MAX, '\n');
-			std::cout << "Invalid weight.  Try 1, 10, 100, etc:" << std::endl;
-		}
-	}
-	else
-		pool_weight = 1;
-
-	std::string pool_table;
-	pool_table += "\t{\"pool_address\" : \"" + pool +"\", \"wallet_address\" : \"" + userName +  "\", \"pool_password\" : \"" + 
-		passwd + "\", \"use_nicehash\" : " + bool_to_str(nicehash) + ", \"use_tls\" : " + bool_to_str(tls) + 
-		", \"tls_fingerprint\" : \"\", \"pool_weight\" : " + std::to_string(pool_weight) + " },\n";
-
-	if(multipool)
-	{
-		bool final;
-		do
-		{
-			pool_table += get_multipool_entry(final);
-		}
-		while(!final);
-	}
-
-	configTpl.replace("POOLCONF", pool_table);
-	configTpl.replace("CURRENCY", currency);
-	configTpl.write(params::inst().configFile);
-	std::cout<<"Configuration stored in file '"<<params::inst().configFile<<"'"<<std::endl;
 }
 
 int main(int argc, char *argv[])
@@ -403,17 +247,6 @@ int main(int argc, char *argv[])
 		{
 			params::inst().nicehashMode = true;
 		}
-		else if(opName.compare("-c") == 0 || opName.compare("--config") == 0)
-		{
-			++i;
-			if( i >=argc )
-			{
-				printer::inst()->print_msg(L0, "No argument for parameter '-c/--config' given");
-				win_exit();
-				return 1;
-			}
-			params::inst().configFile = argv[i];
-		}
 		else
 		{
 			printer::inst()->print_msg(L0, "Parameter unknown '%s'",argv[i]);
@@ -422,11 +255,7 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	// check if we need a guided start
-	if(!configEditor::file_exist(params::inst().configFile))
-		do_guided_config();
-
-	if(!jconf::inst()->parse_config(params::inst().configFile.c_str()))
+	if(!jconf::inst()->parse_config())
 	{
 		win_exit();
 		return 1;
