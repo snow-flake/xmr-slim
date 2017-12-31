@@ -50,11 +50,6 @@
 
 void (* const extra_hashes[4])(const uint8_t *, size_t, uint8_t *) = {do_blake_hash, do_groestl_hash, do_jh_hash, do_skein_hash};
 
-size_t cryptonight_init(size_t use_fast_mem, size_t use_mlock, alloc_msg* msg)
-{
-	return 1;
-}
-
 cryptonight_ctx* cryptonight_alloc_ctx(size_t use_fast_mem, size_t use_mlock, alloc_msg* msg)
 {
 	const size_t hashMemSize = MONERO_MEMORY;

@@ -161,41 +161,6 @@ cryptonight_ctx* minethd::minethd_alloc_ctx()
 static constexpr size_t MAX_N = 5;
 bool minethd::self_test()
 {
-	alloc_msg msg = { 0 };
-	size_t res;
-	bool fatal = false;
-
-	switch (::jconf::inst()->GetSlowMemSetting())
-	{
-	case ::jconf::never_use:
-		res = cryptonight_init(1, 1, &msg);
-		fatal = true;
-		break;
-
-	case ::jconf::no_mlck:
-		res = cryptonight_init(1, 0, &msg);
-		fatal = true;
-		break;
-
-	case ::jconf::print_warning:
-		res = cryptonight_init(1, 1, &msg);
-		break;
-
-	case ::jconf::always_use:
-		res = cryptonight_init(0, 0, &msg);
-		break;
-
-	case ::jconf::unknown_value:
-	default:
-		return false; //Shut up compiler
-	}
-
-	if(msg.warning != nullptr)
-		printer::inst()->print_msg(L0, "MEMORY INIT ERROR: %s", msg.warning);
-
-	if(res == 0 && fatal)
-		return false;
-
 	cryptonight_ctx *ctx[MAX_N] = {0};
 	for (int i = 0; i < MAX_N; i++)
 	{
@@ -208,7 +173,6 @@ bool minethd::self_test()
 	}
 
 	bool bResult = true;
-
 	{
 		unsigned char out[32 * MAX_N];
 		cn_hash_fun hashf;
