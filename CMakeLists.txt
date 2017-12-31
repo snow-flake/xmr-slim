@@ -136,6 +136,8 @@ file(GLOB BACKEND_CPP
     "c_groestl/*.cpp"
     "c_jh/*.hpp"
     "c_jh/*.cpp"
+    "c_keccak/*.hpp"
+    "c_keccak/*.cpp"
     "xmrstak/backend/cpu/crypto/*.h"
     "xmrstak/backend/cpu/crypto/*.hpp"
     "xmrstak/backend/cpu/crypto/*.c"
