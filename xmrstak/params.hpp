@@ -6,10 +6,8 @@
 
 namespace xmrstak
 {
-
 struct params
 {
-
 	static inline params& inst()
 	{
 		auto& env = environment::inst();
@@ -20,16 +18,6 @@ struct params
 
 	std::string executablePrefix;
 	std::string binaryName;
-
-	bool poolUseTls = false;
-	std::string poolURL;
-	bool userSetPwd = false;
-	std::string poolPasswd;
-	std::string poolUsername;
-	bool nicehashMode = false;
-
-	std::string currency;
-
 	std::string configFileCPU;
 
 	params() :
@@ -37,7 +25,6 @@ struct params
 		executablePrefix(""),
 		configFileCPU("cpu.txt")
 	{}
-
 };
 
 } // namepsace xmrstak

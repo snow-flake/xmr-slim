@@ -66,19 +66,14 @@ public:
 	inline uint64_t GetCallTimeout() { return CONFIG_CALL_TIMEOUT; }
 	inline uint64_t GetNetRetry() { return CONFIG_RETRY_TIME; }
 	inline uint64_t GetGiveUpLimit() { return CONFIG_GIVEUP_LIMIT; }
-
 	inline bool DaemonMode() { return CONFIG_DAEMON_MODE; }
-
 	inline bool HaveHardwareAes() { return CONFIG_AES_OVERRIDE; }
+	inline slow_mem_cfg GetSlowMemSetting() { return CONFIG_USE_SLOW_MEMORY; }
 
 	static void cpuid(uint32_t eax, int32_t ecx, int32_t val[4]);
-
-	inline slow_mem_cfg GetSlowMemSetting() { return CONFIG_USE_SLOW_MEMORY; }
 
 private:
 	jconf();
 
 	void check_cpu_features(bool & haveAes, bool & haveSse2);
-	struct opaque_private;
-	opaque_private* prv;
 };

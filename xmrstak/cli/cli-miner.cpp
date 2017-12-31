@@ -56,47 +56,7 @@ void help()
 	cout<<"  -h, --help            show this help"<<endl;
 	cout<<"  -v, --version         show version number"<<endl;
 	cout<<"  -V, --version-long    show long version number"<<endl;
-	cout<<"  -c, --config FILE     common miner configuration file"<<endl;
-	cout<<" "<<endl;
-	cout<<"The following options can be used for automatic start without a guided config,"<<endl;
-	cout<<"If config exists then this pool will be top priority."<<endl;
-	cout<<"  -o, --url URL         pool url and port, e.g. pool.usxmrpool.com:3333"<<endl;
-	cout<<"  -O, --tls-url URL     TLS pool url and port, e.g. pool.usxmrpool.com:10443"<<endl;
-	cout<<"  -u, --user USERNAME   pool user name or wallet address"<<endl;
-	cout<<"  -p, --pass PASSWD     pool password, in the most cases x or empty \"\""<<endl;
-	cout<<"  --use-nicehash        the pool should run in nicehash mode"<<endl;
-	cout<<" \n"<<endl;
 	cout<< "Version: " << get_version_str_short() << endl;
-	cout<<"Brought to by fireice_uk and psychocrypt under GPLv3."<<endl;
-}
-
-bool read_yes_no(const char* str)
-{
-	std::string tmp;
-	do
-	{
-		std::cout << str << std::endl;
-		std::cin >> tmp;
-		std::transform(tmp.begin(), tmp.end(), tmp.begin(), ::tolower);
-	}
-	while(tmp != "y" && tmp != "n" && tmp != "yes" && tmp != "no");
-
-	return tmp == "y" || tmp == "yes";
-}
-
-inline const char* bool_to_str(bool v)
-{
-	return v ? "true" : "false";
-}
-
-
-inline void prompt_once(bool& prompted)
-{
-	if(!prompted)
-	{
-		std::cout<<"Please enter:"<<std::endl;
-		prompted = true;
-	}
 }
 
 int main(int argc, char *argv[])
@@ -131,14 +91,6 @@ int main(int argc, char *argv[])
 		params::inst().executablePrefix += seperator;
 	}
 
-	bool pool_url_set = false;
-	for(size_t i = 1; i < argc-1; i++)
-	{
-		std::string opName(argv[i]);
-		if(opName == "-o" || opName == "-O" || opName == "--url" || opName == "--tls-url")
-			pool_url_set = true;
-	}
-
 	for(size_t i = 1; i < argc; ++i)
 	{
 		std::string opName(argv[i]);
@@ -159,93 +111,6 @@ int main(int argc, char *argv[])
 			std::cout<< "Version: " << get_version_str() << std::endl;
 			win_exit();
 			return 0;
-		}
-		else if(opName.compare("--cpu") == 0)
-		{
-			++i;
-			if( i >=argc )
-			{
-				printer::inst()->print_msg(L0, "No argument for parameter '--cpu' given");
-				win_exit();
-				return 1;
-			}
-			params::inst().configFileCPU = argv[i];
-		}
-		else if(opName.compare("--currency") == 0)
-		{
-			++i;
-			if( i >=argc )
-			{
-				printer::inst()->print_msg(L0, "No argument for parameter '--currency' given");
-				win_exit();
-				return 1;
-			}
-			params::inst().currency = argv[i];
-		}
-		else if(opName.compare("-o") == 0 || opName.compare("--url") == 0)
-		{
-			++i;
-			if( i >=argc )
-			{
-				printer::inst()->print_msg(L0, "No argument for parameter '-o/--url' given");
-				win_exit();
-				return 1;
-			}
-			params::inst().poolURL = argv[i];
-			params::inst().poolUseTls = false;
-		}
-		else if(opName.compare("-O") == 0 || opName.compare("--tls-url") == 0)
-		{
-			++i;
-			if( i >=argc )
-			{
-				printer::inst()->print_msg(L0, "No argument for parameter '-O/--tls-url' given");
-				win_exit();
-				return 1;
-			}
-			params::inst().poolURL = argv[i];
-			params::inst().poolUseTls = true;
-		}
-		else if(opName.compare("-u") == 0 || opName.compare("--user") == 0)
-		{
-			if(!pool_url_set)
-			{
-				printer::inst()->print_msg(L0, "Pool address has to be set if you want to specify username and password.");
-				win_exit();
-				return 1;
-			}
-
-			++i;
-			if( i >=argc )
-			{
-				printer::inst()->print_msg(L0, "No argument for parameter '-u/--user' given");
-				win_exit();
-				return 1;
-			}
-			params::inst().poolUsername = argv[i];
-		}
-		else if(opName.compare("-p") == 0 || opName.compare("--pass") == 0)
-		{
-			if(!pool_url_set)
-			{
-				printer::inst()->print_msg(L0, "Pool address has to be set if you want to specify username and password.");
-				win_exit();
-				return 1;
-			}
-
-			++i;
-			if( i >=argc )
-			{
-				printer::inst()->print_msg(L0, "No argument for parameter '-p/--pass' given");
-				win_exit();
-				return 1;
-			}
-			params::inst().userSetPwd = true;
-			params::inst().poolPasswd = argv[i];
-		}
-		else if(opName.compare("--use-nicehash") == 0)
-		{
-			params::inst().nicehashMode = true;
 		}
 		else
 		{
@@ -270,9 +135,6 @@ int main(int argc, char *argv[])
 	printer::inst()->print_str("-------------------------------------------------------------------\n");
 	printer::inst()->print_str(get_version_str_short().c_str());
 	printer::inst()->print_str("\n\n");
-	printer::inst()->print_str("Brought to you by fireice_uk and psychocrypt under GPLv3.\n");
-	printer::inst()->print_str("Based on CPU mining code by wolf9466 (heavily optimized by fireice_uk).\n");
-	printer::inst()->print_str("\n\n");
 	printer::inst()->print_str("You can use following keys to display reports:\n");
 	printer::inst()->print_str("'h' - hashrate\n");
 	printer::inst()->print_str("'r' - results\n");
@@ -280,8 +142,9 @@ int main(int argc, char *argv[])
 	printer::inst()->print_str("-------------------------------------------------------------------\n");
 	printer::inst()->print_msg(L0,"Start mining: MONERO");
 
-	if(strlen(jconf::inst()->GetOutputFile()) != 0)
+	if(strlen(jconf::inst()->GetOutputFile()) != 0) {
 		printer::inst()->open_logfile(jconf::inst()->GetOutputFile());
+	}
 
 	executor::inst()->ex_start(jconf::inst()->DaemonMode());
 
@@ -290,9 +153,7 @@ int main(int argc, char *argv[])
 	while(true)
 	{
 		key = get_key();
-
-		switch(key)
-		{
+		switch(key) {
 		case 'h':
 			executor::inst()->push_event(ex_event(EV_USR_HASHRATE));
 			break;
@@ -309,42 +170,11 @@ int main(int argc, char *argv[])
 		uint64_t currentTime = get_timestamp_ms();
 
 		/* Hard guard to make sure we never get called more than twice per second */
-		if( currentTime - lastTime < 500)
+		if( currentTime - lastTime < 500) {
 			std::this_thread::sleep_for(std::chrono::milliseconds(500 - (currentTime - lastTime)));
+		}
 		lastTime = currentTime;
 	}
 
 	return 0;
-}
-
-void do_benchmark()
-{
-	using namespace std::chrono;
-	std::vector<xmrstak::iBackend*>* pvThreads;
-
-	printer::inst()->print_msg(L0, "Running a 60 second benchmark...");
-
-	uint8_t work[76] = {0};
-	xmrstak::miner_work oWork = xmrstak::miner_work("", work, sizeof(work), 0, false, 0);
-	pvThreads = xmrstak::BackendConnector::thread_starter(oWork);
-
-	uint64_t iStartStamp = get_timestamp_ms();
-
-	std::this_thread::sleep_for(std::chrono::seconds(60));
-
-	oWork = xmrstak::miner_work();
-	xmrstak::pool_data dat;
-	xmrstak::globalStates::inst().switch_work(oWork, dat);
-
-	double fTotalHps = 0.0;
-	for (uint32_t i = 0; i < pvThreads->size(); i++)
-	{
-		double fHps = pvThreads->at(i)->iHashCount;
-		fHps /= (pvThreads->at(i)->iTimestamp - iStartStamp) / 1000.0;
-
-		printer::inst()->print_msg(L0, "Thread %u: %.1f H/S", i, fHps);
-		fTotalHps += fHps;
-	}
-
-	printer::inst()->print_msg(L0, "Total: %.1f H/S", fTotalHps);
 }

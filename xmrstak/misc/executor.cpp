@@ -496,31 +496,7 @@ void executor::ex_main()
 #endif
 		if(!cfg.tls) dev_tls = false;
 
-		if(!xmrstak::params::inst().poolURL.empty() && xmrstak::params::inst().poolURL == cfg.sPoolAddr)
-		{
-			auto& params = xmrstak::params::inst();
-			already_have_cli_pool = true;
-			
-			const char* wallet = params.poolUsername.empty() ? cfg.sWalletAddr : params.poolUsername.c_str();
-			const char* pwd = params.userSetPwd ? params.poolPasswd.c_str() : cfg.sPasswd;
-			bool nicehash = cfg.nicehash || params.nicehashMode;
-			
-			pools.emplace_back(i+1, cfg.sPoolAddr, wallet, pwd, 9.9, false, params.poolUseTls, cfg.tls_fingerprint, nicehash);
-		}
-		else
-			pools.emplace_back(i+1, cfg.sPoolAddr, cfg.sWalletAddr, cfg.sPasswd, cfg.weight, false, cfg.tls, cfg.tls_fingerprint, cfg.nicehash);
-	}
-
-	if(!xmrstak::params::inst().poolURL.empty() && !already_have_cli_pool)
-	{
-		auto& params = xmrstak::params::inst();
-		if(params.poolUsername.empty())
-		{
-			printer::inst()->print_msg(L1, "ERROR: You didn't specify the username / wallet address for %s", xmrstak::params::inst().poolURL.c_str());
-			win_exit();
-		}
-		
-		pools.emplace_back(i+1, params.poolURL.c_str(), params.poolUsername.c_str(), params.poolPasswd.c_str(), 9.9, false, params.poolUseTls, "", params.nicehashMode);
+		pools.emplace_back(i+1, cfg.sPoolAddr, cfg.sWalletAddr, cfg.sPasswd, cfg.weight, false, cfg.tls, cfg.tls_fingerprint, cfg.nicehash);
 	}
 
 	ex_event ev;
