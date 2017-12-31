@@ -296,11 +296,11 @@ file(GLOB BACKEND_CPP
     "c_hwlock/*.cpp"
     "c_cryptonight/*.hpp"
     "c_cryptonight/*.cpp"
+    "xmrstak/*.hpp"
+    "xmrstak/*.cpp"
     "xmrstak/backend/cpu/crypto/*.h"
     "xmrstak/backend/cpu/crypto/*.hpp"
     "xmrstak/backend/cpu/crypto/*.c"
-    "xmrstak/*.hpp"
-    "xmrstak/*.cpp"
     "xmrstak/backend/cpu/*.hpp"
     "xmrstak/backend/cpu/*.cpp"
     "xmrstak/backend/*.hpp"
@@ -321,7 +321,7 @@ file(GLOB BACKEND_CPP
 file(GLOB SRCFILES_CPP "xmrstak/cli/*.cpp")
 set_source_files_properties(${SRCFILES_CPP} PROPERTIES LANGUAGE CXX)
 
-add_executable(xmr-stak ${SRCFILES_CPP} ${BACKEND_CPP} ${SRCFILES_C} c_hwlock/do_hwlock.cpp c_hwlock/do_hwlock.hpp)
+add_executable(xmr-stak ${SRCFILES_CPP} ${BACKEND_CPP} ${SRCFILES_C} c_hwlock/do_hwlock.cpp c_hwlock/do_hwlock.hpp xmrstak/backend/cpu/autoAdjust.hpp)
 
 set(EXECUTABLE_OUTPUT_PATH "bin")
 set(LIBRARY_OUTPUT_PATH "bin")

@@ -22,9 +22,10 @@ public:
 	bool parse_config(const char* sFilename = params::inst().configFileCPU.c_str());
 
 	struct thd_cfg {
-		int iMultiway;
-		bool bNoPrefetch;
-		long long iCpuAff;
+		int iMultiway;  // low_power_mode
+		bool bNoPrefetch; // no_prefetch
+		long long iCpuAff; // affine_to_cpu
+		thd_cfg(): iMultiway(1), bNoPrefetch(true), iCpuAff(-1)  {}
 	};
 
 	size_t GetThreadCount();
