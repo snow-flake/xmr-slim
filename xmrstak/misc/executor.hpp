@@ -54,12 +54,6 @@ private:
 	// In miliseconds, has to divide a second (1000ms) into an integer number
 	constexpr static size_t iTickTime = 500;
 
-	// Dev donation time period in seconds. 100 minutes by default.
-	// We will divide up this period according to the config setting
-	constexpr static size_t iDevDonatePeriod = 100 * 60;
-
-	inline bool is_dev_time() { return false; };
-
 	std::list<timed_event> lTimedEvents;
 	std::mutex timed_event_mutex;
 	thdq<ex_event> oEventQ;

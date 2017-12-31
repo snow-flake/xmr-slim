@@ -147,7 +147,7 @@ void executor::eval_pool_choice()
 	std::vector<jpsock*> eval_pools;
 	eval_pools.reserve(pools.size());
 
-	bool dev_time = is_dev_time();
+	bool dev_time = false;
 	if(!get_live_pools(eval_pools, dev_time))
 		return;
 
@@ -168,8 +168,7 @@ void executor::eval_pool_choice()
 		{
 			if(pool->can_connect())
 			{
-				if(!dev_time)
-					printer::inst()->print_msg(L1, "Fast-connecting to %s pool ...", pool->get_pool_addr());
+				printer::inst()->print_msg(L1, "Fast-connecting to %s pool ...", pool->get_pool_addr());
 				std::string error;
 				if(!pool->connect(error))
 					log_socket_error(pool, std::move(error));
