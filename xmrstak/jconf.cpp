@@ -160,18 +160,6 @@ bool jconf::TlsSecureAlgos()
 	return prv->configValues[bTlsSecureAlgo]->GetBool();
 }
 
-const std::string jconf::GetCurrency()
-{
-	//	TODO: remove me
-	//	auto& currency = xmrstak::params::inst().currency;
-	return "monero";
-}
-
-bool jconf::IsCurrencyMonero()
-{
-	return true;
-}
-
 bool jconf::PreferIpv4()
 {
 	return prv->configValues[bPreferIpv4]->GetBool();

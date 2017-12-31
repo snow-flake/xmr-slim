@@ -596,7 +596,7 @@ bool jpsock::cmd_login()
 	return true;
 }
 
-bool jpsock::cmd_submit(const char* sJobId, uint32_t iNonce, const uint8_t* bResult, xmrstak::iBackend* bend, bool algo_full_cn)
+bool jpsock::cmd_submit(const char* sJobId, uint32_t iNonce, const uint8_t* bResult, xmrstak::iBackend* bend)
 {
 	char cmd_buffer[1024];
 	char sNonce[9];
@@ -613,7 +613,7 @@ bool jpsock::cmd_submit(const char* sJobId, uint32_t iNonce, const uint8_t* bRes
 		snprintf(sHashcount, sizeof(sHashcount), ",\"hashcount\":%llu", int_port(bend->iHashCount.load(std::memory_order_relaxed)));
 
 	if(ext_algo)
-		snprintf(sAlgo, sizeof(sAlgo), ",\"algo\":\"%s\"", algo_full_cn ? "cryptonight" : "cryptonight-lite");
+		snprintf(sAlgo, sizeof(sAlgo), ",\"algo\":\"%s\"", "cryptonight");
 
 	bin2hex((unsigned char*)&iNonce, 4, sNonce);
 	sNonce[8] = '\0';

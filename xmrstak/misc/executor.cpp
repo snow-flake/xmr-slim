@@ -398,13 +398,12 @@ void executor::on_pool_have_job(size_t pool_id, pool_job& oPoolJob)
 void executor::on_miner_result(size_t pool_id, job_result& oResult)
 {
 	jpsock* pool = pick_pool_by_id(pool_id);
-	bool is_monero = jconf::inst()->IsCurrencyMonero();
 
 	if(pool->is_dev_pool())
 	{
 		//Ignore errors silently
 		if(pool->is_running() && pool->is_logged_in())
-			pool->cmd_submit(oResult.sJobID, oResult.iNonce, oResult.bResult, pvThreads->at(oResult.iThreadId), is_monero);
+			pool->cmd_submit(oResult.sJobID, oResult.iNonce, oResult.bResult, pvThreads->at(oResult.iThreadId));
 
 		return;
 	}
@@ -416,7 +415,7 @@ void executor::on_miner_result(size_t pool_id, job_result& oResult)
 	}
 
 	size_t t_start = get_timestamp_ms();
-	bool bResult = pool->cmd_submit(oResult.sJobID, oResult.iNonce, oResult.bResult, pvThreads->at(oResult.iThreadId), is_monero);
+	bool bResult = pool->cmd_submit(oResult.sJobID, oResult.iNonce, oResult.bResult, pvThreads->at(oResult.iThreadId));
 	size_t t_len = get_timestamp_ms() - t_start;
 
 	if(t_len > 0xFFFF)
@@ -523,21 +522,6 @@ void executor::ex_main()
 		}
 		
 		pools.emplace_back(i+1, params.poolURL.c_str(), params.poolUsername.c_str(), params.poolPasswd.c_str(), 9.9, false, params.poolUseTls, "", params.nicehashMode);
-	}
-
-	if(jconf::inst()->IsCurrencyMonero())
-	{
-		if(dev_tls)
-			pools.emplace_front(0, "donate.xmr-stak.net:6666", "", "", 0.0, true, true, "", false);
-		else
-			pools.emplace_front(0, "donate.xmr-stak.net:3333", "", "", 0.0, true, false, "", false);
-	}
-	else
-	{
-		if(dev_tls)
-			pools.emplace_front(0, "donate.xmr-stak.net:7777", "", "", 0.0, true, true, "", true);
-		else
-			pools.emplace_front(0, "donate.xmr-stak.net:4444", "", "", 0.0, true, false, "", true);
 	}
 
 	ex_event ev;
