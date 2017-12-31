@@ -1,13 +1,7 @@
 #pragma once
 
-//#include "xmrstak/backend/globalStates.hpp"
-
 #include <atomic>
 #include <cstdint>
-//#include <climits>
-//#include <vector>
-//#include <string>
-
 
 namespace xmrstak
 {
