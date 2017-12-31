@@ -1,18 +1,7 @@
 #include "autoAdjust.hpp"
 
-//#include "jconf.hpp"
-
-//#include "xmrstak/misc/console.hpp"
 #include "xmrstak/jconf.hpp"
-//#include "xmrstak/misc/configEditor.hpp"
-#include "xmrstak/params.hpp"
 #include "c_cryptonight/cryptonight.hpp"
-#include <string>
-#include <unistd.h>
-#include <exception>
-#include <iostream>
-#include <vector>
-#include <string.h>
 
 
 // Mask bits between h and l and return the value
@@ -26,10 +15,19 @@ inline int32_t get_masked(int32_t val, int32_t h, int32_t l) {
 xmrstak::cpu::auto_threads::auto_threads() :
 		hashMemSize(MONERO_MEMORY),
 		halfHashMemSize(MONERO_MEMORY / 2u),
-		processors_count(sysconf(_SC_NPROCESSORS_ONLN)),
-		configs(sysconf(_SC_NPROCESSORS_ONLN)) {
+		processors_count(CONFIG_SYSTEM_NPROC),
+		cache_l2(CONFIG_SYSTEM_CACHE_L2),
+		cache_l3(CONFIG_SYSTEM_CACHE_L3),
+		configs(CONFIG_SYSTEM_NPROC) {
+	std::cout << __FILE__ << ":" << __LINE__ << ":" << " auto_threads: hashMemSize      = " << hashMemSize << std::endl;
+	std::cout << __FILE__ << ":" << __LINE__ << ":" << " auto_threads: halfHashMemSize  = " << halfHashMemSize << std::endl;
+	std::cout << __FILE__ << ":" << __LINE__ << ":" << " auto_threads: processors_count = " << processors_count << std::endl;
+	std::cout << __FILE__ << ":" << __LINE__ << ":" << " auto_threads: cache_l2         = " << cache_l2 << std::endl;
+	std::cout << __FILE__ << ":" << __LINE__ << ":" << " auto_threads: cache_l3         = " << cache_l3 << std::endl;
+	std::cout << __FILE__ << ":" << __LINE__ << ":" << " auto_threads: configs.size     = " << configs.size() << std::endl;
+
 	int32_t cpu_info[4];
-	int32_t L3KB_size = 0;
+	const int32_t L3KB_size = cache_l3 / 1024;
 	bool old_amd = false;
 	char cpustr[13] = {0};
 
@@ -39,9 +37,9 @@ xmrstak::cpu::auto_threads::auto_threads() :
 	memcpy(cpustr + 8, &cpu_info[2], 4);
 
 	if (strcmp(cpustr, "GenuineIntel") == 0) {
-		L3KB_size = calc_genuine_intel(cpu_info);
+		//		L3KB_size = calc_genuine_intel(cpu_info);
 	} else if (strcmp(cpustr, "AuthenticAMD") == 0) {
-		L3KB_size = calc_authentic_amd(cpu_info);
+		//		L3KB_size = calc_authentic_amd(cpu_info);
 		old_amd = is_old_amd(cpu_info);
 	} else {
 		std::cerr << __FILE__ << ":" << __LINE__ << ":" << "Autoconf failed: Unknown CPU type: " << cpustr << std::endl;
@@ -50,21 +48,21 @@ xmrstak::cpu::auto_threads::auto_threads() :
 
 	const bool isLessThanMem = L3KB_size < halfHashMemSize;
 	const bool isMoreThan100u = L3KB_size > (halfHashMemSize * 100u);
-	if (isLessThanMem || isMoreThan100u) {
-		std::cerr << __FILE__ << ":" << __LINE__ << ":" << "Autoconf failed: L3 size sanity check failed " << L3KB_size << " KB" << std::endl;
+	if (isLessThanMem) {
+		std::cerr << __FILE__ << ":" << __LINE__ << ":" << " Autoconf failed: L3 size sanity check failed " << L3KB_size << " KB" << " vs halfHashMemSize=" << halfHashMemSize << std::endl;
+		// throw new std::runtime_error("L3 size sanity check failed");
+	} else if (isMoreThan100u) {
+		std::cerr << __FILE__ << ":" << __LINE__ << ":" << " Autoconf failed: L3 size sanity check failed " << L3KB_size << " KB" << " vs halfHashMemSize * 100u = " << halfHashMemSize * 100u << std::endl;
 		// throw new std::runtime_error("L3 size sanity check failed");
 	}
 
 	std::cout << __FILE__ << ":" << __LINE__ << ":" << " Autoconf core count detected as " << processors_count << " on Linux" << std::endl;
 
 	uint32_t aff_id = 0;
-	for (uint32_t i = 0; i < processors_count; i++) {
-		bool double_mode;
+	int32_t available_cache = L3KB_size;
 
-		if (L3KB_size <= 0)
-			break;
-
-		double_mode = L3KB_size / hashMemSize > (int32_t) (processors_count - i);
+	for (uint32_t i = 0; i < processors_count && available_cache <= 0; i++) {
+		const bool double_mode = available_cache / hashMemSize > (int32_t) (processors_count - i);
 
 		auto_thd_cfg config = auto_thd_cfg();
 		config.low_power_mode = double_mode;
@@ -81,29 +79,12 @@ xmrstak::cpu::auto_threads::auto_threads() :
 		}
 
 		if (double_mode)
-			L3KB_size -= hashMemSize * 2u;
+			available_cache -= hashMemSize * 2u;
 		else
-			L3KB_size -= hashMemSize;
+			available_cache -= hashMemSize;
 	}
 }
 
-int32_t xmrstak::cpu::auto_threads::calc_genuine_intel(int32_t *cpu_info) {
-	::jconf::cpuid(4, 3, cpu_info);
-
-	if (get_masked(cpu_info[0], 7, 5) != 3) {
-		std::cerr << __FILE__ << ":" << __LINE__ << ":" << "Autoconf failed: Couldn't find L3 cache page" << std::endl;
-		throw new std::runtime_error("Failed to detect CPU type");
-	}
-
-	int32_t l3cache = ((get_masked(cpu_info[1], 31, 22) + 1) * (get_masked(cpu_info[1], 21, 12) + 1) * (get_masked(cpu_info[1], 11, 0) + 1) * (cpu_info[2] + 1)) / halfHashMemSize;
-	return l3cache;
-}
-
-int32_t xmrstak::cpu::auto_threads::calc_authentic_amd(int32_t *cpu_info) {
-	::jconf::cpuid(0x80000006, 0, cpu_info);
-	int32_t l3cache = get_masked(cpu_info[3], 31, 18) * 512;
-	return l3cache;
-}
 
 bool xmrstak::cpu::auto_threads::is_old_amd(int32_t *cpu_info) {
 	::jconf::cpuid(0x80000006, 0, cpu_info);

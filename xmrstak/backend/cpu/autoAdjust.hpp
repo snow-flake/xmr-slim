@@ -30,15 +30,13 @@ namespace xmrstak
 			const size_t hashMemSize;
 			const size_t halfHashMemSize;
 			const uint32_t processors_count;
+			const uint32_t cache_l2;
+			const uint32_t cache_l3;
 			std::vector<auto_thd_cfg> configs;
 
 			auto_threads();
 
 		private:
-			int32_t calc_genuine_intel(int32_t *cpu_info);
-
-			int32_t calc_authentic_amd(int32_t *cpu_info);
-
 			bool is_old_amd(int32_t *cpu_info);
 		};
 

@@ -39,14 +39,14 @@ public:
 			raw_weight(CONFIG_POOL_POOL_WEIGHT),
 			weight(CONFIG_POOL_POOL_WEIGHT)
 		{
-			// std::cout << "CONFIG_POOL_POOL_ADDRESS:    " << sPoolAddr << std::endl;
-			// std::cout << "CONFIG_POOL_WALLET_ADDRESS:  " << sWalletAddr << std::endl;
-			// std::cout << "CONFIG_POOL_POOL_PASSWORD:   " << sPasswd << std::endl;
-			// std::cout << "CONFIG_POOL_USE_NICEHASH:    " << nicehash << std::endl;
-			// std::cout << "CONFIG_POOL_USE_TLS:         " << tls << std::endl;
-			// std::cout << "CONFIG_POOL_TLS_FINGERPRINT: " << tls_fingerprint << std::endl;
-			// std::cout << "CONFIG_POOL_POOL_WEIGHT:     " << raw_weight << std::endl;
-			// std::cout << "CONFIG_POOL_POOL_WEIGHT:     " << weight << std::endl;
+			 std::cout << __FILE__ << ":" << __LINE__ << ":" << " pool_cfg: CONFIG_POOL_POOL_ADDRESS:    " << sPoolAddr << std::endl;
+			 std::cout << __FILE__ << ":" << __LINE__ << ":" << " pool_cfg: CONFIG_POOL_WALLET_ADDRESS:  " << sWalletAddr << std::endl;
+			 std::cout << __FILE__ << ":" << __LINE__ << ":" << " pool_cfg: CONFIG_POOL_POOL_PASSWORD:   " << sPasswd << std::endl;
+			 std::cout << __FILE__ << ":" << __LINE__ << ":" << " pool_cfg: CONFIG_POOL_USE_NICEHASH:    " << nicehash << std::endl;
+			 std::cout << __FILE__ << ":" << __LINE__ << ":" << " pool_cfg: CONFIG_POOL_USE_TLS:         " << tls << std::endl;
+			 std::cout << __FILE__ << ":" << __LINE__ << ":" << " pool_cfg: CONFIG_POOL_TLS_FINGERPRINT: " << tls_fingerprint << std::endl;
+			 std::cout << __FILE__ << ":" << __LINE__ << ":" << " pool_cfg: CONFIG_POOL_POOL_WEIGHT:     " << raw_weight << std::endl;
+			 std::cout << __FILE__ << ":" << __LINE__ << ":" << " pool_cfg: CONFIG_POOL_POOL_WEIGHT:     " << weight << std::endl;
 		}
 	};
 
