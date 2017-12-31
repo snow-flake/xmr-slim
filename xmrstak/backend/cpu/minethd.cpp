@@ -34,7 +34,7 @@
 #include "minethd.hpp"
 #include "xmrstak/jconf.hpp"
 
-#include "hwlocMemory.hpp"
+#include "c_hwlock/do_hwlock.hpp"
 #include "xmrstak/backend/miner_work.hpp"
 
 #include "autoAdjustHwloc.hpp"
@@ -331,7 +331,7 @@ minethd::cn_hash_fun minethd::func_selector(bool bHaveAes, bool bNoPrefetch)
 void minethd::work_main()
 {
 	if(affinity >= 0) //-1 means no affinity
-		bindMemoryToNUMANode(affinity);
+		do_hwlock(affinity);
 
 	order_fix.set_value();
 	std::unique_lock<std::mutex> lck(thd_aff_set);
@@ -480,7 +480,7 @@ template<size_t N>
 void minethd::multiway_work_main(cn_hash_fun_multi hash_fun_multi)
 {
 	if(affinity >= 0) //-1 means no affinity
-		bindMemoryToNUMANode(affinity);
+		do_hwlock(affinity);
 
 	order_fix.set_value();
 	std::unique_lock<std::mutex> lck(thd_aff_set);
