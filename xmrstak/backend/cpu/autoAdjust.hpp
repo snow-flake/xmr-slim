@@ -12,6 +12,7 @@
 //#include <iostream>
 #include <unistd.h>
 #include <vector>
+#include <cstdint>
 
 namespace xmrstak
 {

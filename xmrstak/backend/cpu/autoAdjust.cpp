@@ -12,6 +12,7 @@
 #include <exception>
 #include <iostream>
 #include <vector>
+#include <string.h>
 
 
 // Mask bits between h and l and return the value
