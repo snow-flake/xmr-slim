@@ -3,7 +3,7 @@
 #include "xmrstak/misc/console.hpp"
 #include "xmrstak/misc/configEditor.hpp"
 #include "xmrstak/params.hpp"
-#include "xmrstak/backend/cryptonight.hpp"
+#include "c_cryptonight/cryptonight.hpp"
 
 #include <unistd.h>
 

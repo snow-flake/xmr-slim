@@ -1,6 +1,6 @@
 #pragma once
 
-#include "crypto/cryptonight.h"
+#include "c_cryptonight/cryptonight.hpp"
 #include "xmrstak/backend/miner_work.hpp"
 #include "xmrstak/backend/iBackend.hpp"
 

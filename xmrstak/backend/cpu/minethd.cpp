@@ -21,7 +21,7 @@
   *
   */
 
-#include "crypto/cryptonight_aesni.h"
+#include "c_cryptonight/cryptonight_aesni.hpp"
 
 #include "xmrstak/misc/console.hpp"
 #include "xmrstak/backend/iBackend.hpp"

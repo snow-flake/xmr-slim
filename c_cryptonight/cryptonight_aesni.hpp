@@ -15,7 +15,7 @@
   */
 #pragma once
 
-#include "cryptonight.h"
+#include "cryptonight.hpp"
 #include <memory.h>
 #include <stdio.h>
 

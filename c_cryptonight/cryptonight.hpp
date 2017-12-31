@@ -1,14 +1,13 @@
 #ifndef __CRYPTONIGHT_H_INCLUDED
 #define __CRYPTONIGHT_H_INCLUDED
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #include <stddef.h>
 #include <inttypes.h>
-#include "xmrstak/backend/cryptonight.hpp"
 
+// define xmr settings
+#define MONERO_MEMORY 2097152llu
+#define MONERO_MASK 0x1FFFF0
+#define MONERO_ITER 0x80000
 
 typedef struct {
 	uint8_t hash_state[224]; // Need only 200, explicit align
@@ -23,9 +22,5 @@ typedef struct {
 size_t cryptonight_init(size_t use_fast_mem, size_t use_mlock, alloc_msg* msg);
 cryptonight_ctx* cryptonight_alloc_ctx(size_t use_fast_mem, size_t use_mlock, alloc_msg* msg);
 void cryptonight_free_ctx(cryptonight_ctx* ctx);
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif
