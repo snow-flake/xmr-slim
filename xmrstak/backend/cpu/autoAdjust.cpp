@@ -57,27 +57,23 @@ xmrstak::cpu::auto_threads::auto_threads() :
 		// throw new std::runtime_error("L3 size sanity check failed");
 	}
 
-	std::cout << __FILE__ << ":" << __LINE__ << ":" << " Autoconf core count detected as " << processors_count << " on Linux" << std::endl;
 
 	uint32_t affine_to_cpu = 0;
-	int32_t available_cache = L3KB_size;
+	const int32_t requred_cache_per_thread = 1024 * 1024 * 2;
+	const int32_t available_cache_per_thread = cache_l3 / (requred_cache_per_thread * processors_count);
+	const int32_t low_power_mode = available_cache_per_thread > 5 ? 5 : available_cache_per_thread;
+
+	std::cout << __FILE__ << ":" << __LINE__ << ":" << " Autoconf processors_count           = " << processors_count << " on Linux" << std::endl;
+	std::cout << __FILE__ << ":" << __LINE__ << ":" << " Autoconf requred_cache_per_thread   = " << requred_cache_per_thread << std::endl;
+	std::cout << __FILE__ << ":" << __LINE__ << ":" << " Autoconf available_cache_per_thread = " << available_cache_per_thread << std::endl;
+	std::cout << __FILE__ << ":" << __LINE__ << ":" << " Autoconf low_power_mode             = " << low_power_mode << " on Linux" << std::endl;
 
 	for (uint32_t i = 0; i < processors_count; i++) {
-		const bool double_mode = available_cache / hashMemSize > (int32_t) (processors_count - i);
-		std::cout << __FILE__ << ":" << __LINE__ << ":" << " Autoconf thread config i=" << i << ": available_cache=" << available_cache << std::endl;
-		std::cout << __FILE__ << ":" << __LINE__ << ":" << " Autoconf thread config i=" << i << ": low_power_mode=" << double_mode << std::endl;
-		std::cout << __FILE__ << ":" << __LINE__ << ":" << " Autoconf thread config i=" << i << ": affine_to_cpu=" << affine_to_cpu << std::endl;
-
-		if (available_cache <= 0) {
-			break;
-		}
-
 		auto_thd_cfg config = auto_thd_cfg();
-		config.low_power_mode = 0; // double_mode;
+		config.low_power_mode = low_power_mode;
 		config.no_prefetch = true;
 		config.affine_to_cpu = affine_to_cpu;
 		configs[i] = config;
-
 
 		if (old_amd) {
 			affine_to_cpu += 2;
@@ -86,11 +82,6 @@ xmrstak::cpu::auto_threads::auto_threads() :
 		} else {
 			affine_to_cpu++;
 		}
-
-		if (double_mode)
-			available_cache -= hashMemSize * 2u;
-		else
-			available_cache -= hashMemSize;
 	}
 }
 
