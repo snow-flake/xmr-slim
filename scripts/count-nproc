@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+
+if [ -e '/usr/bin/nproc' ]; then
+  exec /usr/bin/nproc
+else
+  exec sysctl -n hw.physicalcpu
+fi
+
