@@ -28,7 +28,7 @@ xmrstak::cpu::auto_threads::auto_threads() :
 	std::cout << __FILE__ << ":" << __LINE__ << ":" << " auto_threads: configs.size     = " << configs.size() << std::endl;
 
 	int32_t cpu_info[4];
-	const int32_t L3KB_size = cache_l3 / 1024;
+	const int32_t L3KB_size = cache_l3;
 	bool old_amd = false;
 	char cpustr[13] = {0};
 
