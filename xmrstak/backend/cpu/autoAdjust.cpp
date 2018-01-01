@@ -59,27 +59,32 @@ xmrstak::cpu::auto_threads::auto_threads() :
 
 	std::cout << __FILE__ << ":" << __LINE__ << ":" << " Autoconf core count detected as " << processors_count << " on Linux" << std::endl;
 
-	uint32_t aff_id = 0;
+	uint32_t affine_to_cpu = 0;
 	int32_t available_cache = L3KB_size;
 
-	for (uint32_t i = 0; i < processors_count && available_cache <= 0; i++) {
+	for (uint32_t i = 0; i < processors_count; i++) {
 		const bool double_mode = available_cache / hashMemSize > (int32_t) (processors_count - i);
+		std::cout << __FILE__ << ":" << __LINE__ << ":" << " Autoconf thread config i=" << i << ": available_cache=" << available_cache << std::endl;
+		std::cout << __FILE__ << ":" << __LINE__ << ":" << " Autoconf thread config i=" << i << ": low_power_mode=" << double_mode << std::endl;
+		std::cout << __FILE__ << ":" << __LINE__ << ":" << " Autoconf thread config i=" << i << ": affine_to_cpu=" << affine_to_cpu << std::endl;
+
+		if (available_cache <= 0) {
+			break;
+		}
 
 		auto_thd_cfg config = auto_thd_cfg();
 		config.low_power_mode = double_mode;
 		config.no_prefetch = true;
-		config.affine_to_cpu = aff_id;
+		config.affine_to_cpu = affine_to_cpu;
 		configs[i] = config;
 
-		std::cout << __FILE__ << ":" << __LINE__ << ":" << " Autoconf thread config i=" << i << ": low_power_mode=" << config.low_power_mode << std::endl;
-		std::cout << __FILE__ << ":" << __LINE__ << ":" << " Autoconf thread config i=" << i << ": affine_to_cpu=" << config.affine_to_cpu << std::endl;
 
 		if (old_amd) {
-			aff_id += 2;
-			if (aff_id >= processors_count)
-				aff_id = 1;
+			affine_to_cpu += 2;
+			if (affine_to_cpu >= processors_count)
+				affine_to_cpu = 1;
 		} else {
-			aff_id++;
+			affine_to_cpu++;
 		}
 
 		if (double_mode)
