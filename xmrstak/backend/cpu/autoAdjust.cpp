@@ -70,6 +70,9 @@ xmrstak::cpu::auto_threads::auto_threads() :
 		config.affine_to_cpu = aff_id;
 		configs[i] = config;
 
+		std::cout << __FILE__ << ":" << __LINE__ << ":" << " Autoconf thread config i=" << i << ": low_power_mode=" << config.low_power_mode << std::endl;
+		std::cout << __FILE__ << ":" << __LINE__ << ":" << " Autoconf thread config i=" << i << ": affine_to_cpu=" << config.affine_to_cpu << std::endl;
+
 		if (old_amd) {
 			aff_id += 2;
 			if (aff_id >= processors_count)
