@@ -2,6 +2,7 @@
 
 #include "xmrstak/jconf.hpp"
 #include "c_cryptonight/cryptonight.hpp"
+#include <string>
 
 
 // Mask bits between h and l and return the value
