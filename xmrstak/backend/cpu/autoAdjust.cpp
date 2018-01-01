@@ -73,7 +73,7 @@ xmrstak::cpu::auto_threads::auto_threads() :
 		}
 
 		auto_thd_cfg config = auto_thd_cfg();
-		config.low_power_mode = double_mode;
+		config.low_power_mode = 0; // double_mode;
 		config.no_prefetch = true;
 		config.affine_to_cpu = affine_to_cpu;
 		configs[i] = config;
