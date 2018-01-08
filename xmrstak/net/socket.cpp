@@ -23,7 +23,6 @@
 
 #include "socket.hpp"
 #include "jpsock.hpp"
-#include "xmrstak/jconf.hpp"
 #include "xmrstak/misc/console.hpp"
 #include "xmrstak/misc/executor.hpp"
 #include "xmrstak/system_constants.hpp"

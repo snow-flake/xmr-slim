@@ -25,7 +25,6 @@
 #include "xmrstak/backend/miner_work.hpp"
 #include "xmrstak/backend/globalStates.hpp"
 #include "xmrstak/backend/backendConnector.hpp"
-#include "xmrstak/jconf.hpp"
 #include "xmrstak/misc/console.hpp"
 #include "xmrstak/system_constants.hpp"
 
@@ -109,12 +108,6 @@ int main(int argc, char *argv[])
 			win_exit();
 			return 1;
 		}
-	}
-
-	if(!jconf::inst()->parse_config())
-	{
-		win_exit();
-		return 1;
 	}
 
 	if (!BackendConnector::self_test())

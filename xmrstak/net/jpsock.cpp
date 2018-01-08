@@ -30,7 +30,6 @@
 #include "socket.hpp"
 
 #include "xmrstak/misc/executor.hpp"
-#include "xmrstak/jconf.hpp"
 #include "xmrstak/misc/jext.hpp"
 #include "xmrstak/system_constants.hpp"
 

@@ -23,7 +23,6 @@
 
 #include "cryptonight.hpp"
 #include "cryptonight_aesni.hpp"
-#include "xmrstak/jconf.hpp"
 #include <stdio.h>
 #include <stdlib.h>
 

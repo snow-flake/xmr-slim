@@ -21,7 +21,6 @@
   *
   */
 
-#include "xmrstak/jconf.hpp"
 #include "executor.hpp"
 #include "xmrstak/net/jpsock.hpp"
 
@@ -31,7 +30,6 @@
 #include "xmrstak/backend/backendConnector.hpp"
 #include "xmrstak/backend/iBackend.hpp"
 
-#include "xmrstak/jconf.hpp"
 #include "xmrstak/misc/console.hpp"
 #include "xmrstak/system_constants.hpp"
 
@@ -486,17 +484,27 @@ void executor::ex_main()
 	size_t i=0;
 	for(; i < pc; i++)
 	{
-		jconf::pool_cfg cfg;
 #ifdef CONF_NO_TLS
-		if(cfg.tls)
+		if(system_constants::config_pool_use_tls())
 		{
 			printer::inst()->print_msg(L1, "ERROR: No miner was compiled without TLS support.");
 			win_exit();
 		}
 #endif
-		if(!cfg.tls) dev_tls = false;
+		if(!system_constants::config_pool_use_tls()) {
+			dev_tls = false;
+		}
 
-		pools.emplace_back(i+1, cfg.sPoolAddr, cfg.sWalletAddr, cfg.sPasswd, cfg.weight, false, cfg.tls, cfg.tls_fingerprint, cfg.nicehash);
+		pools.emplace_back(i+1,
+						   system_constants::config_pool_pool_address(),
+						   system_constants::config_pool_wallet_address(),
+						   system_constants::config_pool_pool_password(),
+						   system_constants::config_pool_pool_weight(),
+						   false,
+						   system_constants::config_pool_use_tls(),
+						   system_constants::config_pool_tls_fingerprint(),
+						   system_constants::config_pool_use_nicehash()
+		);
 	}
 
 	ex_event ev;

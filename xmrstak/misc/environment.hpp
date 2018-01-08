@@ -1,7 +1,6 @@
 #pragma once
 
 class printer;
-class jconf;
 class executor;
 
 namespace xmrstak
@@ -33,7 +32,6 @@ struct environment
 
 	printer* pPrinter = nullptr;
 	globalStates* pglobalStates = nullptr;
-	jconf* pJconfConfig = nullptr;
 	executor* pExecutor = nullptr;
 	params* pParams = nullptr;
 };

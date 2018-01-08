@@ -1,8 +1,10 @@
 #include "autoAdjust.hpp"
 
-#include "xmrstak/jconf.hpp"
 #include "c_cryptonight/cryptonight.hpp"
 #include <string.h>
+#include <cpuid.h>
+#include <iostream>
+#include <exception>
 
 
 // Mask bits between h and l and return the value
@@ -12,6 +14,39 @@ inline int32_t get_masked(int32_t val, int32_t h, int32_t l) {
 	val &= (0x7FFFFFFF >> (31 - (h - l))) << l;
 	return val >> l;
 }
+
+void cpuid(uint32_t eax, int32_t ecx, int32_t val[4])
+{
+	memset(val, 0, sizeof(int32_t)*4);
+	__cpuid_count(eax, ecx, val[0], val[1], val[2], val[3]);
+}
+
+void check_cpu_features(bool & haveAes, bool & haveSse2)
+{
+	constexpr int AESNI_BIT = 1 << 25;
+	constexpr int SSE2_BIT = 1 << 26;
+	int32_t cpu_info[4];
+	bool bHaveSse2;
+
+	cpuid(1, 0, cpu_info);
+
+	haveAes = (cpu_info[2] & AESNI_BIT) != 0;
+	haveSse2 = (cpu_info[3] & SSE2_BIT) != 0;
+}
+
+void parse_config() {
+	bool haveAes = false;
+	bool haveSse2 = false;
+	check_cpu_features(haveAes, haveSse2);
+
+	if(!haveSse2) {
+		throw new std::runtime_error("CPU support of SSE2 is required.");
+	}
+	if(!haveAes) {
+		throw new std::runtime_error("WARNING: CPU support of AES is not available.");
+	}
+}
+
 
 xmrstak::cpu::auto_threads::auto_threads() :
 		hashMemSize(MONERO_MEMORY),
@@ -27,12 +62,14 @@ xmrstak::cpu::auto_threads::auto_threads() :
 	std::cout << __FILE__ << ":" << __LINE__ << ":" << " auto_threads: cache_l3         = " << cache_l3 << std::endl;
 	std::cout << __FILE__ << ":" << __LINE__ << ":" << " auto_threads: configs.size     = " << configs.size() << std::endl;
 
+	parse_config();
+
 	int32_t cpu_info[4];
 	const int32_t L3KB_size = cache_l3;
 	bool old_amd = false;
 	char cpustr[13] = {0};
 
-	::jconf::cpuid(0, 0, cpu_info);
+	cpuid(0, 0, cpu_info);
 	memcpy(cpustr, &cpu_info[1], 4);
 	memcpy(cpustr + 4, &cpu_info[3], 4);
 	memcpy(cpustr + 8, &cpu_info[2], 4);
@@ -87,8 +124,8 @@ xmrstak::cpu::auto_threads::auto_threads() :
 
 
 bool xmrstak::cpu::auto_threads::is_old_amd(int32_t *cpu_info) {
-	::jconf::cpuid(0x80000006, 0, cpu_info);
-	::jconf::cpuid(1, 0, cpu_info);
+	cpuid(0x80000006, 0, cpu_info);
+	cpuid(1, 0, cpu_info);
 	if (get_masked(cpu_info[0], 11, 8) < 0x17) //0x17h is Zen
 		return true;
 	return false;

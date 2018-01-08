@@ -23,6 +23,20 @@ namespace system_constants {
 		unknown_value
 	};
 
+	inline const char *config_pool_pool_address() { return CONFIG_POOL_POOL_ADDRESS; }
+
+	inline const char *config_pool_wallet_address() { return CONFIG_POOL_WALLET_ADDRESS; }
+
+	inline const char *config_pool_pool_password() { return CONFIG_POOL_POOL_PASSWORD; }
+
+	inline const bool config_pool_use_nicehash() { return CONFIG_POOL_USE_NICEHASH; }
+
+	inline const bool config_pool_use_tls() { return CONFIG_POOL_USE_TLS; }
+
+	inline const char *config_pool_tls_fingerprint() { return CONFIG_POOL_TLS_FINGERPRINT; }
+
+	inline const int config_pool_pool_weight() { return CONFIG_POOL_POOL_WEIGHT; }
+
 	inline bool TlsSecureAlgos() { return CONFIG_TLS_SECURE_ALGO; }
 
 	inline uint64_t GetVerboseLevel() { return CONFIG_VERBOSE_LEVEL; }
