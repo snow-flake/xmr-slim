@@ -1,7 +1,6 @@
 #pragma once
 
 #include "xmrstak/misc/environment.hpp"
-#include "params.hpp"
 
 #include <stdlib.h>
 #include <string>

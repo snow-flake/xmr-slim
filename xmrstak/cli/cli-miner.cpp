@@ -27,7 +27,6 @@
 #include "xmrstak/backend/backendConnector.hpp"
 #include "xmrstak/jconf.hpp"
 #include "xmrstak/misc/console.hpp"
-#include "xmrstak/params.hpp"
 #include "xmrstak/version.hpp"
 #include "xmrstak/misc/utility.hpp"
 
@@ -50,7 +49,7 @@ void help()
 	using namespace std;
 	using namespace xmrstak;
 
-	cout<<"Usage: "<<params::inst().binaryName<<" [OPTION]..."<<endl;
+	cout<<"Usage: xmr-stak [OPTION]..."<<endl;
 	cout<<" "<<endl;
 	cout<<"  -h, --help            show this help"<<endl;
 	cout<<"  -v, --version         show version number"<<endl;
@@ -82,12 +81,6 @@ int main(int argc, char *argv[])
 		// try windows "\"
 		seperator = "\\";
 		pos = pathWithName.rfind(seperator);
-	}
-	params::inst().binaryName = std::string(pathWithName, pos + 1, std::string::npos);
-	if(params::inst().binaryName.compare(pathWithName) != 0)
-	{
-		params::inst().executablePrefix = std::string(pathWithName, 0, pos);
-		params::inst().executablePrefix += seperator;
 	}
 
 	for(size_t i = 1; i < argc; ++i)

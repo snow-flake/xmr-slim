@@ -27,7 +27,6 @@
 #include "globalStates.hpp"
 #include "xmrstak/misc/environment.hpp"
 #include "xmrstak/misc/console.hpp"
-#include "xmrstak/params.hpp"
 
 #include "cpu/minethd.hpp"
 
