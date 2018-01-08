@@ -28,7 +28,6 @@
 #include "xmrstak/jconf.hpp"
 #include "xmrstak/misc/console.hpp"
 #include "xmrstak/version.hpp"
-#include "xmrstak/misc/utility.hpp"
 
 #include <stdlib.h>
 #include <stdio.h>
