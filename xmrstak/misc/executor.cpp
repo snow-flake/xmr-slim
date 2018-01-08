@@ -538,9 +538,6 @@ void executor::ex_main()
 			eval_pool_choice();
 			break;
 
-		case EV_GPU_RES_ERROR:
-			log_result_error(std::string(ev.oGpuError.error_str));
-			break;
 
 		case EV_PERF_TICK:
 			for (i = 0; i < pvThreads->size(); i++)
