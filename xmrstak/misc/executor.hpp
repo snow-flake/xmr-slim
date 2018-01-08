@@ -75,22 +75,12 @@ private:
 	void ex_main();
 
 	void ex_clock_thd();
-	void pool_connect(jpsock* pool);
 
 	constexpr static size_t motd_max_length = 512;
 	bool motd_filter_console(std::string& motd);
-	bool motd_filter_web(std::string& motd);
-
 	void hashrate_report(std::string& out);
 	void result_report(std::string& out);
 	void connection_report(std::string& out);
-
-	void http_hashrate_report(std::string& out);
-	void http_result_report(std::string& out);
-	void http_connection_report(std::string& out);
-	void http_json_report(std::string& out);
-
-	void http_report(ex_event_name ev);
 	void print_report(ex_event_name ev);
 
 	std::string* pHttpString = nullptr;
@@ -173,7 +163,6 @@ private:
 	void on_sock_error(size_t pool_id, std::string&& sError, bool silent);
 	void on_pool_have_job(size_t pool_id, pool_job& oPoolJob);
 	void on_miner_result(size_t pool_id, job_result& oResult);
-	void connect_to_pools(std::list<jpsock*>& eval_pools);
 	bool get_live_pools(std::vector<jpsock*>& eval_pools, bool is_dev);
 	void eval_pool_choice();
 
