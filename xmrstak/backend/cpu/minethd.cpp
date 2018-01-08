@@ -27,7 +27,6 @@
 #include "xmrstak/backend/iBackend.hpp"
 #include "xmrstak/backend//globalStates.hpp"
 #include "xmrstak/params.hpp"
-#include "jconf.hpp"
 
 #include "xmrstak/misc/executor.hpp"
 #include "minethd.hpp"
@@ -35,6 +34,8 @@
 
 #include "c_hwlock/do_hwlock.hpp"
 #include "xmrstak/backend/miner_work.hpp"
+#include "autoAdjust.hpp"
+
 
 #include <assert.h>
 #include <cmath>
@@ -219,26 +220,27 @@ std::vector<iBackend*> minethd::thread_starter(uint32_t threadOffset, miner_work
 
 	//Launch the requested number of single and double threads, to distribute
 	//load evenly we need to alternate single and double threads
-	size_t i, n = xmrstak::cpu::jconf::GetThreadCount();
+	auto _threads = auto_threads();
+
+	size_t i, n = _threads.processors_count;
 	pvThreads.reserve(n);
 
-	jconf::thd_cfg cfg;
 	for (i = 0; i < n; i++)
 	{
-		xmrstak::cpu::jconf::GetThreadConfig(i, cfg);
+		auto auto_config = _threads.configs[i];
 
-		if(cfg.iCpuAff >= 0)
+		if(auto_config.affine_to_cpu >= 0)
 		{
 #if defined(__APPLE__)
 			printer::inst()->print_msg(L1, "WARNING on MacOS thread affinity is only advisory.");
 #endif
 
-			printer::inst()->print_msg(L1, "Starting %dx thread, affinity: %d.", cfg.iMultiway, (int)cfg.iCpuAff);
+			printer::inst()->print_msg(L1, "Starting %dx thread, affinity: %d.", auto_config.low_power_mode, (int)auto_config.affine_to_cpu);
 		}
 		else
-			printer::inst()->print_msg(L1, "Starting %dx thread, no affinity.", cfg.iMultiway);
+			printer::inst()->print_msg(L1, "Starting %dx thread, no affinity.", auto_config.low_power_mode);
 		
-		minethd* thd = new minethd(pWork, i + threadOffset, cfg.iMultiway, cfg.bNoPrefetch, cfg.iCpuAff);
+		minethd* thd = new minethd(pWork, i + threadOffset, auto_config.low_power_mode, auto_config.no_prefetch, auto_config.affine_to_cpu);
 		pvThreads.push_back(thd);
 	}
 
