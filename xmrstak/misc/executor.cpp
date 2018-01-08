@@ -616,47 +616,6 @@ bool executor::motd_filter_console(std::string& motd)
 	return motd.size() > 0;
 }
 
-bool executor::motd_filter_web(std::string& motd)
-{
-	if(!motd_filter_console(motd))
-		return false;
-
-	std::string tmp;
-	tmp.reserve(motd.size() + 128);
-
-	for(size_t i=0; i < motd.size(); i++)
-	{
-		char c = motd[i];
-		switch(c)
-		{
-		case '&':
-			tmp.append("&amp;");
-			break;
-		case '"':
-			tmp.append("&quot;");
-			break;
-		case '\'':
-			tmp.append("&#039");
-			break;
-		case '<':
-			tmp.append("&lt;");
-			break;
-		case '>':
-			tmp.append("&gt;");
-			break;
-		case '\n':
-			tmp.append("<br>");
-			break;
-		default:
-			tmp.append(1, c);
-			break;
-		}
-	}
-
-	motd = std::move(tmp);
-	return true;
-}
-
 void executor::hashrate_report(std::string& out)
 {
 	out.reserve(2048 + pvThreads->size() * 64);
