@@ -37,8 +37,6 @@
 #include "c_hwlock/do_hwlock.hpp"
 #include "xmrstak/backend/miner_work.hpp"
 
-#include "autoAdjustHwloc.hpp"
-
 #include <assert.h>
 #include <cmath>
 #include <chrono>
@@ -219,13 +217,6 @@ bool minethd::self_test()
 std::vector<iBackend*> minethd::thread_starter(uint32_t threadOffset, miner_work& pWork)
 {
 	std::vector<iBackend*> pvThreads;
-
-	if(!configEditor::file_exist(params::inst().configFileCPU))
-	{
-		autoAdjust adjust;
-		if(!adjust.printConfig())
-			return pvThreads;
-	}
 
 	//Launch the requested number of single and double threads, to distribute
 	//load evenly we need to alternate single and double threads

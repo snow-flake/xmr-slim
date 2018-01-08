@@ -18,12 +18,10 @@ struct params
 
 	std::string executablePrefix;
 	std::string binaryName;
-	std::string configFileCPU;
 
 	params() :
 		binaryName("xmr-stak"),
-		executablePrefix(""),
-		configFileCPU("cpu.txt")
+		executablePrefix("")
 	{}
 };
 
