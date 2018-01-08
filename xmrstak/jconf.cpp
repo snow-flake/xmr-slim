@@ -61,10 +61,6 @@ bool jconf::parse_config() {
 	if(!haveAes) {
 		printer::inst()->print_msg(L0, "WARNING: CPU support of AES is not available.");
 	}
-	if(GetSlowMemSetting() == unknown_value) {
-		printer::inst()->print_msg(L0, "Invalid config file. use_slow_memory must be \"always\", \"no_mlck\", \"warn\" or \"never\"");
-		return false;
-	}
 
 	return true;
 }

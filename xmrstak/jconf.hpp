@@ -49,16 +49,6 @@ public:
 		}
 	};
 
-	enum slow_mem_cfg {
-		always_use,
-		no_mlck,
-		print_warning,
-		never_use,
-		unknown_value
-	};
-
-	inline slow_mem_cfg GetSlowMemSetting() { return CONFIG_USE_SLOW_MEMORY; }
-
 	static void cpuid(uint32_t eax, int32_t ecx, int32_t val[4]);
 
 private:
