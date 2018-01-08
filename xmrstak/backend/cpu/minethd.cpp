@@ -26,7 +26,6 @@
 #include "xmrstak/misc/console.hpp"
 #include "xmrstak/backend/iBackend.hpp"
 #include "xmrstak/backend//globalStates.hpp"
-#include "xmrstak/misc/configEditor.hpp"
 #include "xmrstak/params.hpp"
 #include "jconf.hpp"
 

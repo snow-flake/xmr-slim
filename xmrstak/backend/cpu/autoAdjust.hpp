@@ -1,15 +1,5 @@
 #pragma once
 
-//#include "jconf.hpp"
-
-//#include "xmrstak/misc/console.hpp"
-//#include "xmrstak/jconf.hpp"
-//#include "xmrstak/misc/configEditor.hpp"
-//#include "xmrstak/params.hpp"
-//#include "c_cryptonight/cryptonight.hpp"
-//#include <string>
-//#include <exception>
-//#include <iostream>
 #include <unistd.h>
 #include <vector>
 #include <cstdint>
