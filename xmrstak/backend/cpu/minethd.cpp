@@ -26,7 +26,6 @@
 #include "xmrstak/misc/console.hpp"
 #include "xmrstak/backend/iBackend.hpp"
 #include "xmrstak/backend//globalStates.hpp"
-#include "xmrstak/params.hpp"
 
 #include "xmrstak/misc/executor.hpp"
 #include "minethd.hpp"
