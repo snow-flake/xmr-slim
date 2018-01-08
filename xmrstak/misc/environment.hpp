@@ -7,7 +7,6 @@ namespace xmrstak
 {
 
 struct globalStates;
-struct params;
 
 struct environment
 {
@@ -33,7 +32,6 @@ struct environment
 	printer* pPrinter = nullptr;
 	globalStates* pglobalStates = nullptr;
 	executor* pExecutor = nullptr;
-	params* pParams = nullptr;
 };
 
 } // namepsace xmrstak
