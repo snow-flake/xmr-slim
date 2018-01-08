@@ -33,7 +33,7 @@
 
 #include "xmrstak/jconf.hpp"
 #include "xmrstak/misc/console.hpp"
-#include "xmrstak/version.hpp"
+#include "xmrstak/system_constants.hpp"
 
 #include <thread>
 #include <string>
@@ -86,8 +86,8 @@ void executor::ex_clock_thd()
 
 bool executor::get_live_pools(std::vector<jpsock*>& eval_pools, bool is_dev)
 {
-	size_t limit = jconf::inst()->GetGiveUpLimit();
-	size_t wait = jconf::inst()->GetNetRetry();
+	size_t limit = system_constants::GetGiveUpLimit();
+	size_t wait = system_constants::GetNetRetry();
 
 	if(limit == 0 || is_dev) limit = (-1); //No limit = limit of 2^64-1
 
@@ -509,8 +509,8 @@ void executor::ex_main()
 	vMineResults.emplace_back();
 
 	// If the user requested it, start the autohash printer
-	if(jconf::inst()->GetVerboseLevel() >= 4)
-		push_timed_event(ex_event(EV_HASHRATE_LOOP), jconf::inst()->GetAutohashTime());
+	if(system_constants::GetVerboseLevel() >= 4)
+		push_timed_event(ex_event(EV_HASHRATE_LOOP), system_constants::GetAutohashTime());
 
 	size_t cnt = 0;
 	while (true)
@@ -577,7 +577,7 @@ void executor::ex_main()
 
 		case EV_HASHRATE_LOOP:
 			print_report(EV_USR_HASHRATE);
-			push_timed_event(ex_event(EV_HASHRATE_LOOP), jconf::inst()->GetAutohashTime());
+			push_timed_event(ex_event(EV_HASHRATE_LOOP), system_constants::GetAutohashTime());
 			break;
 
 		case EV_INVALID_VAL:
@@ -653,7 +653,7 @@ void executor::hashrate_report(std::string& out)
 {
 	out.reserve(2048 + pvThreads->size() * 64);
 
-	if(jconf::inst()->PrintMotd())
+	if(system_constants::PrintMotd())
 	{
 		std::string motd;
 		for(jpsock& pool : pools)

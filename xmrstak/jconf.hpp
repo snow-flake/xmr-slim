@@ -57,16 +57,6 @@ public:
 		unknown_value
 	};
 
-	inline bool TlsSecureAlgos() { return CONFIG_TLS_SECURE_ALGO; }
-	inline uint64_t GetVerboseLevel() { return CONFIG_VERBOSE_LEVEL; }
-	inline bool PrintMotd() { return CONFIG_PRINT_MOTD; }
-	inline uint64_t GetAutohashTime() { return CONFIG_H_PRINT_TIME; }
-	inline const char* GetOutputFile() { return CONFIG_OUTPUT_FILE; }
-	inline uint64_t GetCallTimeout() { return CONFIG_CALL_TIMEOUT; }
-	inline uint64_t GetNetRetry() { return CONFIG_RETRY_TIME; }
-	inline uint64_t GetGiveUpLimit() { return CONFIG_GIVEUP_LIMIT; }
-	inline bool DaemonMode() { return CONFIG_DAEMON_MODE; }
-	inline bool HaveHardwareAes() { return CONFIG_AES_OVERRIDE; }
 	inline slow_mem_cfg GetSlowMemSetting() { return CONFIG_USE_SLOW_MEMORY; }
 
 	static void cpuid(uint32_t eax, int32_t ecx, int32_t val[4]);

@@ -32,7 +32,7 @@
 #include "xmrstak/misc/executor.hpp"
 #include "xmrstak/jconf.hpp"
 #include "xmrstak/misc/jext.hpp"
-#include "xmrstak/version.hpp"
+#include "xmrstak/system_constants.hpp"
 
 using namespace rapidjson;
 
@@ -495,7 +495,7 @@ bool jpsock::cmd_ret_wait(const char* sPacket, opq_json_val& poResult)
 	//Success is true if the server approves, result is true if there was no socket error
 	bool bSuccess;
 	mlock.lock();
-	bool bResult = call_cond.wait_for(mlock, std::chrono::seconds(jconf::inst()->GetCallTimeout()),
+	bool bResult = call_cond.wait_for(mlock, std::chrono::seconds(system_constants::GetCallTimeout()),
 		[&]() { return prv->oCallRsp.bHaveResponse; });
 
 	bSuccess = prv->oCallRsp.pCallData != nullptr;
@@ -524,7 +524,7 @@ bool jpsock::cmd_login()
 	char cmd_buffer[1024];
 
 	snprintf(cmd_buffer, sizeof(cmd_buffer), "{\"method\":\"login\",\"params\":{\"login\":\"%s\",\"pass\":\"%s\",\"agent\":\"%s\"},\"id\":1}\n",
-		usr_login.c_str(), usr_pass.c_str(), get_version_str().c_str());
+		usr_login.c_str(), usr_pass.c_str(), system_constants::get_version_str().c_str());
 
 	opq_json_val oResult(nullptr);
 

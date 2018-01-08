@@ -27,7 +27,7 @@
 #include "xmrstak/backend/backendConnector.hpp"
 #include "xmrstak/jconf.hpp"
 #include "xmrstak/misc/console.hpp"
-#include "xmrstak/version.hpp"
+#include "xmrstak/system_constants.hpp"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -53,7 +53,7 @@ void help()
 	cout<<"  -h, --help            show this help"<<endl;
 	cout<<"  -v, --version         show version number"<<endl;
 	cout<<"  -V, --version-long    show long version number"<<endl;
-	cout<< "Version: " << get_version_str_short() << endl;
+	cout<< "Version: " << system_constants::get_version_str_short() << endl;
 }
 
 int main(int argc, char *argv[])
@@ -93,13 +93,13 @@ int main(int argc, char *argv[])
 		}
 		if(opName.compare("-v") == 0 || opName.compare("--version") == 0)
 		{
-			std::cout<< "Version: " << get_version_str_short() << std::endl;
+			std::cout<< "Version: " << system_constants::get_version_str_short() << std::endl;
 			win_exit();
 			return 0;
 		}
 		else if(opName.compare("-V") == 0 || opName.compare("--version-long") == 0)
 		{
-			std::cout<< "Version: " << get_version_str() << std::endl;
+			std::cout<< "Version: " << system_constants::get_version_str() << std::endl;
 			win_exit();
 			return 0;
 		}
@@ -124,7 +124,7 @@ int main(int argc, char *argv[])
 	}
 
 	printer::inst()->print_str("-------------------------------------------------------------------\n");
-	printer::inst()->print_str(get_version_str_short().c_str());
+	printer::inst()->print_str(system_constants::get_version_str_short().c_str());
 	printer::inst()->print_str("\n\n");
 	printer::inst()->print_str("You can use following keys to display reports:\n");
 	printer::inst()->print_str("'h' - hashrate\n");
@@ -133,11 +133,11 @@ int main(int argc, char *argv[])
 	printer::inst()->print_str("-------------------------------------------------------------------\n");
 	printer::inst()->print_msg(L0,"Start mining: MONERO");
 
-	if(strlen(jconf::inst()->GetOutputFile()) != 0) {
-		printer::inst()->open_logfile(jconf::inst()->GetOutputFile());
+	if(strlen(system_constants::GetOutputFile()) != 0) {
+		printer::inst()->open_logfile(system_constants::GetOutputFile());
 	}
 
-	executor::inst()->ex_start(jconf::inst()->DaemonMode());
+	executor::inst()->ex_start(system_constants::DaemonMode());
 
 	uint64_t lastTime = get_timestamp_ms();
 	int key;

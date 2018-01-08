@@ -26,6 +26,7 @@
 #include "xmrstak/jconf.hpp"
 #include "xmrstak/misc/console.hpp"
 #include "xmrstak/misc/executor.hpp"
+#include "xmrstak/system_constants.hpp"
 
 #ifndef CONF_NO_TLS
 #include <openssl/ssl.h>
@@ -180,7 +181,7 @@ void tls_socket::print_error()
 
 	if(buf == nullptr)
 	{
-		if(jconf::inst()->TlsSecureAlgos())
+		if(system_constants::TlsSecureAlgos())
 			pCallback->set_socket_error("Unknown TLS error. Secure TLS maybe unsupported, try setting tls_secure_algo to false.");
 		else
 			pCallback->set_socket_error("Unknown TLS error.");
@@ -202,7 +203,7 @@ void tls_socket::init_ctx()
 	if(ctx == nullptr)
 		return;
 
-	if(jconf::inst()->TlsSecureAlgos())
+	if(system_constants::TlsSecureAlgos())
 	{
 		SSL_CTX_set_options(ctx, SSL_OP_NO_SSLv2 | SSL_OP_NO_SSLv3 | SSL_OP_NO_TLSv1 | SSL_OP_NO_COMPRESSION);
 	}
@@ -239,7 +240,7 @@ bool tls_socket::set_hostname(const char* sAddr)
 		return false;
 	}
 
-	if(jconf::inst()->TlsSecureAlgos())
+	if(system_constants::TlsSecureAlgos())
 	{
 		if(SSL_set_cipher_list(ssl, "HIGH:!aNULL:!kRSA:!PSK:!SRP:!MD5:!RC4:!SHA1") != 1)
 		{

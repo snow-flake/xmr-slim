@@ -34,8 +34,6 @@ public:
 		return env.pPrinter;
 	};
 
-	inline void set_verbose_level(size_t level) { verbose_level = (verbosity)level; }
-	inline void set_flush_stdout(bool status) { b_flush_stdout = status; }
 	void print_msg(verbosity verbose, const char* fmt, ...);
 	void print_str(const char* str);
 	bool open_logfile(const char* file);

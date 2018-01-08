@@ -34,6 +34,7 @@
 #include "c_hwlock/do_hwlock.hpp"
 #include "xmrstak/backend/miner_work.hpp"
 #include "autoAdjust.hpp"
+#include "xmrstak/system_constants.hpp"
 
 
 #include <assert.h>
@@ -122,21 +123,21 @@ cryptonight_ctx* minethd::minethd_alloc_ctx()
 	cryptonight_ctx* ctx;
 	alloc_msg msg = { 0 };
 
-	switch (::jconf::inst()->GetSlowMemSetting())
+	switch (::system_constants::GetSlowMemSetting())
 	{
-	case ::jconf::never_use:
+	case ::system_constants::never_use:
 		ctx = cryptonight_alloc_ctx(1, 1, &msg);
 		if (ctx == NULL)
 			printer::inst()->print_msg(L0, "MEMORY ALLOC FAILED: %s", msg.warning);
 		return ctx;
 
-	case ::jconf::no_mlck:
+	case ::system_constants::no_mlck:
 		ctx = cryptonight_alloc_ctx(1, 0, &msg);
 		if (ctx == NULL)
 			printer::inst()->print_msg(L0, "MEMORY ALLOC FAILED: %s", msg.warning);
 		return ctx;
 
-	case ::jconf::print_warning:
+	case ::system_constants::print_warning:
 		ctx = cryptonight_alloc_ctx(1, 1, &msg);
 		if (msg.warning != NULL)
 			printer::inst()->print_msg(L0, "MEMORY ALLOC FAILED: %s", msg.warning);
@@ -144,10 +145,10 @@ cryptonight_ctx* minethd::minethd_alloc_ctx()
 			ctx = cryptonight_alloc_ctx(0, 0, NULL);
 		return ctx;
 
-	case ::jconf::always_use:
+	case ::system_constants::always_use:
 		return cryptonight_alloc_ctx(0, 0, NULL);
 
-	case ::jconf::unknown_value:
+	case ::system_constants::unknown_value:
 		return NULL; //Shut up compiler
 	}
 
@@ -174,31 +175,31 @@ bool minethd::self_test()
 		cn_hash_fun hashf;
 		cn_hash_fun_multi hashf_multi;
 
-		hashf = func_selector(::jconf::inst()->HaveHardwareAes(), false);
+		hashf = func_selector(::system_constants::HaveHardwareAes(), false);
 		hashf("This is a test", 14, out, ctx[0]);
 		bResult = memcmp(out, "\xa0\x84\xf0\x1d\x14\x37\xa0\x9c\x69\x85\x40\x1b\x60\xd4\x35\x54\xae\x10\x58\x02\xc5\xf5\xd8\xa9\xb3\x25\x36\x49\xc0\xbe\x66\x05", 32) == 0;
 
-		hashf = func_selector(::jconf::inst()->HaveHardwareAes(), true);
+		hashf = func_selector(::system_constants::HaveHardwareAes(), true);
 		hashf("This is a test", 14, out, ctx[0]);
 		bResult &= memcmp(out, "\xa0\x84\xf0\x1d\x14\x37\xa0\x9c\x69\x85\x40\x1b\x60\xd4\x35\x54\xae\x10\x58\x02\xc5\xf5\xd8\xa9\xb3\x25\x36\x49\xc0\xbe\x66\x05", 32) == 0;
 
-		hashf_multi = func_multi_selector(2, ::jconf::inst()->HaveHardwareAes(), false);
+		hashf_multi = func_multi_selector(2, ::system_constants::HaveHardwareAes(), false);
 		hashf_multi("The quick brown fox jumps over the lazy dogThe quick brown fox jumps over the lazy log", 43, out, ctx);
 		bResult &= memcmp(out, "\x3e\xbb\x7f\x9f\x7d\x27\x3d\x7c\x31\x8d\x86\x94\x77\x55\x0c\xc8\x00\xcf\xb1\x1b\x0c\xad\xb7\xff\xbd\xf6\xf8\x9f\x3a\x47\x1c\x59\xb4\x77\xd5\x02\xe4\xd8\x48\x7f\x42\xdf\xe3\x8e\xed\x73\x81\x7a\xda\x91\xb7\xe2\x63\xd2\x91\x71\xb6\x5c\x44\x3a\x01\x2a\x41\x22", 64) == 0;
 
-		hashf_multi = func_multi_selector(2, ::jconf::inst()->HaveHardwareAes(), true);
+		hashf_multi = func_multi_selector(2, ::system_constants::HaveHardwareAes(), true);
 		hashf_multi("The quick brown fox jumps over the lazy dogThe quick brown fox jumps over the lazy log", 43, out, ctx);
 		bResult &= memcmp(out, "\x3e\xbb\x7f\x9f\x7d\x27\x3d\x7c\x31\x8d\x86\x94\x77\x55\x0c\xc8\x00\xcf\xb1\x1b\x0c\xad\xb7\xff\xbd\xf6\xf8\x9f\x3a\x47\x1c\x59\xb4\x77\xd5\x02\xe4\xd8\x48\x7f\x42\xdf\xe3\x8e\xed\x73\x81\x7a\xda\x91\xb7\xe2\x63\xd2\x91\x71\xb6\x5c\x44\x3a\x01\x2a\x41\x22", 64) == 0;
 
-		hashf_multi = func_multi_selector(3, ::jconf::inst()->HaveHardwareAes(), false);
+		hashf_multi = func_multi_selector(3, ::system_constants::HaveHardwareAes(), false);
 		hashf_multi("This is a testThis is a testThis is a test", 14, out, ctx);
 		bResult &= memcmp(out, "\xa0\x84\xf0\x1d\x14\x37\xa0\x9c\x69\x85\x40\x1b\x60\xd4\x35\x54\xae\x10\x58\x02\xc5\xf5\xd8\xa9\xb3\x25\x36\x49\xc0\xbe\x66\x05\xa0\x84\xf0\x1d\x14\x37\xa0\x9c\x69\x85\x40\x1b\x60\xd4\x35\x54\xae\x10\x58\x02\xc5\xf5\xd8\xa9\xb3\x25\x36\x49\xc0\xbe\x66\x05\xa0\x84\xf0\x1d\x14\x37\xa0\x9c\x69\x85\x40\x1b\x60\xd4\x35\x54\xae\x10\x58\x02\xc5\xf5\xd8\xa9\xb3\x25\x36\x49\xc0\xbe\x66\x05", 96) == 0;
 
-		hashf_multi = func_multi_selector(4, ::jconf::inst()->HaveHardwareAes(), false);
+		hashf_multi = func_multi_selector(4, ::system_constants::HaveHardwareAes(), false);
 		hashf_multi("This is a testThis is a testThis is a testThis is a test", 14, out, ctx);
 		bResult &= memcmp(out, "\xa0\x84\xf0\x1d\x14\x37\xa0\x9c\x69\x85\x40\x1b\x60\xd4\x35\x54\xae\x10\x58\x02\xc5\xf5\xd8\xa9\xb3\x25\x36\x49\xc0\xbe\x66\x05\xa0\x84\xf0\x1d\x14\x37\xa0\x9c\x69\x85\x40\x1b\x60\xd4\x35\x54\xae\x10\x58\x02\xc5\xf5\xd8\xa9\xb3\x25\x36\x49\xc0\xbe\x66\x05\xa0\x84\xf0\x1d\x14\x37\xa0\x9c\x69\x85\x40\x1b\x60\xd4\x35\x54\xae\x10\x58\x02\xc5\xf5\xd8\xa9\xb3\x25\x36\x49\xc0\xbe\x66\x05\xa0\x84\xf0\x1d\x14\x37\xa0\x9c\x69\x85\x40\x1b\x60\xd4\x35\x54\xae\x10\x58\x02\xc5\xf5\xd8\xa9\xb3\x25\x36\x49\xc0\xbe\x66\x05", 128) == 0;
 
-		hashf_multi = func_multi_selector(5, ::jconf::inst()->HaveHardwareAes(), false);
+		hashf_multi = func_multi_selector(5, ::system_constants::HaveHardwareAes(), false);
 		hashf_multi("This is a testThis is a testThis is a testThis is a testThis is a test", 14, out, ctx);
 		bResult &= memcmp(out, "\xa0\x84\xf0\x1d\x14\x37\xa0\x9c\x69\x85\x40\x1b\x60\xd4\x35\x54\xae\x10\x58\x02\xc5\xf5\xd8\xa9\xb3\x25\x36\x49\xc0\xbe\x66\x05\xa0\x84\xf0\x1d\x14\x37\xa0\x9c\x69\x85\x40\x1b\x60\xd4\x35\x54\xae\x10\x58\x02\xc5\xf5\xd8\xa9\xb3\x25\x36\x49\xc0\xbe\x66\x05\xa0\x84\xf0\x1d\x14\x37\xa0\x9c\x69\x85\x40\x1b\x60\xd4\x35\x54\xae\x10\x58\x02\xc5\xf5\xd8\xa9\xb3\x25\x36\x49\xc0\xbe\x66\x05\xa0\x84\xf0\x1d\x14\x37\xa0\x9c\x69\x85\x40\x1b\x60\xd4\x35\x54\xae\x10\x58\x02\xc5\xf5\xd8\xa9\xb3\x25\x36\x49\xc0\xbe\x66\x05\xa0\x84\xf0\x1d\x14\x37\xa0\x9c\x69\x85\x40\x1b\x60\xd4\x35\x54\xae\x10\x58\x02\xc5\xf5\xd8\xa9\xb3\x25\x36\x49\xc0\xbe\x66\x05", 160) == 0;
 	}
@@ -293,7 +294,7 @@ void minethd::work_main()
 	uint32_t* piNonce;
 	job_result result;
 
-	hash_fun = func_selector(::jconf::inst()->HaveHardwareAes(), bNoPrefetch);
+	hash_fun = func_selector(::system_constants::HaveHardwareAes(), bNoPrefetch);
 	ctx = minethd_alloc_ctx();
 
 	piHashVal = (uint64_t*)(result.bResult + 24);
@@ -395,22 +396,22 @@ minethd::cn_hash_fun_multi minethd::func_multi_selector(size_t N, bool bHaveAes,
 
 void minethd::double_work_main()
 {
-	multiway_work_main<2>(func_multi_selector(2, ::jconf::inst()->HaveHardwareAes(), bNoPrefetch));
+	multiway_work_main<2>(func_multi_selector(2, ::system_constants::HaveHardwareAes(), bNoPrefetch));
 }
 
 void minethd::triple_work_main()
 {
-	multiway_work_main<3>(func_multi_selector(3, ::jconf::inst()->HaveHardwareAes(), bNoPrefetch));
+	multiway_work_main<3>(func_multi_selector(3, ::system_constants::HaveHardwareAes(), bNoPrefetch));
 }
 
 void minethd::quad_work_main()
 {
-	multiway_work_main<4>(func_multi_selector(4, ::jconf::inst()->HaveHardwareAes(), bNoPrefetch));
+	multiway_work_main<4>(func_multi_selector(4, ::system_constants::HaveHardwareAes(), bNoPrefetch));
 }
 
 void minethd::penta_work_main()
 {
-	multiway_work_main<5>(func_multi_selector(5, ::jconf::inst()->HaveHardwareAes(), bNoPrefetch));
+	multiway_work_main<5>(func_multi_selector(5, ::system_constants::HaveHardwareAes(), bNoPrefetch));
 }
 
 template<size_t N>

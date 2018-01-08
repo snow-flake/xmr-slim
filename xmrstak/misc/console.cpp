@@ -22,6 +22,7 @@
   */
 
 #include "xmrstak/misc/console.hpp"
+#include "xmrstak/system_constants.hpp"
 #include <time.h>
 #include <stdio.h>
 #include <string.h>
@@ -86,7 +87,7 @@ inline void comp_localtime(const time_t* ctime, tm* stime)
 
 printer::printer()
 {
-	verbose_level = LINF;
+	verbose_level = (verbosity)system_constants::GetVerboseLevel();
 	logfile = nullptr;
 	b_flush_stdout = false;
 }

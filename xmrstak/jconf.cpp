@@ -61,18 +61,6 @@ bool jconf::parse_config() {
 	if(!haveAes) {
 		printer::inst()->print_msg(L0, "WARNING: CPU support of AES is not available.");
 	}
-	if(GetCallTimeout() == 0 || GetNetRetry() == 0) {
-		printer::inst()->print_msg(L0, "Invalid config file. call_timeout and retry_time need to be positive integers.");
-		return false;
-	}
-
-	if(GetCallTimeout() < 2 || GetNetRetry() < 2) {
-		printer::inst()->print_msg(L0, "Invalid config file. call_timeout and retry_time need to be larger than 1 second.");
-		return false;
-	}
-
-	printer::inst()->set_verbose_level(GetVerboseLevel());
-
 	if(GetSlowMemSetting() == unknown_value) {
 		printer::inst()->print_msg(L0, "Invalid config file. use_slow_memory must be \"always\", \"no_mlck\", \"warn\" or \"never\"");
 		return false;
