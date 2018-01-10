@@ -22,7 +22,16 @@
 	We parse it in-situ in the network buffer, after that we copy it to a
 	std::string. Executor will move the buffer via an r-value ref.
 */
-class base_socket;
+
+class base_socket
+{
+public:
+	virtual bool set_hostname(const char* sAddr) = 0;
+	virtual bool connect() = 0;
+	virtual int recv(char* buf, unsigned int len) = 0;
+	virtual bool send(const char* buf) = 0;
+	virtual void close(bool free) = 0;
+};
 
 class jpsock
 {
