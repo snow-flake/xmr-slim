@@ -45,41 +45,6 @@ int get_key()
 	return ch;
 }
 
-void set_colour(out_colours cl)
-{
-	switch(cl)
-	{
-	case K_RED:
-		fputs("\x1B[1;31m", stdout);
-		break;
-	case K_GREEN:
-		fputs("\x1B[1;32m", stdout);
-		break;
-	case K_BLUE:
-		fputs("\x1B[1;34m", stdout);
-		break;
-	case K_YELLOW:
-		fputs("\x1B[1;33m", stdout);
-		break;
-	case K_CYAN:
-		fputs("\x1B[1;36m", stdout);
-		break;
-	case K_MAGENTA:
-		fputs("\x1B[1;35m", stdout);
-		break;
-	case K_WHITE:
-		fputs("\x1B[1;37m", stdout);
-		break;
-	default:
-		break;
-	}
-}
-
-void reset_colour()
-{
-	fputs("\x1B[0m", stdout);
-}
-
 inline void comp_localtime(const time_t* ctime, tm* stime)
 {
 	localtime_r(ctime, stime);

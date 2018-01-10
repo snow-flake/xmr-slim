@@ -5,14 +5,9 @@
 #include <mutex>
 
 
-enum out_colours { K_RED, K_GREEN, K_BLUE, K_YELLOW, K_CYAN, K_MAGENTA, K_WHITE, K_NONE };
-
 // Warning - on Linux get_key will detect control keys, but not on Windows.
 // We will only use it for alphanum keys anyway.
 int get_key();
-
-void set_colour(out_colours cl);
-void reset_colour();
 
 // on MSVC sizeof(long int) = 4, gcc sizeof(long int) = 8, this is the workaround
 // now we can use %llu on both compilers
