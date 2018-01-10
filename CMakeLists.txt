@@ -242,23 +242,7 @@ list(APPEND CMAKE_PREFIX_PATH "$ENV{CMAKE_PREFIX_PATH}")
 
 find_package(Threads REQUIRED)
 set(LIBS ${LIBS} ${CMAKE_THREAD_LIBS_INIT})
-    
-###############################################################################
-# Find OpenSSL
-###############################################################################
 
-option(OpenSSL_ENABLE "Enable or disable the requirement of OpenSSL" ON)
-if(OpenSSL_ENABLE)
-    find_package(OpenSSL)
-    if(OPENSSL_FOUND)
-        include_directories(${OPENSSL_INCLUDE_DIR})
-        set(LIBS ${LIBS} ${OPENSSL_LIBRARIES})
-    else()
-        message(FATAL_ERROR "OpenSSL NOT found: use `-DOpenSSL_ENABLE=OFF` to build without SSL support")
-    endif()
-else()
-    add_definitions("-DCONF_NO_TLS")
-endif()
 
 ################################################################################
 # Find hwloc

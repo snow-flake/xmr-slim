@@ -32,28 +32,3 @@ private:
 	SOCKET hSocket;
 };
 
-typedef struct ssl_ctx_st SSL_CTX;
-typedef struct bio_st BIO;
-typedef struct ssl_st SSL;
-
-class tls_socket : public base_socket
-{
-public:
-	tls_socket(jpsock* err_callback);
-
-	bool set_hostname(const char* sAddr);
-	bool connect();
-	int recv(char* buf, unsigned int len);
-	bool send(const char* buf);
-	void close(bool free);
-
-private:
-	void init_ctx();
-	void print_error();
-
-	jpsock* pCallback;
-
-	SSL_CTX* ctx = nullptr;
-	BIO* bio = nullptr;
-	SSL* ssl = nullptr;
-};

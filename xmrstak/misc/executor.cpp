@@ -503,13 +503,11 @@ void executor::ex_main()
 	size_t i=0;
 	for(; i < pc; i++)
 	{
-#ifdef CONF_NO_TLS
 		if(system_constants::config_pool_use_tls())
 		{
 			printer::inst()->print_msg(L1, "ERROR: No miner was compiled without TLS support.");
 			std::exit(1);
 		}
-#endif
 		if(!system_constants::config_pool_use_tls()) {
 			dev_tls = false;
 		}
