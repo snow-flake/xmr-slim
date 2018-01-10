@@ -23,11 +23,7 @@
 
 #include "xmrstak/misc/console.hpp"
 #include "xmrstak/system_constants.hpp"
-#include <time.h>
-#include <stdio.h>
-#include <string.h>
 #include <stdarg.h>
-#include <cstdlib>
 #include <termios.h>
 #include <unistd.h>
 #include <stdio.h>
@@ -45,22 +41,10 @@ int get_key()
 	return ch;
 }
 
-inline void comp_localtime(const time_t* ctime, tm* stime)
-{
-	localtime_r(ctime, stime);
-}
-
 printer::printer()
 {
 	verbose_level = (verbosity)system_constants::GetVerboseLevel();
-	logfile = nullptr;
 	b_flush_stdout = false;
-}
-
-bool printer::open_logfile(const char* file)
-{
-	logfile = fopen(file, "ab+");
-	return logfile != nullptr;
 }
 
 void printer::print_msg(verbosity verbose, const char* fmt, ...)
@@ -73,7 +57,8 @@ void printer::print_msg(verbosity verbose, const char* fmt, ...)
 	tm stime;
 
 	time_t now = time(nullptr);
-	comp_localtime(&now, &stime);
+	localtime_r(&now, &stime);
+
 	strftime(buf, sizeof(buf), "[%F %T] : ", &stime);
 	bpos = strlen(buf);
 
@@ -96,12 +81,6 @@ void printer::print_msg(verbosity verbose, const char* fmt, ...)
 	{
 		fflush(stdout);
 	}
-
-	if(logfile != nullptr)
-	{
-		fputs(buf, logfile);
-		fflush(logfile);
-	}
 }
 
 void printer::print_str(const char* str)
@@ -112,11 +91,5 @@ void printer::print_str(const char* str)
 	if (b_flush_stdout)
 	{
 		fflush(stdout);
-	}
-
-	if(logfile != nullptr)
-	{
-		fputs(str, logfile);
-		fflush(logfile);
 	}
 }

@@ -126,13 +126,6 @@ add_definitions("-DCONFIG_USE_SLOW_MEMORY=print_warning")
 #
 add_definitions("-DCONFIG_AES_OVERRIDE=true")
 
-
-# Output file
-#
-# output_file  - This option will log all output to a file.
-#
-add_definitions("-DCONFIG_OUTPUT_FILE=\"\"")
-
 # Buffered output control.
 # When running the miner through a pipe, standard output is buffered. This means that the pipe won't read
 # each output line immediately. This can cause delays when running in background.

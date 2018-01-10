@@ -43,8 +43,6 @@ namespace system_constants {
 
 	inline uint64_t GetAutohashTime() { return CONFIG_H_PRINT_TIME; }
 
-	inline const char *GetOutputFile() { return CONFIG_OUTPUT_FILE; }
-
 	inline uint64_t GetCallTimeout() { return CONFIG_CALL_TIMEOUT; }
 
 	inline uint64_t GetNetRetry() { return CONFIG_RETRY_TIME; }

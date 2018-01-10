@@ -78,10 +78,6 @@ int main(int argc, char *argv[])
 	printer::inst()->print_str("-------------------------------------------------------------------\n");
 	printer::inst()->print_msg(L0,"Start mining: MONERO");
 
-	if(strlen(system_constants::GetOutputFile()) != 0) {
-		printer::inst()->open_logfile(system_constants::GetOutputFile());
-	}
-
 	executor::inst()->ex_start(system_constants::DaemonMode());
 
 	uint64_t lastTime = get_timestamp_ms();
