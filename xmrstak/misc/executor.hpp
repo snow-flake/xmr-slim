@@ -83,10 +83,6 @@ private:
 	void connection_report(std::string& out);
 	void print_report(ex_event_name ev);
 
-	std::string* pHttpString = nullptr;
-	std::promise<void> httpReady;
-	std::mutex httpMutex;
-
 	struct sck_error_log
 	{
 		std::chrono::system_clock::time_point time;
