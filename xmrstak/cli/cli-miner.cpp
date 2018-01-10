@@ -32,17 +32,13 @@
 #include <time.h>
 #include <iostream>
 
-void help()
-{
-	using namespace std;
-	using namespace xmrstak;
-
-	cout<<"Usage: xmr-stak [OPTION]..."<<endl;
-	cout<<" "<<endl;
-	cout<<"  --help            show this help"<<endl;
-	cout<<"  --version         show version number"<<endl;
-	cout<<"  --version-long    show long version number"<<endl;
-	cout<< "Version: " << system_constants::get_version_str_short() << endl;
+void help() {
+	std::cout <<"Usage: xmr-stak [OPTION]..."<< std::endl;
+	std::cout <<" "<< std::endl;
+	std::cout <<"  --help            show this help"<< std::endl;
+	std::cout <<"  --version         show version number"<< std::endl;
+	std::cout <<"  --version-long    show long version number"<< std::endl;
+	std::cout << "Version: " << system_constants::get_version_str_short() <<  std::endl;
 }
 
 int main(int argc, char *argv[])
