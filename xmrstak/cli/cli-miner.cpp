@@ -22,7 +22,6 @@
   */
 
 #include "xmrstak/misc/executor.hpp"
-#include "xmrstak/backend/backendConnector.hpp"
 #include "xmrstak/system_constants.hpp"
 #include "xmrstak/backend/cpu/minethd.hpp"
 

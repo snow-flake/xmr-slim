@@ -27,9 +27,10 @@
 #include "telemetry.hpp"
 #include "xmrstak/backend/miner_work.hpp"
 #include "xmrstak/backend/globalStates.hpp"
-#include "xmrstak/backend/backendConnector.hpp"
 #include "xmrstak/backend/iBackend.hpp"
-
+#include "xmrstak/backend/iBackend.hpp"
+#include "xmrstak/backend/globalStates.hpp"
+#include "xmrstak/backend/cpu/minethd.hpp"
 #include "xmrstak/misc/console.hpp"
 #include "xmrstak/system_constants.hpp"
 
@@ -40,6 +41,24 @@
 #include <functional>
 #include <assert.h>
 #include <time.h>
+#include <cmath>
+
+
+std::vector<xmrstak::iBackend*>* thread_starter(xmrstak::miner_work& pWork)
+{
+	xmrstak::globalStates::inst().iGlobalJobNo = 0;
+	xmrstak::globalStates::inst().iConsumeCnt = 0;
+	std::vector<xmrstak::iBackend*>* pvThreads = new std::vector<xmrstak::iBackend*>;
+
+	auto cpuThreads = xmrstak::cpu::minethd::thread_starter(static_cast<uint32_t>(pvThreads->size()), pWork);
+	pvThreads->insert(std::end(*pvThreads), std::begin(cpuThreads), std::end(cpuThreads));
+	if(cpuThreads.size() == 0)
+		printer::inst()->print_msg(L0, "WARNING: backend CPU disabled.");
+
+	xmrstak::globalStates::inst().iThreadCount = pvThreads->size();
+	return pvThreads;
+}
+
 
 executor::executor()
 {
@@ -467,7 +486,7 @@ void executor::ex_main()
 	xmrstak::miner_work oWork = xmrstak::miner_work();
 
 	// \todo collect all backend threads
-	pvThreads = xmrstak::BackendConnector::thread_starter(oWork);
+	pvThreads = thread_starter(oWork);
 
 	if(pvThreads->size()==0)
 	{
