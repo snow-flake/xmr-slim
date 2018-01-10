@@ -16,15 +16,14 @@ namespace xmrstak
 		uint8_t     bWorkBlob[112];
 		uint32_t    iWorkSize;
 		uint64_t    iTarget;
-		bool        bNiceHash;
 		bool        bStall;
 		size_t      iPoolId;
 
-		miner_work() : iWorkSize(0), bNiceHash(false), bStall(true), iPoolId(0) { }
+		miner_work() : iWorkSize(0), bStall(true), iPoolId(0) { }
 
 		miner_work(const char* sJobID, const uint8_t* bWork, uint32_t iWorkSize,
-			uint64_t iTarget, bool bNiceHash, size_t iPoolId) : iWorkSize(iWorkSize),
-			iTarget(iTarget), bNiceHash(bNiceHash), bStall(false), iPoolId(iPoolId)
+			uint64_t iTarget, size_t iPoolId) : iWorkSize(iWorkSize),
+			iTarget(iTarget), bStall(false), iPoolId(iPoolId)
 		{
 			assert(iWorkSize <= sizeof(bWorkBlob));
 			memcpy(this->sJobID, sJobID, sizeof(miner_work::sJobID));
@@ -39,7 +38,6 @@ namespace xmrstak
 
 			iWorkSize = from.iWorkSize;
 			iTarget = from.iTarget;
-			bNiceHash = from.bNiceHash;
 			bStall = from.bStall;
 			iPoolId = from.iPoolId;
 
@@ -64,7 +62,6 @@ namespace xmrstak
 
 			iWorkSize = from.iWorkSize;
 			iTarget = from.iTarget;
-			bNiceHash = from.bNiceHash;
 			bStall = from.bStall;
 			iPoolId = from.iPoolId;
 

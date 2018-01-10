@@ -29,8 +29,6 @@ namespace system_constants {
 
 	inline const char *config_pool_pool_password() { return CONFIG_POOL_POOL_PASSWORD; }
 
-	inline const bool config_pool_use_nicehash() { return CONFIG_POOL_USE_NICEHASH; }
-
 	inline const bool config_pool_use_tls() { return CONFIG_POOL_USE_TLS; }
 
 	inline const char *config_pool_tls_fingerprint() { return CONFIG_POOL_TLS_FINGERPRINT; }
@@ -63,7 +61,6 @@ namespace system_constants {
 		std::cout << __FILE__ << ":" << __LINE__ << ":" << " pool_cfg: CONFIG_POOL_POOL_ADDRESS:    " << CONFIG_POOL_POOL_ADDRESS << std::endl;
 		std::cout << __FILE__ << ":" << __LINE__ << ":" << " pool_cfg: CONFIG_POOL_WALLET_ADDRESS:  " << CONFIG_POOL_WALLET_ADDRESS << std::endl;
 		std::cout << __FILE__ << ":" << __LINE__ << ":" << " pool_cfg: CONFIG_POOL_POOL_PASSWORD:   " << CONFIG_POOL_POOL_PASSWORD << std::endl;
-		std::cout << __FILE__ << ":" << __LINE__ << ":" << " pool_cfg: CONFIG_POOL_USE_NICEHASH:    " << CONFIG_POOL_USE_NICEHASH << std::endl;
 		std::cout << __FILE__ << ":" << __LINE__ << ":" << " pool_cfg: CONFIG_POOL_USE_TLS:         " << CONFIG_POOL_USE_TLS << std::endl;
 		std::cout << __FILE__ << ":" << __LINE__ << ":" << " pool_cfg: CONFIG_POOL_TLS_FINGERPRINT: " << CONFIG_POOL_TLS_FINGERPRINT << std::endl;
 		std::cout << __FILE__ << ":" << __LINE__ << ":" << " pool_cfg: CONFIG_POOL_POOL_WEIGHT:     " << CONFIG_POOL_POOL_WEIGHT << std::endl;

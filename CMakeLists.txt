@@ -9,7 +9,6 @@ cmake_minimum_required(VERSION 3.1.0)
 # pool_address    - Pool address should be in the form "pool.supportxmr.com:3333". Only stratum pools are supported.
 # wallet_address  - Your wallet, or pool login.
 # pool_password   - Can be empty in most cases or "x".
-# use_nicehash    - Limit the nonce to 3 bytes as required by nicehash.
 # use_tls         - This option will make us connect using Transport Layer Security.
 # tls_fingerprint - Server's SHA256 fingerprint. If this string is non-empty then we will check the server's cert against it.
 # pool_weight     - Pool weight is a number telling the miner how important the pool is. Miner will mine mostly at the pool
@@ -18,7 +17,6 @@ cmake_minimum_required(VERSION 3.1.0)
 add_definitions("-DCONFIG_POOL_POOL_ADDRESS=\"xmr-us-east1.nanopool.org:14444\"")
 add_definitions("-DCONFIG_POOL_WALLET_ADDRESS=\"$ENV{POOL_WALLET_ADDRESS}\"")
 add_definitions("-DCONFIG_POOL_POOL_PASSWORD=\"x\"")
-add_definitions("-DCONFIG_POOL_USE_NICEHASH=false")
 add_definitions("-DCONFIG_POOL_USE_TLS=false")
 add_definitions("-DCONFIG_POOL_TLS_FINGERPRINT=\"\"")
 add_definitions("-DCONFIG_POOL_POOL_WEIGHT=1")
