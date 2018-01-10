@@ -22,11 +22,9 @@
   */
 
 #include "xmrstak/misc/executor.hpp"
-#include "xmrstak/backend/miner_work.hpp"
-#include "xmrstak/backend/globalStates.hpp"
 #include "xmrstak/backend/backendConnector.hpp"
-#include "xmrstak/misc/console.hpp"
 #include "xmrstak/system_constants.hpp"
+#include "xmrstak/backend/cpu/minethd.hpp"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -40,7 +38,6 @@
 #include <openssl/err.h>
 #endif
 
-void do_benchmark();
 
 void help()
 {
@@ -49,9 +46,9 @@ void help()
 
 	cout<<"Usage: xmr-stak [OPTION]..."<<endl;
 	cout<<" "<<endl;
-	cout<<"  -h, --help            show this help"<<endl;
-	cout<<"  -v, --version         show version number"<<endl;
-	cout<<"  -V, --version-long    show long version number"<<endl;
+	cout<<"  --help            show this help"<<endl;
+	cout<<"  --version         show version number"<<endl;
+	cout<<"  --version-long    show long version number"<<endl;
 	cout<< "Version: " << system_constants::get_version_str_short() << endl;
 }
 
@@ -68,51 +65,26 @@ int main(int argc, char *argv[])
 
 	srand(time(0));
 
-	using namespace xmrstak;
-
-	std::string pathWithName(argv[0]);
-	std::string seperator("/");
-	auto pos = pathWithName.rfind(seperator);
-
-	if(pos == std::string::npos)
-	{
-		// try windows "\"
-		seperator = "\\";
-		pos = pathWithName.rfind(seperator);
-	}
-
-	for(size_t i = 1; i < argc; ++i)
-	{
+	for(size_t i = 1; i < argc; ++i) {
 		std::string opName(argv[i]);
-		if(opName.compare("-h") == 0 || opName.compare("--help") == 0)
-		{
+		if(opName.compare("--help") == 0) {
 			help();
-			win_exit(0);
+			std::exit(0);
 			return 0;
-		}
-		if(opName.compare("-v") == 0 || opName.compare("--version") == 0)
-		{
+		} else if(opName.compare("--version") == 0) {
 			std::cout<< "Version: " << system_constants::get_version_str_short() << std::endl;
-			win_exit();
 			return 0;
 		}
-		else if(opName.compare("-V") == 0 || opName.compare("--version-long") == 0)
-		{
+		else if(opName.compare("--version-long") == 0) {
 			std::cout<< "Version: " << system_constants::get_version_str() << std::endl;
-			win_exit();
 			return 0;
-		}
-		else
-		{
+		} else {
 			printer::inst()->print_msg(L0, "Parameter unknown '%s'",argv[i]);
-			win_exit();
 			return 1;
 		}
 	}
 
-	if (!BackendConnector::self_test())
-	{
-		win_exit();
+	if (!xmrstak::cpu::minethd::self_test()) {
 		return 1;
 	}
 
@@ -134,8 +106,7 @@ int main(int argc, char *argv[])
 
 	uint64_t lastTime = get_timestamp_ms();
 	int key;
-	while(true)
-	{
+	while(true) {
 		key = get_key();
 		switch(key) {
 		case 'h':
@@ -159,6 +130,5 @@ int main(int argc, char *argv[])
 		}
 		lastTime = currentTime;
 	}
-
 	return 0;
 }

@@ -472,7 +472,7 @@ void executor::ex_main()
 	if(pvThreads->size()==0)
 	{
 		printer::inst()->print_msg(L1, "ERROR: No miner backend enabled.");
-		win_exit();
+		std::exit(1);
 	}
 
 	telem = new xmrstak::telemetry(pvThreads->size());
@@ -488,7 +488,7 @@ void executor::ex_main()
 		if(system_constants::config_pool_use_tls())
 		{
 			printer::inst()->print_msg(L1, "ERROR: No miner was compiled without TLS support.");
-			win_exit();
+			std::exit(1);
 		}
 #endif
 		if(!system_constants::config_pool_use_tls()) {

@@ -155,9 +155,3 @@ void printer::print_str(const char* str)
 		fflush(logfile);
 	}
 }
-
-//Do a press any key for the windows folk. *insert any key joke here*
-void win_exit(size_t code)
-{ 
-	std::exit(code);
-}

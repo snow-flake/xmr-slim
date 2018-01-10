@@ -47,4 +47,3 @@ private:
 	FILE* logfile;
 };
 
-void win_exit(size_t code = 1);
