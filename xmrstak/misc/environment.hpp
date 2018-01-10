@@ -1,6 +1,5 @@
 #pragma once
 
-class printer;
 class executor;
 
 namespace xmrstak
@@ -29,7 +28,6 @@ struct environment
 	{
 	}
 
-	printer* pPrinter = nullptr;
 	globalStates* pglobalStates = nullptr;
 	executor* pExecutor = nullptr;
 };

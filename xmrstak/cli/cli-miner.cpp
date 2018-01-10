@@ -59,7 +59,7 @@ int main(int argc, char *argv[])
 			std::cout<< "Version: " << system_constants::get_version_str() << std::endl;
 			return 0;
 		} else {
-			printer::inst()->print_msg(L0, "Parameter unknown '%s'",argv[i]);
+			std::cout << "Parameter unknown '%s'" << argv[i] << std::endl;
 			return 1;
 		}
 	}
@@ -68,22 +68,23 @@ int main(int argc, char *argv[])
 		return 1;
 	}
 
-	printer::inst()->print_str("-------------------------------------------------------------------\n");
-	printer::inst()->print_str(system_constants::get_version_str_short().c_str());
-	printer::inst()->print_str("\n\n");
-	printer::inst()->print_str("You can use following keys to display reports:\n");
-	printer::inst()->print_str("'h' - hashrate\n");
-	printer::inst()->print_str("'r' - results\n");
-	printer::inst()->print_str("'c' - connection\n");
-	printer::inst()->print_str("-------------------------------------------------------------------\n");
-	printer::inst()->print_msg(L0,"Start mining: MONERO");
+	std::cout << "-------------------------------------------------------------------" << std::endl;
+	std::cout << system_constants::get_version_str_short() << std::endl;
+	std::cout << std::endl;
+	std::cout << "You can use following keys to display reports:" << std::endl;
+	std::cout << "'h' - hashrate" << std::endl;
+	std::cout << "'r' - results" << std::endl;
+	std::cout << "'c' - connection" << std::endl;
+	std::cout << "-------------------------------------------------------------------" << std::endl;
+	std::cout << "Start mining: MONERO" << std::endl;
+	std::cout << std::endl;
 
 	executor::inst()->ex_start(system_constants::DaemonMode());
 
 	uint64_t lastTime = get_timestamp_ms();
 	int key;
 	while(true) {
-		key = get_key();
+		key = printer::get_key();
 		switch(key) {
 		case 'h':
 			executor::inst()->push_event(ex_event(EV_USR_HASHRATE));

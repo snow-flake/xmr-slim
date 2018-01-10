@@ -53,7 +53,7 @@ std::vector<xmrstak::iBackend*>* thread_starter(xmrstak::miner_work& pWork)
 	auto cpuThreads = xmrstak::cpu::minethd::thread_starter(static_cast<uint32_t>(pvThreads->size()), pWork);
 	pvThreads->insert(std::end(*pvThreads), std::begin(cpuThreads), std::end(cpuThreads));
 	if(cpuThreads.size() == 0)
-		printer::inst()->print_msg(L0, "WARNING: backend CPU disabled.");
+		printer::print_msg(L0, "WARNING: backend CPU disabled.");
 
 	xmrstak::globalStates::inst().iThreadCount = pvThreads->size();
 	return pvThreads;
@@ -134,7 +134,7 @@ bool executor::get_live_pools(std::vector<jpsock*>& eval_pools, bool is_dev)
 		{
 			if(xmrstak::globalStates::inst().pool_id != invalid_pool_id)
 			{
-				printer::inst()->print_msg(L0, "All pools are dead. Idling...");
+				printer::print_msg(L0, "All pools are dead. Idling...");
 				auto work = xmrstak::miner_work();
 				xmrstak::pool_data dat;
 				xmrstak::globalStates::inst().switch_work(work, dat);
@@ -142,7 +142,7 @@ bool executor::get_live_pools(std::vector<jpsock*>& eval_pools, bool is_dev)
 
 			if(over_limit == pool_count)
 			{
-				printer::inst()->print_msg(L0, "All pools are over give up limit. Exitting.");
+				printer::print_msg(L0, "All pools are over give up limit. Exitting.");
 				exit(0);
 			}
 
@@ -179,13 +179,13 @@ void executor::eval_pool_choice()
 	if(running == 0)
 	{
 		if(dev_time)
-			printer::inst()->print_msg(L1, "Fast-connecting to dev pool ...");
+			printer::print_msg(L1, "Fast-connecting to dev pool ...");
 
 		for(jpsock* pool : eval_pools)
 		{
 			if(pool->can_connect())
 			{
-				printer::inst()->print_msg(L1, "Fast-connecting to %s pool ...", pool->get_pool_addr());
+				printer::print_msg(L1, "Fast-connecting to %s pool ...", pool->get_pool_addr());
 				std::string error;
 				if(!pool->connect(error))
 					log_socket_error(pool, std::move(error));
@@ -203,9 +203,9 @@ void executor::eval_pool_choice()
 		if(!goal->is_running() && goal->can_connect())
 		{
 			if(dev_time)
-				printer::inst()->print_msg(L1, "Connecting to dev pool ...");
+				printer::print_msg(L1, "Connecting to dev pool ...");
 			else
-				printer::inst()->print_msg(L1, "Connecting to %s pool ...", goal->get_pool_addr());
+				printer::print_msg(L1, "Connecting to %s pool ...", goal->get_pool_addr());
 
 			std::string error;
 			if(!goal->connect(error))
@@ -248,7 +248,7 @@ void executor::eval_pool_choice()
 		{
 			if(!goal2->is_running() && goal2->can_connect())
 			{
-				printer::inst()->print_msg(L1, "Background-connect to %s pool ...", goal2->get_pool_addr());
+				printer::print_msg(L1, "Background-connect to %s pool ...", goal2->get_pool_addr());
 				std::string error;
 				if(!goal2->connect(error))
 					log_socket_error(goal2, std::move(error));
@@ -278,7 +278,7 @@ void executor::log_socket_error(jpsock* pool, std::string&& sError)
 	sError.insert(0, pool_name);
 
 	vSocketLog.emplace_back(std::move(sError));
-	printer::inst()->print_msg(L1, "SOCKET ERROR - %s", vSocketLog.back().msg.c_str());
+	printer::print_msg(L1, "SOCKET ERROR - %s", vSocketLog.back().msg.c_str());
 
 	push_event(ex_event(EV_EVAL_POOL_CHOICE));
 }
@@ -332,9 +332,9 @@ void executor::on_sock_ready(size_t pool_id)
 	jpsock* pool = pick_pool_by_id(pool_id);
 
 	if(pool->is_dev_pool())
-		printer::inst()->print_msg(L1, "Dev pool connected. Logging in...");
+		printer::print_msg(L1, "Dev pool connected. Logging in...");
 	else
-		printer::inst()->print_msg(L1, "Pool %s connected. Logging in...", pool->get_pool_addr());
+		printer::print_msg(L1, "Pool %s connected. Logging in...", pool->get_pool_addr());
 
 	if(!pool->cmd_login())
 	{
@@ -361,7 +361,7 @@ void executor::on_sock_error(size_t pool_id, std::string&& sError, bool silent)
 	if(!pool->is_dev_pool())
 		log_socket_error(pool, std::move(sError));
 	else
-		printer::inst()->print_msg(L1, "Dev pool socket error - mining on user pool...");
+		printer::print_msg(L1, "Dev pool socket error - mining on user pool...");
 }
 
 void executor::on_pool_have_job(size_t pool_id, pool_job& oPoolJob)
@@ -392,7 +392,7 @@ void executor::on_pool_have_job(size_t pool_id, pool_job& oPoolJob)
 	if(iPoolDiff != pool->get_current_diff())
 	{
 		iPoolDiff = pool->get_current_diff();
-		printer::inst()->print_msg(L2, "Difficulty changed. Now: %llu.", int_port(iPoolDiff));
+		printer::print_msg(L2, "Difficulty changed. Now: %llu.", int_port(iPoolDiff));
 	}
 
 	if(dat.pool_id != pool_id)
@@ -401,15 +401,15 @@ void executor::on_pool_have_job(size_t pool_id, pool_job& oPoolJob)
 		if(dat.pool_id != invalid_pool_id && (prev_pool = pick_pool_by_id(dat.pool_id)) != nullptr)
 		{
 			if(prev_pool->is_dev_pool())
-				printer::inst()->print_msg(L2, "Switching back to user pool.");
+				printer::print_msg(L2, "Switching back to user pool.");
 			else
-				printer::inst()->print_msg(L2, "Pool switched.");
+				printer::print_msg(L2, "Pool switched.");
 		}
 		else
-			printer::inst()->print_msg(L2, "Pool logged in.");
+			printer::print_msg(L2, "Pool logged in.");
 	}
 	else
-		printer::inst()->print_msg(L3, "New block detected.");
+		printer::print_msg(L3, "New block detected.");
 }
 
 void executor::on_miner_result(size_t pool_id, job_result& oResult)
@@ -443,19 +443,19 @@ void executor::on_miner_result(size_t pool_id, job_result& oResult)
 	{
 		uint64_t* targets = (uint64_t*)oResult.bResult;
 		log_result_ok(jpsock::t64_to_diff(targets[3]));
-		printer::inst()->print_msg(L3, "Result accepted by the pool.");
+		printer::print_msg(L3, "Result accepted by the pool.");
 	}
 	else
 	{
 		if(!pool->have_sock_error())
 		{
-			printer::inst()->print_msg(L3, "Result rejected by the pool.");
+			printer::print_msg(L3, "Result rejected by the pool.");
 
 			std::string error = pool->get_call_error();
 
 			if(strncasecmp(error.c_str(), "Unauthenticated", 15) == 0)
 			{
-				printer::inst()->print_msg(L2, "Your miner was unable to find a share in time. Either the pool difficulty is too high, or the pool timeout is too low.");
+				printer::print_msg(L2, "Your miner was unable to find a share in time. Either the pool difficulty is too high, or the pool timeout is too low.");
 				pool->disconnect();
 			}
 
@@ -474,7 +474,7 @@ void disable_sigpipe()
 	sa.sa_handler = SIG_IGN;
 	sa.sa_flags = 0;
 	if (sigaction(SIGPIPE, &sa, 0) == -1)
-		printer::inst()->print_msg(L1, "ERROR: Call to sigaction failed!");
+		printer::print_msg(L1, "ERROR: Call to sigaction failed!");
 }
 
 void executor::ex_main()
@@ -490,7 +490,7 @@ void executor::ex_main()
 
 	if(pvThreads->size()==0)
 	{
-		printer::inst()->print_msg(L1, "ERROR: No miner backend enabled.");
+		printer::print_msg(L1, "ERROR: No miner backend enabled.");
 		std::exit(1);
 	}
 
@@ -505,7 +505,7 @@ void executor::ex_main()
 	{
 		if(system_constants::config_pool_use_tls())
 		{
-			printer::inst()->print_msg(L1, "ERROR: No miner was compiled without TLS support.");
+			printer::print_msg(L1, "ERROR: No miner was compiled without TLS support.");
 			std::exit(1);
 		}
 		if(!system_constants::config_pool_use_tls()) {
@@ -857,5 +857,5 @@ void executor::print_report(ex_event_name ev)
 		break;
 	}
 
-	printer::inst()->print_str(out.c_str());
+	std::cout << out << std::endl;
 }

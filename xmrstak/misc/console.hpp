@@ -1,13 +1,12 @@
 #pragma once
 
-#include "xmrstak/misc/environment.hpp"
+#include "xmrstak/system_constants.hpp"
 
-#include <mutex>
+#include <termios.h>
+#include <unistd.h>
+#include <stdio.h>
+#include <iostream>
 
-
-// Warning - on Linux get_key will detect control keys, but not on Windows.
-// We will only use it for alphanum keys anyway.
-int get_key();
 
 // on MSVC sizeof(long int) = 4, gcc sizeof(long int) = 8, this is the workaround
 // now we can use %llu on both compilers
@@ -18,25 +17,49 @@ inline long long unsigned int int_port(size_t i)
 
 enum verbosity : size_t { L0 = 0, L1 = 1, L2 = 2, L3 = 3, L4 = 4, LINF = 100};
 
-class printer
-{
-public:
-	static inline printer* inst()
+namespace printer {
+	static inline int get_key()
 	{
-		auto& env = xmrstak::environment::inst();
-		if(env.pPrinter == nullptr)
-			env.pPrinter = new printer;
-		return env.pPrinter;
-	};
+		struct termios oldattr, newattr;
+		int ch;
+		tcgetattr( STDIN_FILENO, &oldattr );
+		newattr = oldattr;
+		newattr.c_lflag &= ~( ICANON | ECHO );
+		tcsetattr( STDIN_FILENO, TCSANOW, &newattr );
+		ch = getchar();
+		tcsetattr( STDIN_FILENO, TCSANOW, &oldattr );
+		return ch;
+	}
 
-	void print_msg(verbosity verbose, const char* fmt, ...);
-	void print_str(const char* str);
+	static inline void print_msg(verbosity verbose, const char* fmt, ...)
+	{
+		const int verbose_level = (verbosity)system_constants::GetVerboseLevel();
+		if(verbose > verbose_level)
+			return;
 
-private:
-	printer();
+		char buf[1024];
+		size_t bpos;
+		tm stime;
 
-	std::mutex print_mutex;
-	verbosity verbose_level;
-	bool b_flush_stdout;
+		time_t now = time(nullptr);
+		localtime_r(&now, &stime);
+
+		strftime(buf, sizeof(buf), "[%F %T] : ", &stime);
+		bpos = strlen(buf);
+
+		va_list args;
+		va_start(args, fmt);
+		vsnprintf(buf+bpos, sizeof(buf)-bpos, fmt, args);
+		va_end(args);
+		bpos = strlen(buf);
+
+		if(bpos+2 >= sizeof(buf))
+			return;
+
+		buf[bpos] = '\n';
+		buf[bpos+1] = '\0';
+
+		std::cout << buf << std::endl;
+	}
 };
 

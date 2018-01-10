@@ -111,7 +111,7 @@ minethd::minethd(miner_work& pWork, size_t iNo, int iMultiway, bool no_prefetch,
 
 	if(affinity >= 0) //-1 means no affinity
 		if(!thd_setaffinity(oWorkThd.native_handle(), affinity))
-			printer::inst()->print_msg(L1, "WARNING setting affinity failed.");
+			printer::print_msg(L1, "WARNING setting affinity failed.");
 }
 
 cryptonight_ctx* minethd::minethd_alloc_ctx()
@@ -124,19 +124,19 @@ cryptonight_ctx* minethd::minethd_alloc_ctx()
 	case ::system_constants::never_use:
 		ctx = cryptonight_alloc_ctx(1, 1, &msg);
 		if (ctx == NULL)
-			printer::inst()->print_msg(L0, "MEMORY ALLOC FAILED: %s", msg.warning);
+			printer::print_msg(L0, "MEMORY ALLOC FAILED: %s", msg.warning);
 		return ctx;
 
 	case ::system_constants::no_mlck:
 		ctx = cryptonight_alloc_ctx(1, 0, &msg);
 		if (ctx == NULL)
-			printer::inst()->print_msg(L0, "MEMORY ALLOC FAILED: %s", msg.warning);
+			printer::print_msg(L0, "MEMORY ALLOC FAILED: %s", msg.warning);
 		return ctx;
 
 	case ::system_constants::print_warning:
 		ctx = cryptonight_alloc_ctx(1, 1, &msg);
 		if (msg.warning != NULL)
-			printer::inst()->print_msg(L0, "MEMORY ALLOC FAILED: %s", msg.warning);
+			printer::print_msg(L0, "MEMORY ALLOC FAILED: %s", msg.warning);
 		if (ctx == NULL)
 			ctx = cryptonight_alloc_ctx(0, 0, NULL);
 		return ctx;
@@ -204,8 +204,7 @@ bool minethd::self_test()
 		cryptonight_free_ctx(ctx[i]);
 
 	if(!bResult)
-		printer::inst()->print_msg(L0,
-			"Cryptonight hash self-test failed. This might be caused by bad compiler optimizations.");
+		printer::print_msg(L0, "Cryptonight hash self-test failed. This might be caused by bad compiler optimizations.");
 
 	return bResult;
 }
@@ -228,13 +227,13 @@ std::vector<iBackend*> minethd::thread_starter(uint32_t threadOffset, miner_work
 		if(auto_config.affine_to_cpu >= 0)
 		{
 #if defined(__APPLE__)
-			printer::inst()->print_msg(L1, "WARNING on MacOS thread affinity is only advisory.");
+			printer::print_msg(L1, "WARNING on MacOS thread affinity is only advisory.");
 #endif
 
-			printer::inst()->print_msg(L1, "Starting %dx thread, affinity: %d.", auto_config.low_power_mode, (int)auto_config.affine_to_cpu);
+			printer::print_msg(L1, "Starting %dx thread, affinity: %d.", auto_config.low_power_mode, (int)auto_config.affine_to_cpu);
 		}
 		else
-			printer::inst()->print_msg(L1, "Starting %dx thread, no affinity.", auto_config.low_power_mode);
+			printer::print_msg(L1, "Starting %dx thread, no affinity.", auto_config.low_power_mode);
 		
 		minethd* thd = new minethd(pWork, i + threadOffset, auto_config.low_power_mode, auto_config.no_prefetch, auto_config.affine_to_cpu);
 		pvThreads.push_back(thd);
