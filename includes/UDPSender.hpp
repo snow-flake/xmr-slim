@@ -139,7 +139,7 @@ namespace Statsd
             constexpr unsigned int batchingWait{ 1000U };
 
             m_batching = true;
-            m_batchsize = batchsize.value();
+            m_batchsize = *batchsize;  // TODO: changed from upstream for MacOS compatability :-/
 
             // Define the batching thread
             m_batchingThread = std::thread([this, batchingWait] {

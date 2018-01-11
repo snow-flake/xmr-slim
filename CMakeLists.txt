@@ -190,10 +190,11 @@ endif()
 # Compiler settings
 ################################################################################
 
+#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /std:c++lastest")
 # enforce C++11
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 17)
 
 if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
     set(CMAKE_INSTALL_PREFIX "${CMAKE_BINARY_DIR}" CACHE PATH "install prefix" FORCE)
@@ -320,8 +321,8 @@ file(
         "xmrstak/rapidjson/*"
         "xmrstak/net/*.hpp"
         "xmrstak/net/*.cpp"
-        "includes/*.hpp"
-        "includes/*.cpp"
+        "includes/StatsdClient.hpp"
+        "includes/UDPSender.hpp"
 )
 
 # compile final binary
@@ -338,8 +339,8 @@ target_link_libraries(xmr-stak ${LIBS})
 
 
 # compile final binary
-file(GLOB STATSD_TEST_CPP "includes/StatsdClient.hpp" "includes/statsd_test.cpp")
-#set_source_files_properties(${STATSD_TEST_CPP} PROPERTIES LANGUAGE CXX)
+file(GLOB STATSD_TEST_CPP "includes/StatsdClient.hpp" "includes/UDPSender.hpp" "includes/statsd_test.cpp")
+set_source_files_properties(${STATSD_TEST_CPP} PROPERTIES LANGUAGE CXX)
 add_executable(statsd-test ${STATSD_TEST_CPP})
 
 
