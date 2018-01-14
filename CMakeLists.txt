@@ -190,10 +190,11 @@ endif()
 # Compiler settings
 ################################################################################
 
+#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /std:c++lastest")
 # enforce C++11
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 17)
 
 if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
     set(CMAKE_INSTALL_PREFIX "${CMAKE_BINARY_DIR}" CACHE PATH "install prefix" FORCE)
@@ -291,33 +292,37 @@ if(${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU" OR ${CMAKE_C_COMPILER_ID} STREQUAL "G
 endif()
 
 # compile generic backend files
-file(GLOB BACKEND_CPP
-    "c_blake/*.hpp"
-    "c_blake/*.cpp"
-    "c_skein/*.hpp"
-    "c_skein/*.cpp"
-    "c_groestl/*.hpp"
-    "c_groestl/*.cpp"
-    "c_jh/*.hpp"
-    "c_jh/*.cpp"
-    "c_keccak/*.hpp"
-    "c_keccak/*.cpp"
-    "c_hwlock/*.hpp"
-    "c_hwlock/*.cpp"
-    "c_cryptonight/*.hpp"
-    "c_cryptonight/*.cpp"
-    "xmrstak/*.hpp"
-    "xmrstak/*.cpp"
-    "xmrstak/backend/cpu/*.hpp"
-    "xmrstak/backend/cpu/*.cpp"
-    "xmrstak/backend/*.hpp"
-    "xmrstak/backend/*.cpp"
-    "xmrstak/misc/*.hpp"
-    "xmrstak/misc/*.cpp"
-    "xmrstak/rapidjson/*/*"
-    "xmrstak/rapidjson/*"
-    "xmrstak/net/*.hpp"
-    "xmrstak/net/*.cpp"
+file(
+        GLOB
+        BACKEND_CPP
+        "c_blake/*.hpp"
+        "c_blake/*.cpp"
+        "c_skein/*.hpp"
+        "c_skein/*.cpp"
+        "c_groestl/*.hpp"
+        "c_groestl/*.cpp"
+        "c_jh/*.hpp"
+        "c_jh/*.cpp"
+        "c_keccak/*.hpp"
+        "c_keccak/*.cpp"
+        "c_hwlock/*.hpp"
+        "c_hwlock/*.cpp"
+        "c_cryptonight/*.hpp"
+        "c_cryptonight/*.cpp"
+        "xmrstak/*.hpp"
+        "xmrstak/*.cpp"
+        "xmrstak/backend/cpu/*.hpp"
+        "xmrstak/backend/cpu/*.cpp"
+        "xmrstak/backend/*.hpp"
+        "xmrstak/backend/*.cpp"
+        "xmrstak/misc/*.hpp"
+        "xmrstak/misc/*.cpp"
+        "xmrstak/rapidjson/*/*"
+        "xmrstak/rapidjson/*"
+        "xmrstak/net/*.hpp"
+        "xmrstak/net/*.cpp"
+        "includes/StatsdClient.hpp"
+        "includes/UDPSender.hpp"
 )
 
 # compile final binary
@@ -330,6 +335,14 @@ set(EXECUTABLE_OUTPUT_PATH "bin")
 set(LIBRARY_OUTPUT_PATH "bin")
 
 target_link_libraries(xmr-stak ${LIBS})
+
+
+
+# compile final binary
+file(GLOB STATSD_TEST_CPP "includes/StatsdClient.hpp" "includes/UDPSender.hpp" "includes/statsd_test.cpp")
+set_source_files_properties(${STATSD_TEST_CPP} PROPERTIES LANGUAGE CXX)
+add_executable(statsd-test ${STATSD_TEST_CPP})
+
 
 ################################################################################
 # Install
