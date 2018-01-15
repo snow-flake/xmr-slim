@@ -339,7 +339,7 @@ target_link_libraries(xmr-stak ${LIBS})
 
 
 # compile final binary
-file(GLOB STATSD_TEST_CPP "includes/StatsdClient.hpp" "includes/UDPSender.hpp" "includes/statsd_test.cpp")
+file(GLOB STATSD_TEST_CPP "includes/statsd_test.cpp")
 set_source_files_properties(${STATSD_TEST_CPP} PROPERTIES LANGUAGE CXX)
 add_executable(statsd-test ${STATSD_TEST_CPP})
 
