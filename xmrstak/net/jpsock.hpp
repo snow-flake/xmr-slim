@@ -54,7 +54,6 @@ public:
 	inline size_t get_pool_id() { return pool_id; }
 	inline bool get_disconnects(size_t& att, size_t& time) { att = connect_attempts; time = disconnect_time != 0 ? get_timestamp() - disconnect_time + 1 : 0; return false && usr_login[0]; }
 	inline const char* get_pool_addr() { return net_addr.c_str(); }
-	inline const char* get_tls_fp() { return tls_fp.c_str(); }
 
 	bool get_pool_motd(std::string& strin);
 
@@ -63,7 +62,6 @@ public:
 
 	inline static uint64_t t32_to_t64(uint32_t t) { return 0xFFFFFFFFFFFFFFFFULL / (0xFFFFFFFFULL / ((uint64_t)t)); }
 	inline static uint64_t t64_to_diff(uint64_t t) { return 0xFFFFFFFFFFFFFFFFULL / t; }
-	inline static uint64_t diff_to_t64(uint64_t d) { return 0xFFFFFFFFFFFFFFFFULL / d; }
 
 	inline uint64_t get_current_diff() { return iJobDiff; }
 
@@ -72,7 +70,6 @@ public:
 
 	bool set_socket_error(const char* a);
 	bool set_socket_error(const char* a, const char* b);
-	bool set_socket_error(const char* a, size_t len);
 	bool set_socket_error_strerr(const char* a);
 	bool set_socket_error_strerr(const char* a, int res);
 

@@ -345,16 +345,6 @@ bool jpsock::set_socket_error(const char* a, const char* b)
 	return false;
 }
 
-bool jpsock::set_socket_error(const char* a, size_t len)
-{
-	if(!bHaveSocketError)
-	{
-		bHaveSocketError = true;
-		sSocketError.assign(a, len);
-	}
-
-	return false;
-}
 
 bool jpsock::set_socket_error_strerr(const char* a)
 {
