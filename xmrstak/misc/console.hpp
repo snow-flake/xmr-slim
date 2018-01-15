@@ -1,7 +1,7 @@
 #pragma once
 
 #include "xmrstak/system_constants.hpp"
-
+#include <stdarg.h>
 #include <termios.h>
 #include <unistd.h>
 #include <stdio.h>
