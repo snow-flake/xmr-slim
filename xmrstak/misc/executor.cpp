@@ -470,21 +470,10 @@ void executor::ex_main()
 	size_t i=0;
 	for(; i < pc; i++)
 	{
-		if(system_constants::config_pool_use_tls())
-		{
-			printer::print_msg(L1, "ERROR: No miner was compiled without TLS support.");
-			std::exit(1);
-		}
-		if(!system_constants::config_pool_use_tls()) {
-			dev_tls = false;
-		}
-
 		pools.emplace_back(i+1,
 						   system_constants::config_pool_pool_address(),
 						   system_constants::config_pool_wallet_address(),
-						   system_constants::config_pool_pool_password(),
-						   system_constants::config_pool_use_tls(),
-						   system_constants::config_pool_tls_fingerprint()
+						   system_constants::config_pool_pool_password()
 		);
 	}
 

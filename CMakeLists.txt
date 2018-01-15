@@ -17,8 +17,6 @@ cmake_minimum_required(VERSION 3.1.0)
 add_definitions("-DCONFIG_POOL_POOL_ADDRESS=\"xmr-us-east1.nanopool.org:14444\"")
 add_definitions("-DCONFIG_POOL_WALLET_ADDRESS=\"$ENV{POOL_WALLET_ADDRESS}\"")
 add_definitions("-DCONFIG_POOL_POOL_PASSWORD=\"x\"")
-add_definitions("-DCONFIG_POOL_USE_TLS=false")
-add_definitions("-DCONFIG_POOL_TLS_FINGERPRINT=\"\"")
 
 
 # Network timeouts.

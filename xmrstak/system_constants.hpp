@@ -29,12 +29,6 @@ namespace system_constants {
 
 	inline const char *config_pool_pool_password() { return CONFIG_POOL_POOL_PASSWORD; }
 
-	inline const bool config_pool_use_tls() { return CONFIG_POOL_USE_TLS; }
-
-	inline const char *config_pool_tls_fingerprint() { return CONFIG_POOL_TLS_FINGERPRINT; }
-
-	inline bool TlsSecureAlgos() { return CONFIG_TLS_SECURE_ALGO; }
-
 	inline uint64_t GetVerboseLevel() { return CONFIG_VERBOSE_LEVEL; }
 
 	inline bool PrintMotd() { return CONFIG_PRINT_MOTD; }
@@ -52,16 +46,6 @@ namespace system_constants {
 	inline bool HaveHardwareAes() { return CONFIG_AES_OVERRIDE; }
 
 	inline slow_mem_cfg GetSlowMemSetting() { return CONFIG_USE_SLOW_MEMORY; }
-
-	inline void print_system_config() {
-		std::cout << __FILE__ << ":" << __LINE__ << ":" << " pool_cfg: CONFIG_POOL_POOL_ADDRESS:    " << CONFIG_POOL_POOL_ADDRESS << std::endl;
-		std::cout << __FILE__ << ":" << __LINE__ << ":" << " pool_cfg: CONFIG_POOL_WALLET_ADDRESS:  " << CONFIG_POOL_WALLET_ADDRESS << std::endl;
-		std::cout << __FILE__ << ":" << __LINE__ << ":" << " pool_cfg: CONFIG_POOL_POOL_PASSWORD:   " << CONFIG_POOL_POOL_PASSWORD << std::endl;
-		std::cout << __FILE__ << ":" << __LINE__ << ":" << " pool_cfg: CONFIG_POOL_USE_TLS:         " << CONFIG_POOL_USE_TLS << std::endl;
-		std::cout << __FILE__ << ":" << __LINE__ << ":" << " pool_cfg: CONFIG_POOL_TLS_FINGERPRINT: " << CONFIG_POOL_TLS_FINGERPRINT << std::endl;
-		std::cout << __FILE__ << ":" << __LINE__ << ":" << " pool_cfg: CONFIG_POOL_POOL_WEIGHT:     " << CONFIG_POOL_POOL_WEIGHT << std::endl;
-		std::cout << __FILE__ << ":" << __LINE__ << ":" << " pool_cfg: CONFIG_POOL_POOL_WEIGHT:     " << CONFIG_POOL_POOL_WEIGHT << std::endl;
-	}
 }
 
 #endif //XMR_SLIM_SYSTEM_CONSTANTS_HPP

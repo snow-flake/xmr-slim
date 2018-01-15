@@ -36,7 +36,7 @@ public:
 class jpsock
 {
 public:
-	jpsock(size_t id, const char* sAddr, const char* sLogin, const char* sPassword, bool tls, const char* tls_fp);
+	jpsock(size_t id, const char* sAddr, const char* sLogin, const char* sPassword);
 	~jpsock();
 
 	bool connect(std::string& sConnectError);
