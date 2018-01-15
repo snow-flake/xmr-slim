@@ -803,6 +803,8 @@ bool jpsock::cmd_submit(const char* sJobId, uint32_t iNonce, const uint8_t* bRes
 		sMinerId, sJobId, sNonce, sResult, sBackend, sHashcount, sAlgo);
 
 	opq_json_val oResult(nullptr);
+
+	std::cout << __FILE__ << ":" << __LINE__ << ":jpsock::cmd_submit: " << cmd_buffer << std::endl;
 	return cmd_ret_wait(cmd_buffer, oResult);
 }
 
