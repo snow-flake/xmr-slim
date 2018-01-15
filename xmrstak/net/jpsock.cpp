@@ -29,7 +29,8 @@
 
 #include "xmrstak/misc/executor.hpp"
 #include "xmrstak/misc/jext.hpp"
-#include "xmrstak/system_constants.hpp"
+#include "includes/json.hpp"
+
 
 /* Assume that any non-Windows platform uses POSIX-style sockets instead. */
 #include <sys/socket.h>
@@ -282,9 +283,7 @@ struct jpsock::opq_json_val
 	opq_json_val(const Value* val) : val(val) {}
 };
 
-jpsock::jpsock(size_t id, const char* sAddr, const char* sLogin, const char* sPassword) :
-	net_addr(sAddr), usr_login(sLogin), usr_pass(sPassword), pool_id(id),
-	connect_time(0), connect_attempts(0), disconnect_time(0), quiet_close(false)
+jpsock::jpsock(size_t id) : pool_id(id), connect_time(0), connect_attempts(0), disconnect_time(0), quiet_close(false)
 {
 	sock_init();
 
@@ -617,7 +616,8 @@ bool jpsock::connect(std::string& sConnectError)
 	connect_attempts++;
 	connect_time = get_timestamp();
 
-	if(sck->set_hostname(net_addr.c_str()))
+	const std::string host_name = system_constants::get_pool_pool_address();
+	if(sck->set_hostname(host_name.c_str()))
 	{
 		bRunning = true;
 		disconnect_time = 0;
@@ -649,6 +649,7 @@ void jpsock::disconnect(bool quiet)
 bool jpsock::cmd_ret_wait(const char* sPacket, opq_json_val& poResult)
 {
 	//printf("SEND: %s\n", sPacket);
+	std::cout << __FILE__ << ":" << __LINE__ << ":jpsock::cmd_ret_wait: " << sPacket << std::endl;
 
 	/*Set up the call rsp for the call reply*/
 	prv->oCallValue.SetNull();
@@ -660,6 +661,7 @@ bool jpsock::cmd_ret_wait(const char* sPacket, opq_json_val& poResult)
 
 	if(!sck->send(sPacket))
 	{
+		std::cout << __FILE__ << ":" << __LINE__ << ":jpsock::cmd_ret_wait:" << "Failed, disconnecting" << std::endl;
 		disconnect(); //This will join the other thread;
 		return false;
 	}
@@ -693,15 +695,19 @@ bool jpsock::cmd_ret_wait(const char* sPacket, opq_json_val& poResult)
 
 bool jpsock::cmd_login()
 {
-	char cmd_buffer[1024];
+	nlohmann::json data;
+	data["method"] = "login";
+	data["id"] = 1;
+	data["params"]["login"] = system_constants::get_pool_wallet_address();
+	data["params"]["pass"] = system_constants::get_pool_pool_password();
+	data["params"]["agent"] = system_constants::get_version_str();
 
-	snprintf(cmd_buffer, sizeof(cmd_buffer), "{\"method\":\"login\",\"params\":{\"login\":\"%s\",\"pass\":\"%s\",\"agent\":\"%s\"},\"id\":1}\n",
-		usr_login.c_str(), usr_pass.c_str(), system_constants::get_version_str().c_str());
+	std::string cmd_buffer = data.dump();
 
 	opq_json_val oResult(nullptr);
 
 	/*Normal error conditions (failed login etc..) will end here*/
-	if (!cmd_ret_wait(cmd_buffer, oResult))
+	if (!cmd_ret_wait(cmd_buffer.c_str(), oResult))
 		return false;
 
 	if (!oResult.val->IsObject())

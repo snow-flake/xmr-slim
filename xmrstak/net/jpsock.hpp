@@ -8,6 +8,7 @@
 #include <condition_variable>
 #include <thread>
 #include <string>
+#include "xmrstak/system_constants.hpp"
 
 
 /* Our pool can have two kinds of errors:
@@ -36,7 +37,7 @@ public:
 class jpsock
 {
 public:
-	jpsock(size_t id, const char* sAddr, const char* sLogin, const char* sPassword);
+	jpsock(size_t id);
 	~jpsock();
 
 	bool connect(std::string& sConnectError);
@@ -52,8 +53,7 @@ public:
 	inline bool is_running() { return bRunning; }
 	inline bool is_logged_in() { return bLoggedIn; }
 	inline size_t get_pool_id() { return pool_id; }
-	inline bool get_disconnects(size_t& att, size_t& time) { att = connect_attempts; time = disconnect_time != 0 ? get_timestamp() - disconnect_time + 1 : 0; return false && usr_login[0]; }
-	inline const char* get_pool_addr() { return net_addr.c_str(); }
+	inline bool get_disconnects(size_t& att, size_t& time) { att = connect_attempts; time = disconnect_time != 0 ? get_timestamp() - disconnect_time + 1 : 0; return false && true; }
 
 	bool get_pool_motd(std::string& strin);
 
@@ -74,11 +74,6 @@ public:
 	bool set_socket_error_strerr(const char* a, int res);
 
 private:
-	std::string net_addr;
-	std::string usr_login;
-	std::string usr_pass;
-	std::string tls_fp;
-
 	size_t pool_id;
 
 	bool ext_algo = false;
