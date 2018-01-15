@@ -776,36 +776,27 @@ bool jpsock::cmd_login()
 
 bool jpsock::cmd_submit(const char* sJobId, uint32_t iNonce, const uint8_t* bResult, xmrstak::iBackend* bend)
 {
-	char cmd_buffer[1024];
 	char sNonce[9];
-	char sResult[65];
-	/*Extensions*/
-	char sAlgo[64] = {0};
-	char sBackend[64] = {0};
-	char sHashcount[64] = {0};
-
-	if(ext_backend)
-		snprintf(sBackend, sizeof(sBackend), ",\"backend\":\"cpu\"");
-
-	if(ext_hashcount)
-		snprintf(sHashcount, sizeof(sHashcount), ",\"hashcount\":%llu", int_port(bend->iHashCount.load(std::memory_order_relaxed)));
-
-	if(ext_algo)
-		snprintf(sAlgo, sizeof(sAlgo), ",\"algo\":\"%s\"", "cryptonight");
-
 	bin2hex((unsigned char*)&iNonce, 4, sNonce);
 	sNonce[8] = '\0';
 
+	char sResult[65];
 	bin2hex(bResult, 32, sResult);
 	sResult[64] = '\0';
 
-	snprintf(cmd_buffer, sizeof(cmd_buffer), "{\"method\":\"submit\",\"params\":{\"id\":\"%s\",\"job_id\":\"%s\",\"nonce\":\"%s\",\"result\":\"%s\"%s%s%s},\"id\":1}\n",
-		sMinerId, sJobId, sNonce, sResult, sBackend, sHashcount, sAlgo);
+	nlohmann::json data;
+	data["method"] = "submit";
+	data["params"]["id"] = sMinerId;
+	data["params"]["job_id"] = sJobId;
+	data["params"]["nonce"] = sNonce;
+	data["params"]["result"] = sResult;
+	data["id"] = 1;
+
+	const std::string cmd_buffer = data.dump();
+	std::cout << __FILE__ << ":" << __LINE__ << ":jpsock::cmd_submit: " << cmd_buffer << std::endl;
 
 	opq_json_val oResult(nullptr);
-
-	std::cout << __FILE__ << ":" << __LINE__ << ":jpsock::cmd_submit: " << cmd_buffer << std::endl;
-	return cmd_ret_wait(cmd_buffer, oResult);
+	return cmd_ret_wait(cmd_buffer.c_str(), oResult);
 }
 
 void jpsock::save_nonce(uint32_t nonce)
