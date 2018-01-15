@@ -101,20 +101,17 @@ void executor::ex_clock_thd()
 	}
 }
 
-bool executor::get_live_pools(std::vector<jpsock*>& eval_pools, bool is_dev)
+bool executor::get_live_pools(std::vector<jpsock*>& eval_pools)
 {
 	size_t limit = system_constants::GetGiveUpLimit();
 	size_t wait = system_constants::GetNetRetry();
 
-	if(limit == 0 || is_dev) limit = (-1); //No limit = limit of 2^64-1
+	if(limit == 0 || false) limit = (-1); //No limit = limit of 2^64-1
 
 	size_t pool_count = 0;
 	size_t over_limit = 0;
 	for(jpsock& pool : pools)
 	{
-		if(false != is_dev)
-			continue;
-
 		// Only eval live pools
 		size_t num, dtime;
 		if(pool.get_disconnects(num, dtime))
@@ -130,26 +127,21 @@ bool executor::get_live_pools(std::vector<jpsock*>& eval_pools, bool is_dev)
 
 	if(eval_pools.size() == 0)
 	{
-		if(!is_dev)
+		if(xmrstak::globalStates::inst().pool_id != invalid_pool_id)
 		{
-			if(xmrstak::globalStates::inst().pool_id != invalid_pool_id)
-			{
-				printer::print_msg(L0, "All pools are dead. Idling...");
-				auto work = xmrstak::miner_work();
-				xmrstak::pool_data dat;
-				xmrstak::globalStates::inst().switch_work(work, dat);
-			}
-
-			if(over_limit == pool_count)
-			{
-				printer::print_msg(L0, "All pools are over give up limit. Exitting.");
-				exit(0);
-			}
-
-			return false;
+			printer::print_msg(L0, "All pools are dead. Idling...");
+			auto work = xmrstak::miner_work();
+			xmrstak::pool_data dat;
+			xmrstak::globalStates::inst().switch_work(work, dat);
 		}
-		else
-			return get_live_pools(eval_pools, false);
+
+		if(over_limit == pool_count)
+		{
+			printer::print_msg(L0, "All pools are over give up limit. Exitting.");
+			exit(0);
+		}
+
+		return false;
 	}
 
 	return true;
@@ -164,8 +156,7 @@ void executor::eval_pool_choice()
 	std::vector<jpsock*> eval_pools;
 	eval_pools.reserve(pools.size());
 
-	bool dev_time = false;
-	if(!get_live_pools(eval_pools, dev_time))
+	if(!get_live_pools(eval_pools))
 		return;
 
 	size_t running = 0;
@@ -178,9 +169,6 @@ void executor::eval_pool_choice()
 	// Special case - if we are without a pool, connect to all find a live pool asap
 	if(running == 0)
 	{
-		if(dev_time)
-			printer::print_msg(L1, "Fast-connecting to dev pool ...");
-
 		for(jpsock* pool : eval_pools)
 		{
 			if(pool->can_connect())
@@ -201,10 +189,7 @@ void executor::eval_pool_choice()
 	{
 		if(!goal->is_running() && goal->can_connect())
 		{
-			if(dev_time)
-				printer::print_msg(L1, "Connecting to dev pool ...");
-			else
-				printer::print_msg(L1, "Connecting to %s pool ...", goal->get_pool_addr());
+			printer::print_msg(L1, "Connecting to %s pool ...", goal->get_pool_addr());
 
 			std::string error;
 			if(!goal->connect(error))
@@ -250,13 +235,10 @@ void executor::eval_pool_choice()
 		}
 	}
 
-	if(!dev_time)
+	for(jpsock& pool : pools)
 	{
-		for(jpsock& pool : pools)
-		{
-			if(goal->is_logged_in() && pool.is_logged_in() && pool.get_pool_id() != goal->get_pool_id())
-				pool.disconnect(true);
-		}
+		if(goal->is_logged_in() && pool.is_logged_in() && pool.get_pool_id() != goal->get_pool_id())
+			pool.disconnect(true);
 	}
 }
 

@@ -159,7 +159,7 @@ private:
 	void on_sock_error(size_t pool_id, std::string&& sError, bool silent);
 	void on_pool_have_job(size_t pool_id, pool_job& oPoolJob);
 	void on_miner_result(size_t pool_id, job_result& oResult);
-	bool get_live_pools(std::vector<jpsock*>& eval_pools, bool is_dev);
+	bool get_live_pools(std::vector<jpsock*>& eval_pools);
 	void eval_pool_choice();
 
 	inline size_t sec_to_ticks(size_t sec) { return sec * (1000 / iTickTime); }
