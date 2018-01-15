@@ -42,6 +42,7 @@
 #include <assert.h>
 #include <time.h>
 #include <cmath>
+#include <memory>
 
 
 std::vector<xmrstak::iBackend*>* thread_starter(xmrstak::miner_work& pWork)
@@ -101,51 +102,6 @@ void executor::ex_clock_thd()
 	}
 }
 
-bool executor::get_live_pools(std::vector<jpsock*>& eval_pools)
-{
-	size_t limit = system_constants::GetGiveUpLimit();
-	size_t wait = system_constants::GetNetRetry();
-
-	if(limit == 0 || false) limit = (-1); //No limit = limit of 2^64-1
-
-	size_t pool_count = 0;
-	size_t over_limit = 0;
-	for(jpsock& pool : pools)
-	{
-		// Only eval live pools
-		size_t num, dtime;
-		if(pool.get_disconnects(num, dtime))
-			set_timestamp();
-
-		if(dtime == 0 || (dtime >= wait && num <= limit))
-			eval_pools.emplace_back(&pool);
-
-		pool_count++;
-		if(num > limit)
-			over_limit++;
-	}
-
-	if(eval_pools.size() == 0)
-	{
-		if(xmrstak::globalStates::inst().pool_id != invalid_pool_id)
-		{
-			printer::print_msg(L0, "All pools are dead. Idling...");
-			auto work = xmrstak::miner_work();
-			xmrstak::pool_data dat;
-			xmrstak::globalStates::inst().switch_work(work, dat);
-		}
-
-		if(over_limit == pool_count)
-		{
-			printer::print_msg(L0, "All pools are over give up limit. Exitting.");
-			exit(0);
-		}
-
-		return false;
-	}
-
-	return true;
-}
 
 /*
  * This event is called by the timer and whenever something relevant happens.
@@ -153,92 +109,40 @@ bool executor::get_live_pools(std::vector<jpsock*>& eval_pools)
  */
 void executor::eval_pool_choice()
 {
-	std::vector<jpsock*> eval_pools;
-	eval_pools.reserve(pools.size());
-
-	if(!get_live_pools(eval_pools))
-		return;
-
-	size_t running = 0;
-	for(jpsock* pool : eval_pools)
-	{
-		if(pool->is_running())
-			running++;
-	}
-
 	// Special case - if we are without a pool, connect to all find a live pool asap
-	if(running == 0)
-	{
-		for(jpsock* pool : eval_pools)
-		{
-			if(pool->can_connect())
-			{
-				printer::print_msg(L1, "Fast-connecting to %s pool ...", pool->get_pool_addr());
-				std::string error;
-				if(!pool->connect(error))
-					log_socket_error(pool, std::move(error));
+	if(!pool->is_pool_alive()) {
+		if(pool->can_connect()) {
+			printer::print_msg(L1, "Fast-connecting to %s pool ...", pool->get_pool_addr());
+			std::string error;
+			if(!pool->connect(error)) {
+				log_socket_error(pool.get(), std::move(error));
+				throw new std::runtime_error("Failed to connect to pool");
 			}
 		}
-
 		return;
 	}
 
-	jpsock* goal = eval_pools[0];
+	if(!pool->is_running() && pool->can_connect()) {
+		printer::print_msg(L1, "Connecting to %s pool ...", pool->get_pool_addr());
 
-	if(goal->get_pool_id() != xmrstak::globalStates::inst().pool_id)
-	{
-		if(!goal->is_running() && goal->can_connect())
-		{
-			printer::print_msg(L1, "Connecting to %s pool ...", goal->get_pool_addr());
+		std::string error;
+		if(!pool->connect(error)) {
+			log_socket_error(pool.get(), std::move(error));
+			throw new std::runtime_error("Failed to connect to pool");
+		}
+		return;
+	}
 
-			std::string error;
-			if(!goal->connect(error))
-				log_socket_error(goal, std::move(error));
+	if(pool->is_logged_in()) {
+		pool_job oPoolJob;
+		if(!pool->get_current_job(oPoolJob)) {
+			pool->disconnect();
 			return;
 		}
 
-		if(goal->is_logged_in())
-		{
-			pool_job oPoolJob;
-			if(!goal->get_current_job(oPoolJob))
-			{
-				goal->disconnect();
-				return;
-			}
-
-			size_t prev_pool_id = current_pool_id;
-			current_pool_id = goal->get_pool_id();
-			on_pool_have_job(current_pool_id, oPoolJob);
-
-			jpsock* prev_pool = pick_pool_by_id(prev_pool_id);
-			reset_stats();
-
-			last_usr_pool_id = invalid_pool_id;
-			return;
-		}
-	}
-	else
-	{
-		/* All is good - but check if we can do better */
-		jpsock* goal2 = eval_pools[0];
-
-		if(goal->get_pool_id() != goal2->get_pool_id())
-		{
-			if(!goal2->is_running() && goal2->can_connect())
-			{
-				printer::print_msg(L1, "Background-connect to %s pool ...", goal2->get_pool_addr());
-				std::string error;
-				if(!goal2->connect(error))
-					log_socket_error(goal2, std::move(error));
-				return;
-			}
-		}
-	}
-
-	for(jpsock& pool : pools)
-	{
-		if(goal->is_logged_in() && pool.is_logged_in() && pool.get_pool_id() != goal->get_pool_id())
-			pool.disconnect(true);
+		on_pool_have_job(oPoolJob);
+		reset_stats();
+		return;
 	}
 }
 
@@ -287,95 +191,52 @@ void executor::log_result_ok(uint64_t iActualDiff)
 	vMineResults[0].increment();
 }
 
-jpsock* executor::pick_pool_by_id(size_t pool_id)
-{
-	if(pool_id == invalid_pool_id)
-		return nullptr;
 
-	for(jpsock& pool : pools)
-		if(pool.get_pool_id() == pool_id)
-			return &pool;
-
-	return nullptr;
-}
-
-void executor::on_sock_ready(size_t pool_id)
-{
-	jpsock* pool = pick_pool_by_id(pool_id);
+void executor::on_sock_ready() {
 	printer::print_msg(L1, "Pool %s connected. Logging in...", pool->get_pool_addr());
 
-	if(!pool->cmd_login())
-	{
-		if(!pool->have_sock_error())
-		{
-			log_socket_error(pool, pool->get_call_error());
+	if(!pool->cmd_login()) {
+		if(!pool->have_sock_error()) {
+			log_socket_error(pool.get(), pool->get_call_error());
 			pool->disconnect();
 		}
 	}
 }
 
-void executor::on_sock_error(size_t pool_id, std::string&& sError, bool silent)
+void executor::on_sock_error(std::string&& sError, bool silent)
 {
-	jpsock* pool = pick_pool_by_id(pool_id);
+	if (pool.get() != nullptr) {
+		pool->disconnect();
+	}
 
-	pool->disconnect();
-
-	if(pool_id == current_pool_id)
-		current_pool_id = invalid_pool_id;
-
-	if(silent)
-		return;
-
-	log_socket_error(pool, std::move(sError));
+	if(!silent && pool != nullptr) {
+		log_socket_error(pool.get(), std::move(sError));
+	}
 }
 
-void executor::on_pool_have_job(size_t pool_id, pool_job& oPoolJob)
+void executor::on_pool_have_job(pool_job& oPoolJob)
 {
-	if(pool_id != current_pool_id)
-		return;
-
-	jpsock* pool = pick_pool_by_id(pool_id);
-
-	xmrstak::miner_work oWork(oPoolJob.sJobID, oPoolJob.bWorkBlob, oPoolJob.iWorkLen, oPoolJob.iTarget, pool_id);
+	// TODO: Remove pool_id param
+	xmrstak::miner_work oWork(oPoolJob.sJobID, oPoolJob.bWorkBlob, oPoolJob.iWorkLen, oPoolJob.iTarget, 0);
 
 	xmrstak::pool_data dat;
 	dat.iSavedNonce = oPoolJob.iSavedNonce;
-	dat.pool_id = pool_id;
+	// TODO: Remove pool_id param
+	dat.pool_id = 0;
 
 	xmrstak::globalStates::inst().switch_work(oWork, dat);
 
-	if(dat.pool_id != pool_id)
-	{
-		jpsock* prev_pool;
-		if((prev_pool = pick_pool_by_id(dat.pool_id)) != nullptr)
-			prev_pool->save_nonce(dat.iSavedNonce);
-	}
-
-	if(iPoolDiff != pool->get_current_diff())
-	{
+	if(iPoolDiff != pool->get_current_diff()) {
 		iPoolDiff = pool->get_current_diff();
 		printer::print_msg(L2, "Difficulty changed. Now: %llu.", int_port(iPoolDiff));
 	}
 
-	if(dat.pool_id != pool_id)
-	{
-		jpsock* prev_pool;
-		if(dat.pool_id != invalid_pool_id && (prev_pool = pick_pool_by_id(dat.pool_id)) != nullptr)
-		{
-			printer::print_msg(L2, "Pool switched.");
-		}
-		else
-			printer::print_msg(L2, "Pool logged in.");
-	}
-	else
-		printer::print_msg(L3, "New block detected.");
+	printer::print_msg(L3, "New block detected.");
 }
 
-void executor::on_miner_result(size_t pool_id, job_result& oResult)
+void executor::on_miner_result(job_result& oResult)
 {
-	jpsock* pool = pick_pool_by_id(pool_id);
-	if (!pool->is_running() || !pool->is_logged_in())
-	{
+	if (!pool->is_running() || !pool->is_logged_in()) {
 		log_result_error("[NETWORK ERROR]");
 		return;
 	}
@@ -388,30 +249,25 @@ void executor::on_miner_result(size_t pool_id, job_result& oResult)
 		t_len = 0xFFFF;
 	iPoolCallTimes.push_back((uint16_t)t_len);
 
-	if(bResult)
-	{
+	if(bResult) {
 		uint64_t* targets = (uint64_t*)oResult.bResult;
 		log_result_ok(jpsock::t64_to_diff(targets[3]));
 		printer::print_msg(L3, "Result accepted by the pool.");
 	}
-	else
-	{
-		if(!pool->have_sock_error())
-		{
+	else {
+		if(!pool->have_sock_error()) {
 			printer::print_msg(L3, "Result rejected by the pool.");
-
 			std::string error = pool->get_call_error();
 
-			if(strncasecmp(error.c_str(), "Unauthenticated", 15) == 0)
-			{
+			if(strncasecmp(error.c_str(), "Unauthenticated", 15) == 0) {
 				printer::print_msg(L2, "Your miner was unable to find a share in time. Either the pool difficulty is too high, or the pool timeout is too low.");
 				pool->disconnect();
 			}
 
 			log_result_error(std::move(error));
-		}
-		else
+		} else {
 			log_result_error("[NETWORK ERROR]");
+		}
 	}
 }
 
@@ -445,19 +301,15 @@ void executor::ex_main()
 
 	telem = new xmrstak::telemetry(pvThreads->size());
 
-	set_timestamp();
 	size_t pc = 1;
 	bool dev_tls = true;
 	bool already_have_cli_pool = false;
 	size_t i=0;
-	for(; i < pc; i++)
-	{
-		pools.emplace_back(i+1,
-						   system_constants::config_pool_pool_address(),
-						   system_constants::config_pool_wallet_address(),
-						   system_constants::config_pool_pool_password()
-		);
-	}
+	pool = std::shared_ptr<jpsock>(new jpsock(
+			system_constants::config_pool_pool_address(),
+			system_constants::config_pool_wallet_address(),
+			system_constants::config_pool_pool_password()
+	));
 
 	ex_event ev;
 	std::thread clock_thd(&executor::ex_clock_thd, this);
@@ -479,19 +331,19 @@ void executor::ex_main()
 		switch (ev.iName)
 		{
 		case EV_SOCK_READY:
-			on_sock_ready(ev.iPoolId);
+			on_sock_ready();
 			break;
 
 		case EV_SOCK_ERROR:
-			on_sock_error(ev.iPoolId, std::move(ev.oSocketError.sSocketError), ev.oSocketError.silent);
+			on_sock_error(std::move(ev.oSocketError.sSocketError), ev.oSocketError.silent);
 			break;
 
 		case EV_POOL_HAVE_JOB:
-			on_pool_have_job(ev.iPoolId, ev.oPoolJob);
+			on_pool_have_job(ev.oPoolJob);
 			break;
 
 		case EV_MINER_HAVE_RESULT:
-			on_miner_result(ev.iPoolId, ev.oJobResult);
+			on_miner_result(ev.oJobResult);
 			break;
 
 		case EV_EVAL_POOL_CHOICE:
@@ -575,12 +427,11 @@ void executor::hashrate_report(std::string& out)
 	if(system_constants::PrintMotd())
 	{
 		std::string motd;
-		for(jpsock& pool : pools)
-		{
+		if (pool.get() != nullptr) {
 			motd.empty();
-			if(pool.get_pool_motd(motd) && motd_filter_console(motd))
+			if(pool->get_pool_motd(motd) && motd_filter_console(motd))
 			{
-				out.append("Message from ").append(pool.get_pool_addr()).append(":\n");
+				out.append("Message from ").append(pool->get_pool_addr()).append(":\n");
 				out.append(motd).append("\n");
 				out.append("-----------------------------------------------------\n");
 			}
@@ -734,10 +585,6 @@ void executor::connection_report(std::string& out)
 	char date[32];
 
 	out.reserve(512);
-
-	jpsock* pool = pick_pool_by_id(current_pool_id);
-	if(pool != nullptr)
-		pool = pick_pool_by_id(last_usr_pool_id);
 
 	out.append("CONNECTION REPORT\n");
 	out.append("Pool address    : ").append(pool != nullptr ? pool->get_pool_addr() : "<not connected>").append(1, '\n');
