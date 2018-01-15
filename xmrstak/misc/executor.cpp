@@ -446,18 +446,11 @@ void executor::ex_main()
 	telem = new xmrstak::telemetry(pvThreads->size());
 
 	set_timestamp();
-	size_t pc = 1;
-	bool dev_tls = true;
-	bool already_have_cli_pool = false;
-	size_t i=0;
-	for(; i < pc; i++)
-	{
-		pools.emplace_back(i+1,
-						   system_constants::config_pool_pool_address(),
-						   system_constants::config_pool_wallet_address(),
-						   system_constants::config_pool_pool_password()
-		);
-	}
+	pools.emplace_back(1,
+					   system_constants::config_pool_pool_address(),
+					   system_constants::config_pool_wallet_address(),
+					   system_constants::config_pool_pool_password()
+	);
 
 	ex_event ev;
 	std::thread clock_thd(&executor::ex_clock_thd, this);
@@ -500,7 +493,7 @@ void executor::ex_main()
 
 
 		case EV_PERF_TICK:
-			for (i = 0; i < pvThreads->size(); i++)
+			for (int i = 0; i < pvThreads->size(); i++)
 				telem->push_perf_value(i, pvThreads->at(i)->iHashCount.load(std::memory_order_relaxed),
 				pvThreads->at(i)->iTimestamp.load(std::memory_order_relaxed));
 
@@ -510,7 +503,7 @@ void executor::ex_main()
 				double fTelem;
 				bool normal = true;
 
-				for (i = 0; i < pvThreads->size(); i++)
+				for (int i = 0; i < pvThreads->size(); i++)
 				{
 					fTelem = telem->calc_telemetry_data(10000, i);
 					if(std::isnormal(fTelem))
