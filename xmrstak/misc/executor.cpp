@@ -729,8 +729,6 @@ void executor::connection_report(std::string& out)
 	out.reserve(512);
 
 	jpsock* pool = pick_pool_by_id(current_pool_id);
-	if(pool != nullptr)
-		pool = pick_pool_by_id(last_usr_pool_id);
 
 	out.append("CONNECTION REPORT\n");
 	out.append("Pool address    : ").append(pool != nullptr ? pool->get_pool_addr() : "<not connected>").append(1, '\n');
