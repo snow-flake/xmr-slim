@@ -1,0 +1,14 @@
+[Unit]
+Description=Monero Mining Node
+After=network.target
+
+[Service]
+User=root
+WorkingDirectory=~
+Type=simple
+ExecStart=/usr/bin/xmr-slim
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+
