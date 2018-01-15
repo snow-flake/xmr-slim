@@ -19,7 +19,6 @@ add_definitions("-DCONFIG_POOL_WALLET_ADDRESS=\"$ENV{POOL_WALLET_ADDRESS}\"")
 add_definitions("-DCONFIG_POOL_POOL_PASSWORD=\"x\"")
 add_definitions("-DCONFIG_POOL_USE_TLS=false")
 add_definitions("-DCONFIG_POOL_TLS_FINGERPRINT=\"\"")
-add_definitions("-DCONFIG_POOL_POOL_WEIGHT=1")
 
 
 # Network timeouts.

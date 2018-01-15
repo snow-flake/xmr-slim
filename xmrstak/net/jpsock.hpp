@@ -36,7 +36,7 @@ public:
 class jpsock
 {
 public:
-	jpsock(size_t id, const char* sAddr, const char* sLogin, const char* sPassword, double pool_weight, bool tls, const char* tls_fp);
+	jpsock(size_t id, const char* sAddr, const char* sLogin, const char* sPassword, bool tls, const char* tls_fp);
 	~jpsock();
 
 	bool connect(std::string& sConnectError);
@@ -47,16 +47,6 @@ public:
 
 	static bool hex2bin(const char* in, unsigned int len, unsigned char* out);
 	static void bin2hex(const unsigned char* in, unsigned int len, char* out);
-
-	inline double get_pool_weight(bool gross_weight) 
-	{ 
-		double ret = pool_weight; 
-		if(gross_weight && bRunning)
-			ret += 10.0;
-		if(gross_weight && bLoggedIn)
-			ret += 10.0;
-		return ret;
-	}
 
 	inline size_t can_connect() { return get_timestamp() != connect_time; }
 	inline bool is_running() { return bRunning; }
@@ -93,8 +83,6 @@ private:
 	std::string tls_fp;
 
 	size_t pool_id;
-	double pool_weight;
-	bool pool;
 
 	bool ext_algo = false;
 	bool ext_backend = false;

@@ -282,8 +282,8 @@ struct jpsock::opq_json_val
 	opq_json_val(const Value* val) : val(val) {}
 };
 
-jpsock::jpsock(size_t id, const char* sAddr, const char* sLogin, const char* sPassword, double pool_weight, bool tls, const char* tls_fp) :
-	net_addr(sAddr), usr_login(sLogin), usr_pass(sPassword), tls_fp(tls_fp), pool_id(id), pool_weight(pool_weight),
+jpsock::jpsock(size_t id, const char* sAddr, const char* sLogin, const char* sPassword, bool tls, const char* tls_fp) :
+	net_addr(sAddr), usr_login(sLogin), usr_pass(sPassword), tls_fp(tls_fp), pool_id(id),
 	connect_time(0), connect_attempts(0), disconnect_time(0), quiet_close(false)
 {
 	sock_init();

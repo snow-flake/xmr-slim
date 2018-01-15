@@ -195,7 +195,6 @@ void executor::eval_pool_choice()
 		return;
 	}
 
-	std::sort(eval_pools.begin(), eval_pools.end(), [](jpsock* a, jpsock* b) { return b->get_pool_weight(true) < a->get_pool_weight(true); });
 	jpsock* goal = eval_pools[0];
 
 	if(goal->get_pool_id() != xmrstak::globalStates::inst().pool_id)
@@ -236,7 +235,6 @@ void executor::eval_pool_choice()
 	else
 	{
 		/* All is good - but check if we can do better */
-		std::sort(eval_pools.begin(), eval_pools.end(), [](jpsock* a, jpsock* b) { return b->get_pool_weight(false) < a->get_pool_weight(false); }); 
 		jpsock* goal2 = eval_pools[0];
 
 		if(goal->get_pool_id() != goal2->get_pool_id())
@@ -485,7 +483,6 @@ void executor::ex_main()
 						   system_constants::config_pool_pool_address(),
 						   system_constants::config_pool_wallet_address(),
 						   system_constants::config_pool_pool_password(),
-						   system_constants::config_pool_pool_weight(),
 						   system_constants::config_pool_use_tls(),
 						   system_constants::config_pool_tls_fingerprint()
 		);

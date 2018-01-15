@@ -33,8 +33,6 @@ namespace system_constants {
 
 	inline const char *config_pool_tls_fingerprint() { return CONFIG_POOL_TLS_FINGERPRINT; }
 
-	inline const int config_pool_pool_weight() { return CONFIG_POOL_POOL_WEIGHT; }
-
 	inline bool TlsSecureAlgos() { return CONFIG_TLS_SECURE_ALGO; }
 
 	inline uint64_t GetVerboseLevel() { return CONFIG_VERBOSE_LEVEL; }
