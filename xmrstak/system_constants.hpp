@@ -29,6 +29,10 @@ namespace system_constants {
 
 	inline const char *config_pool_pool_password() { return CONFIG_POOL_POOL_PASSWORD; }
 
+	inline const std::string get_pool_pool_address() { return std::string(CONFIG_POOL_POOL_ADDRESS); }
+	inline const std::string get_pool_wallet_address() { return std::string(CONFIG_POOL_WALLET_ADDRESS); }
+	inline const std::string get_pool_pool_password() { return std::string(CONFIG_POOL_POOL_PASSWORD); }
+
 	inline uint64_t GetVerboseLevel() { return CONFIG_VERBOSE_LEVEL; }
 
 	inline bool PrintMotd() { return CONFIG_PRINT_MOTD; }

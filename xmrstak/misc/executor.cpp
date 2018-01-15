@@ -173,7 +173,7 @@ void executor::eval_pool_choice()
 		{
 			if(pool->can_connect())
 			{
-				printer::print_msg(L1, "Fast-connecting to %s pool ...", pool->get_pool_addr());
+				printer::print_msg(L1, "Fast-connecting to %s pool ...", system_constants::config_pool_pool_address());
 				std::string error;
 				if(!pool->connect(error))
 					log_socket_error(pool, std::move(error));
@@ -189,7 +189,7 @@ void executor::eval_pool_choice()
 	{
 		if(!goal->is_running() && goal->can_connect())
 		{
-			printer::print_msg(L1, "Connecting to %s pool ...", goal->get_pool_addr());
+			printer::print_msg(L1, "Connecting to %s pool ...", system_constants::config_pool_pool_address());
 
 			std::string error;
 			if(!goal->connect(error))
@@ -226,7 +226,7 @@ void executor::eval_pool_choice()
 		{
 			if(!goal2->is_running() && goal2->can_connect())
 			{
-				printer::print_msg(L1, "Background-connect to %s pool ...", goal2->get_pool_addr());
+				printer::print_msg(L1, "Background-connect to %s pool ...", system_constants::config_pool_pool_address());
 				std::string error;
 				if(!goal2->connect(error))
 					log_socket_error(goal2, std::move(error));
@@ -246,7 +246,7 @@ void executor::log_socket_error(jpsock* pool, std::string&& sError)
 {
 	std::string pool_name;
 	pool_name.reserve(128);
-	pool_name.append("[").append(pool->get_pool_addr()).append("] ");
+	pool_name.append("[").append(system_constants::config_pool_pool_address()).append("] ");
 	sError.insert(0, pool_name);
 
 	vSocketLog.emplace_back(std::move(sError));
@@ -302,7 +302,7 @@ jpsock* executor::pick_pool_by_id(size_t pool_id)
 void executor::on_sock_ready(size_t pool_id)
 {
 	jpsock* pool = pick_pool_by_id(pool_id);
-	printer::print_msg(L1, "Pool %s connected. Logging in...", pool->get_pool_addr());
+	printer::print_msg(L1, "Pool %s connected. Logging in...", system_constants::config_pool_pool_address());
 
 	if(!pool->cmd_login())
 	{
@@ -446,11 +446,7 @@ void executor::ex_main()
 	telem = new xmrstak::telemetry(pvThreads->size());
 
 	set_timestamp();
-	pools.emplace_back(1,
-					   system_constants::config_pool_pool_address(),
-					   system_constants::config_pool_wallet_address(),
-					   system_constants::config_pool_pool_password()
-	);
+	pools.emplace_back(1);
 
 	ex_event ev;
 	std::thread clock_thd(&executor::ex_clock_thd, this);
@@ -573,7 +569,7 @@ void executor::hashrate_report(std::string& out)
 			motd.empty();
 			if(pool.get_pool_motd(motd) && motd_filter_console(motd))
 			{
-				out.append("Message from ").append(pool.get_pool_addr()).append(":\n");
+				out.append("Message from ").append(system_constants::config_pool_pool_address()).append(":\n");
 				out.append(motd).append("\n");
 				out.append("-----------------------------------------------------\n");
 			}
@@ -731,7 +727,7 @@ void executor::connection_report(std::string& out)
 	jpsock* pool = pick_pool_by_id(current_pool_id);
 
 	out.append("CONNECTION REPORT\n");
-	out.append("Pool address    : ").append(pool != nullptr ? pool->get_pool_addr() : "<not connected>").append(1, '\n');
+	out.append("Pool address    : ").append(pool != nullptr ? system_constants::config_pool_pool_address() : "<not connected>").append(1, '\n');
 	if(pool != nullptr && pool->is_running() && pool->is_logged_in())
 		out.append("Connected since : ").append(time_format(date, sizeof(date), tPoolConnTime)).append(1, '\n');
 	else
