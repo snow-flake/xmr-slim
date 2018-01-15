@@ -112,7 +112,7 @@ bool executor::get_live_pools(std::vector<jpsock*>& eval_pools, bool is_dev)
 	size_t over_limit = 0;
 	for(jpsock& pool : pools)
 	{
-		if(pool.is_dev_pool() != is_dev)
+		if(false != is_dev)
 			continue;
 
 		// Only eval live pools
@@ -227,14 +227,9 @@ void executor::eval_pool_choice()
 			on_pool_have_job(current_pool_id, oPoolJob);
 
 			jpsock* prev_pool = pick_pool_by_id(prev_pool_id);
-			if(prev_pool == nullptr || (!prev_pool->is_dev_pool() && !goal->is_dev_pool()))
-				reset_stats();
+			reset_stats();
 
-			if(goal->is_dev_pool() && (prev_pool != nullptr && !prev_pool->is_dev_pool()))
-				last_usr_pool_id = prev_pool_id;
-			else
-				last_usr_pool_id = invalid_pool_id;
-
+			last_usr_pool_id = invalid_pool_id;
 			return;
 		}
 	}
@@ -262,9 +257,6 @@ void executor::eval_pool_choice()
 		for(jpsock& pool : pools)
 		{
 			if(goal->is_logged_in() && pool.is_logged_in() && pool.get_pool_id() != goal->get_pool_id())
-				pool.disconnect(true);
-
-			if(pool.is_dev_pool() && pool.is_logged_in())
 				pool.disconnect(true);
 		}
 	}
@@ -330,11 +322,7 @@ jpsock* executor::pick_pool_by_id(size_t pool_id)
 void executor::on_sock_ready(size_t pool_id)
 {
 	jpsock* pool = pick_pool_by_id(pool_id);
-
-	if(pool->is_dev_pool())
-		printer::print_msg(L1, "Dev pool connected. Logging in...");
-	else
-		printer::print_msg(L1, "Pool %s connected. Logging in...", pool->get_pool_addr());
+	printer::print_msg(L1, "Pool %s connected. Logging in...", pool->get_pool_addr());
 
 	if(!pool->cmd_login())
 	{
@@ -358,10 +346,7 @@ void executor::on_sock_error(size_t pool_id, std::string&& sError, bool silent)
 	if(silent)
 		return;
 
-	if(!pool->is_dev_pool())
-		log_socket_error(pool, std::move(sError));
-	else
-		printer::print_msg(L1, "Dev pool socket error - mining on user pool...");
+	log_socket_error(pool, std::move(sError));
 }
 
 void executor::on_pool_have_job(size_t pool_id, pool_job& oPoolJob)
@@ -386,9 +371,6 @@ void executor::on_pool_have_job(size_t pool_id, pool_job& oPoolJob)
 			prev_pool->save_nonce(dat.iSavedNonce);
 	}
 
-	if(pool->is_dev_pool())
-		return;
-
 	if(iPoolDiff != pool->get_current_diff())
 	{
 		iPoolDiff = pool->get_current_diff();
@@ -400,10 +382,7 @@ void executor::on_pool_have_job(size_t pool_id, pool_job& oPoolJob)
 		jpsock* prev_pool;
 		if(dat.pool_id != invalid_pool_id && (prev_pool = pick_pool_by_id(dat.pool_id)) != nullptr)
 		{
-			if(prev_pool->is_dev_pool())
-				printer::print_msg(L2, "Switching back to user pool.");
-			else
-				printer::print_msg(L2, "Pool switched.");
+			printer::print_msg(L2, "Pool switched.");
 		}
 		else
 			printer::print_msg(L2, "Pool logged in.");
@@ -415,16 +394,6 @@ void executor::on_pool_have_job(size_t pool_id, pool_job& oPoolJob)
 void executor::on_miner_result(size_t pool_id, job_result& oResult)
 {
 	jpsock* pool = pick_pool_by_id(pool_id);
-
-	if(pool->is_dev_pool())
-	{
-		//Ignore errors silently
-		if(pool->is_running() && pool->is_logged_in())
-			pool->cmd_submit(oResult.sJobID, oResult.iNonce, oResult.bResult, pvThreads->at(oResult.iThreadId));
-
-		return;
-	}
-
 	if (!pool->is_running() || !pool->is_logged_in())
 	{
 		log_result_error("[NETWORK ERROR]");
@@ -517,7 +486,6 @@ void executor::ex_main()
 						   system_constants::config_pool_wallet_address(),
 						   system_constants::config_pool_pool_password(),
 						   system_constants::config_pool_pool_weight(),
-						   false,
 						   system_constants::config_pool_use_tls(),
 						   system_constants::config_pool_tls_fingerprint()
 		);
@@ -800,7 +768,7 @@ void executor::connection_report(std::string& out)
 	out.reserve(512);
 
 	jpsock* pool = pick_pool_by_id(current_pool_id);
-	if(pool != nullptr && pool->is_dev_pool())
+	if(pool != nullptr)
 		pool = pick_pool_by_id(last_usr_pool_id);
 
 	out.append("CONNECTION REPORT\n");
