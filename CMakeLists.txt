@@ -339,6 +339,7 @@ target_link_libraries(xmr-stak ${LIBS})
 file(GLOB STATSD_TEST_CPP "includes/statsd_test.cpp")
 set_source_files_properties(${STATSD_TEST_CPP} PROPERTIES LANGUAGE CXX)
 add_executable(statsd-test ${STATSD_TEST_CPP})
+target_link_libraries(statsd-test ${LIBS})
 
 
 ################################################################################
