@@ -282,8 +282,8 @@ struct jpsock::opq_json_val
 	opq_json_val(const Value* val) : val(val) {}
 };
 
-jpsock::jpsock(size_t id, const char* sAddr, const char* sLogin, const char* sPassword) :
-	net_addr(sAddr), usr_login(sLogin), usr_pass(sPassword), pool_id(id),
+jpsock::jpsock(const char* sAddr, const char* sLogin, const char* sPassword) :
+	net_addr(sAddr), usr_login(sLogin), usr_pass(sPassword),
 	connect_time(0), connect_attempts(0), disconnect_time(0), quiet_close(false)
 {
 	sock_init();
@@ -395,7 +395,7 @@ bool jpsock::jpsock_thd_main()
 	if(!sck->connect())
 		return false;
 
-	executor::inst()->push_event(ex_event(EV_SOCK_READY, pool_id));
+	executor::inst()->push_event(ex_event(EV_SOCK_READY, 0));
 
 	char buf[iSockBufferSize];
 	size_t datalen = 0;
@@ -601,7 +601,7 @@ bool jpsock::process_pool_job(const opq_json_val* params)
 
 	iJobDiff = t64_to_diff(oPoolJob.iTarget);
 
-	executor::inst()->push_event(ex_event(oPoolJob, pool_id));
+	executor::inst()->push_event(ex_event(oPoolJob, 0));
 
 	std::unique_lock<std::mutex>(job_mutex);
 	oCurrentJob = oPoolJob;

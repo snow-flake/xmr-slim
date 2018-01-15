@@ -2,6 +2,7 @@
 
 #include "xmrstak/backend/iBackend.hpp"
 #include "msgstruct.hpp"
+#include "xmrstak/system_constants.hpp"
 
 #include <mutex>
 #include <atomic>
@@ -36,7 +37,7 @@ public:
 class jpsock
 {
 public:
-	jpsock(size_t id, const char* sAddr, const char* sLogin, const char* sPassword);
+	jpsock(const char* sAddr, const char* sLogin, const char* sPassword);
 	~jpsock();
 
 	bool connect(std::string& sConnectError);
@@ -51,9 +52,23 @@ public:
 	inline size_t can_connect() { return get_timestamp() != connect_time; }
 	inline bool is_running() { return bRunning; }
 	inline bool is_logged_in() { return bLoggedIn; }
-	inline size_t get_pool_id() { return pool_id; }
-	inline bool get_disconnects(size_t& att, size_t& time) { att = connect_attempts; time = disconnect_time != 0 ? get_timestamp() - disconnect_time + 1 : 0; return false && usr_login[0]; }
 	inline const char* get_pool_addr() { return net_addr.c_str(); }
+
+	inline bool is_pool_alive() {
+		size_t wait = system_constants::GetNetRetry();
+		size_t dtime = disconnect_time != 0 ? get_timestamp() - disconnect_time + 1 : 0;
+		if (dtime == 0)
+			return true;
+
+		size_t num = connect_attempts;
+		size_t limit = system_constants::GetGiveUpLimit();
+		if(limit == 0 || false) {
+			//No limit = limit of 2^64-1
+			limit = (-1);
+		}
+
+		return (dtime >= wait && num <= limit);
+	}
 
 	bool get_pool_motd(std::string& strin);
 
