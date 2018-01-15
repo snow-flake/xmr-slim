@@ -438,6 +438,7 @@ bool jpsock::jpsock_thd_main()
 
 bool jpsock::process_line(char* line, size_t len)
 {
+	std::cout << __FILE__ << ":" << __LINE__ << ":jpsock::process_line: " << line << std::endl;
 	prv->jsonDoc.SetNull();
 	prv->parseAllocator.Clear();
 	prv->callAllocator.Clear();
