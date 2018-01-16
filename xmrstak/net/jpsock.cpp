@@ -32,7 +32,6 @@
 #include "xmrstak/rapidjson/stringbuffer.h"
 #include "xmrstak/rapidjson/writer.h"
 
-#include "includes/json.hpp"
 
 
 /* Assume that any non-Windows platform uses POSIX-style sockets instead. */
@@ -611,6 +610,96 @@ bool jpsock::process_pool_job(const opq_json_val* params)
 	return true;
 }
 
+bool jpsock::process_pool_job_new_style(const nlohmann::json & params) {
+	if (!params.is_object()) {
+		return set_socket_error("PARSE error: Job error 1");
+	}
+
+	//	const Value *blob, *jobid, *target, *motd;
+	//	const auto job_id = params["job_id"];  // jobid = GetObjectMember(*params->val, "job_id");
+	//	const auto blob = params["blob"];  // blob = GetObjectMember(*params->val, "blob");
+	//	const auto target = params["target"];  // target = GetObjectMember(*params->val, "target");
+	//	const auto motd = params["motd"];  // motd = GetObjectMember(*params->val, "motd");
+
+	if (params["job_id"].is_null() || !params["job_id"].is_string()) {
+		return set_socket_error("PARSE error: Job error 2");
+	}
+	if (params["blob"].is_null() || !params["blob"].is_string()) {
+		return set_socket_error("PARSE error: Job error 2");
+	}
+	if (params["target"].is_null() || !params["target"].is_string()) {
+		return set_socket_error("PARSE error: Job error 2");
+	}
+
+	const std::string job_id = params["job_id"].get<std::string>();
+	const std::string blob = params["blob"].get<std::string>();
+	const std::string target = params["target"].get<std::string>();
+
+	// Note >=
+	if (job_id.length() >= sizeof(pool_job::sJobID)) {
+		return set_socket_error("PARSE error: Job error 3");
+	}
+
+	//	uint32_t iWorkLn = blob->GetStringLength() / 2;
+	if (blob.length() / 2 > sizeof(pool_job::bWorkBlob)) {
+		return set_socket_error("PARSE error: Invalid job legth. Are you sure you are mining the correct coin?");
+	}
+
+	pool_job oPoolJob;
+	if (!hex2bin(blob.c_str(), blob.length(), oPoolJob.bWorkBlob)) {
+		return set_socket_error("PARSE error: Job error 4");
+	}
+
+	oPoolJob.iWorkLen = blob.length() / 2;
+	memset(oPoolJob.sJobID, 0, sizeof(pool_job::sJobID));
+	strcpy(oPoolJob.sJobID, job_id.c_str());
+	//	memcpy(oPoolJob.sJobID, jobid->GetString(), jobid->GetStringLength()); //Bounds checking at proto error 3
+
+	if(target.length() <= 8)
+	{
+		uint32_t iTempInt = 0;
+		char sTempStr[] = "00000000"; // Little-endian CPU FTW
+		memcpy(sTempStr, target.c_str(), target.length());
+		if(!hex2bin(sTempStr, 8, (unsigned char*)&iTempInt) || iTempInt == 0) {
+			return set_socket_error("PARSE error: Invalid target");
+		}
+		oPoolJob.iTarget = t32_to_t64(iTempInt);
+	} else if(target.length() <= 16) {
+		oPoolJob.iTarget = 0;
+		char sTempStr[] = "0000000000000000";
+		memcpy(sTempStr, target.c_str(), target.length());
+		if(!hex2bin(sTempStr, 16, (unsigned char*)&oPoolJob.iTarget) || oPoolJob.iTarget == 0) {
+			return set_socket_error("PARSE error: Invalid target");
+		}
+	}
+	else {
+		return set_socket_error("PARSE error: Job error 5");
+	}
+
+
+	if(!params["motd"].is_null() && params["motd"].is_string() && (params["motd"].get<std::string>().length() & 0x01) == 0) {
+		const std::string motd = params["motd"].get<std::string>();
+		std::unique_lock<std::mutex>(motd_mutex);
+		if(motd.length() > 0) {
+			pool_motd.resize(motd.length()/2 + 1);
+			if(!hex2bin(motd.c_str(), motd.length(), (unsigned char*)&pool_motd.front())) {
+				pool_motd.clear();
+			}
+		}
+		else {
+			pool_motd.clear();
+		}
+	}
+
+	iJobDiff = t64_to_diff(oPoolJob.iTarget);
+
+	executor::inst()->push_event(ex_event(oPoolJob, pool_id));
+
+	std::unique_lock<std::mutex>(job_mutex);
+	oCurrentJob = oPoolJob;
+	return true;
+}
+
 bool jpsock::connect(std::string& sConnectError)
 {
 	ext_motd = false;
@@ -760,64 +849,93 @@ bool jpsock::cmd_login()
 	opq_json_val oResult(nullptr);
 
 	/*Normal error conditions (failed login etc..) will end here*/
-	if (!cmd_ret_wait(cmd_buffer.c_str(), oResult))
+	std::string response_body;
+	if (!cmd_ret_wait_new_style(cmd_buffer, response_body)) {
 		return false;
+	}
+	//	if (!cmd_ret_wait(cmd_buffer.c_str(), oResult))
+	//		return false;
 
-	if (!oResult.val->IsObject())
-	{
+	data = nlohmann::json::parse(response_body);
+	if (!data.is_object()) {
 		set_socket_error("PARSE error: Login protocol error 1");
 		disconnect();
 		return false;
 	}
+	//	if (!oResult.val->IsObject())
+	//	{
+	//		set_socket_error("PARSE error: Login protocol error 1");
+	//		disconnect();
+	//		return false;
+	//	}
 
-	const Value* id = GetObjectMember(*oResult.val, "id");
+
+	//	const Value* id = GetObjectMember(*oResult.val, "id");
 	const Value* job = GetObjectMember(*oResult.val, "job");
 	const Value* ext = GetObjectMember(*oResult.val, "extensions");
 
-	if (id == nullptr || job == nullptr || !id->IsString())
-	{
+	if (data["id"].is_null() || !data["id"].is_string() || data["job"].is_null()) {
 		set_socket_error("PARSE error: Login protocol error 2");
 		disconnect();
 		return false;
 	}
 
-	if (id->GetStringLength() >= sizeof(sMinerId))
-	{
+	//	if (id == nullptr || job == nullptr || !id->IsString())
+	//	{
+	//		set_socket_error("PARSE error: Login protocol error 2");
+	//		disconnect();
+	//		return false;
+	//	}
+
+	const std::string id = data["id"].get<std::string>();
+	if (id.length() >= sizeof(sMinerId)) {
 		set_socket_error("PARSE error: Login protocol error 3");
 		disconnect();
 		return false;
 	}
 
 	memset(sMinerId, 0, sizeof(sMinerId));
-	memcpy(sMinerId, id->GetString(), id->GetStringLength());
+	strcpy(sMinerId, id.c_str());
+	//	memcpy(sMinerId, id->GetString(), id->GetStringLength());
 
-	if(ext != nullptr && ext->IsArray())
-	{
-		for(size_t i=0; i < ext->Size(); i++)
-		{
-			const Value& jextname = ext->GetArray()[i];
-			
-			if(!jextname.IsString())
+	if (!data["extensions"].is_null() && data["extensions"].is_array()) {
+		for (auto & element: data["extensions"]) {
+			if (!element.is_string()) {
 				continue;
+			}
 
-			std::string tmp(jextname.GetString());
+			std::string tmp = element.get<std::string>();
 			std::transform(tmp.begin(), tmp.end(), tmp.begin(), ::tolower);
-
 			if(tmp == "motd")
 				ext_motd = true;
 		}
 	}
 
+	//	if(ext != nullptr && ext->IsArray())
+	//	{
+	//		for(size_t i=0; i < ext->Size(); i++)
+	//		{
+	//			const Value& jextname = ext->GetArray()[i];
+	//
+	//			if(!jextname.IsString())
+	//				continue;
+	//
+	//			std::string tmp(jextname.GetString());
+	//			std::transform(tmp.begin(), tmp.end(), tmp.begin(), ::tolower);
+	//
+	//			if(tmp == "motd")
+	//				ext_motd = true;
+	//		}
+	//	}
+
 	opq_json_val v(job);
-	if(!process_pool_job(&v))
-	{
+	if(!process_pool_job(&v)) {
 		disconnect();
 		return false;
 	}
 
 	bLoggedIn = true;
 	connect_attempts = 0;
-
 	return true;
 }
 

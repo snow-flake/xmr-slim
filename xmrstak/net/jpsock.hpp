@@ -10,6 +10,7 @@
 #include <string>
 #include "xmrstak/system_constants.hpp"
 #include "xmrstak/net/time_utils.hpp"
+#include "includes/json.hpp"
 
 
 /* Our pool can have two kinds of errors:
@@ -106,6 +107,8 @@ private:
 	bool jpsock_thd_main();
 	bool process_line(char* line, size_t len);
 	bool process_pool_job(const opq_json_val* params);
+	bool process_pool_job_new_style(const nlohmann::json & params);
+
 	bool cmd_ret_wait(const char* sPacket, opq_json_val& poResult);
 	bool cmd_ret_wait_new_style(const std::string & message_body, std::string & response_body);
 
