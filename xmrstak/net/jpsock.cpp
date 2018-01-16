@@ -643,12 +643,21 @@ bool jpsock::process_line_new_style(char *line, size_t len)
 			return set_socket_error("PARSE error: Unexpected call response");
 		}
 
-		prv_new_style->oCallRsp = std::shared_ptr<jpsock::call_rsp_new_style>(
-				new jpsock::call_rsp_new_style(
-						iCallId,
-						sError != "N/A" ? sError : *result_iter
-				)
-		);
+		if (sError != "N/A") {
+			prv_new_style->oCallRsp = std::shared_ptr<jpsock::call_rsp_new_style>(
+					new jpsock::call_rsp_new_style(
+							iCallId,
+							sError
+					)
+			);
+		} else {
+			prv_new_style->oCallRsp = std::shared_ptr<jpsock::call_rsp_new_style>(
+					new jpsock::call_rsp_new_style(
+							iCallId,
+							*result_iter
+					)
+			);
+		}
 
 		mlock.unlock();
 		call_cond.notify_one();
