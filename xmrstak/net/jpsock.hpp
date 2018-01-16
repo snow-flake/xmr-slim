@@ -78,8 +78,6 @@ private:
 	size_t pool_id;
 
 	bool ext_algo = false;
-	bool ext_backend = false;
-	bool ext_hashcount = false;
 	bool ext_motd = false;
 
 	std::string pool_motd;
@@ -109,6 +107,7 @@ private:
 	bool process_line(char* line, size_t len);
 	bool process_pool_job(const opq_json_val* params);
 	bool cmd_ret_wait(const char* sPacket, opq_json_val& poResult);
+	bool cmd_ret_wait_new_style(const std::string & message_body, std::string & response_body);
 
 	char sMinerId[64];
 	std::atomic<uint64_t> iJobDiff;

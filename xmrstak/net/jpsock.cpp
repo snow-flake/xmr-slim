@@ -29,6 +29,9 @@
 
 #include "xmrstak/misc/executor.hpp"
 #include "xmrstak/misc/jext.hpp"
+#include "xmrstak/rapidjson/stringbuffer.h"
+#include "xmrstak/rapidjson/writer.h"
+
 #include "includes/json.hpp"
 
 
@@ -610,7 +613,7 @@ bool jpsock::process_pool_job(const opq_json_val* params)
 
 bool jpsock::connect(std::string& sConnectError)
 {
-	ext_algo = ext_backend = ext_hashcount = ext_motd = false;
+	ext_motd = false;
 	bHaveSocketError = false;
 	sSocketError.clear();
 	iJobDiff = 0;
@@ -694,6 +697,55 @@ bool jpsock::cmd_ret_wait(const char* sPacket, opq_json_val& poResult)
 	return bSuccess;
 }
 
+bool jpsock::cmd_ret_wait_new_style(const std::string & message_body, std::string & response_body) {
+	std::cout << __FILE__ << ":" << __LINE__ << ":jpsock::cmd_ret_wait: " << message_body << std::endl;
+
+	/*Set up the call rsp for the call reply*/
+	prv->oCallValue.SetNull();
+	prv->callAllocator.Clear();
+
+	std::unique_lock<std::mutex> mlock(call_mutex);
+	prv->oCallRsp = call_rsp(&prv->oCallValue);
+	mlock.unlock();
+
+	if(!sck->send(message_body.c_str())) {
+		std::cout << __FILE__ << ":" << __LINE__ << ":jpsock::cmd_ret_wait:" << "Failed, disconnecting" << std::endl;
+		disconnect(); //This will join the other thread;
+		return false;
+	}
+
+	//Success is true if the server approves, result is true if there was no socket error
+	mlock.lock();
+	bool bResult = call_cond.wait_for(
+			mlock,
+			std::chrono::seconds(system_constants::GetCallTimeout()),
+			[&]() { return prv->oCallRsp.bHaveResponse; }
+	);
+
+	bool bSuccess = prv->oCallRsp.pCallData != nullptr;
+	prv->oCallRsp.pCallData = nullptr;
+	mlock.unlock();
+
+	if(bHaveSocketError)
+		return false;
+
+	//This means that there was no socket error, but the server is not taking to us
+	if(!bResult) {
+		set_socket_error("CALL error: Timeout while waiting for a reply");
+		disconnect();
+		return false;
+	}
+
+	StringBuffer buffer;
+	Writer<StringBuffer> writer(buffer);
+	prv->oCallValue.Accept(writer);
+	if(bSuccess) {
+		response_body = std::string(buffer.GetString());
+	}
+
+	return bSuccess;
+}
+
 bool jpsock::cmd_login()
 {
 	nlohmann::json data;
@@ -751,13 +803,7 @@ bool jpsock::cmd_login()
 			std::string tmp(jextname.GetString());
 			std::transform(tmp.begin(), tmp.end(), tmp.begin(), ::tolower);
 
-			if(tmp == "algo")
-				ext_algo = true;
-			else if(tmp == "backend")
-				ext_backend = true;
-			else if(tmp == "hashcount")
-				ext_hashcount = true;
-			else if(tmp == "motd")
+			if(tmp == "motd")
 				ext_motd = true;
 		}
 	}
