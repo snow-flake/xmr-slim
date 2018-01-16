@@ -9,6 +9,7 @@
 #include <thread>
 #include <string>
 #include "xmrstak/system_constants.hpp"
+#include "xmrstak/net/time_utils.hpp"
 
 
 /* Our pool can have two kinds of errors:

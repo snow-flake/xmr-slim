@@ -38,7 +38,7 @@
 #include <netdb.h>  /* Needed for getaddrinfo() and freeaddrinfo() */
 #include <unistd.h> /* Needed for close() */
 #include <errno.h>
-#include <string.h>
+
 #if defined(__FreeBSD__)
 #include <netinet/in.h> /* Needed for IPPROTO_TCP */
 #endif

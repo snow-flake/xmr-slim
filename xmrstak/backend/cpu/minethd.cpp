@@ -31,16 +31,14 @@
 #include "xmrstak/backend/miner_work.hpp"
 #include "autoAdjust.hpp"
 #include "xmrstak/system_constants.hpp"
+#include "xmrstak/net/time_utils.hpp"
 
 
-#include <assert.h>
 #include <cmath>
 #include <chrono>
 #include <cstring>
 #include <thread>
 #include <bitset>
-
-#include <pthread.h>
 
 #if defined(__APPLE__)
 #include <mach/thread_policy.h>

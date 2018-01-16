@@ -33,15 +33,14 @@
 #include "xmrstak/backend/cpu/minethd.hpp"
 #include "xmrstak/misc/console.hpp"
 #include "xmrstak/system_constants.hpp"
+#include "xmrstak/net/time_utils.hpp"
 
 #include <thread>
-#include <string>
 #include <cmath>
 #include <algorithm>
 #include <functional>
 #include <assert.h>
 #include <time.h>
-#include <cmath>
 
 
 std::vector<xmrstak::iBackend*>* thread_starter(xmrstak::miner_work& pWork)

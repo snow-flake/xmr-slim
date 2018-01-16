@@ -22,11 +22,10 @@
   */
 
 #include "telemetry.hpp"
-#include "xmrstak/net/msgstruct.hpp"
+#include "xmrstak/net/time_utils.hpp"
 
 #include <cmath>
 #include <cstring>
-#include <chrono>
 
 namespace xmrstak
 {
