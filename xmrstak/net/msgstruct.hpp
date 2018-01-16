@@ -1,4 +1,5 @@
-#pragma once
+#ifndef XMR_SLIM_MSG_STRUCT_HPP
+#define XMR_SLIM_MSG_STRUCT_HPP
 
 #include <string>
 #include <string.h>
@@ -156,20 +157,4 @@ struct ex_event
 	}
 };
 
-#include <chrono>
-//Get steady_clock timestamp - misc helper function
-inline size_t get_timestamp()
-{
-	using namespace std::chrono;
-	return time_point_cast<seconds>(steady_clock::now()).time_since_epoch().count();
-};
-
-//Get milisecond timestamp
-inline size_t get_timestamp_ms()
-{
-	using namespace std::chrono;
-	if(high_resolution_clock::is_steady)
-		return time_point_cast<milliseconds>(high_resolution_clock::now()).time_since_epoch().count();
-	else
-		return time_point_cast<milliseconds>(steady_clock::now()).time_since_epoch().count();
-}
+#endif // XMR_SLIM_MSG_STRUCT_HPP

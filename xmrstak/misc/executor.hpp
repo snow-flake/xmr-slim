@@ -6,13 +6,11 @@
 #include "xmrstak/backend/globalStates.hpp"
 #include "xmrstak/misc/environment.hpp"
 #include "xmrstak/net/msgstruct.hpp"
+#include "xmrstak/net/time_utils.hpp"
 
-#include <atomic>
 #include <array>
 #include <list>
-#include <vector>
 #include <future>
-#include <chrono>
 
 class jpsock;
 

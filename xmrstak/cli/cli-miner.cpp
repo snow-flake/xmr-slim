@@ -24,15 +24,15 @@
 #include "xmrstak/misc/executor.hpp"
 #include "xmrstak/system_constants.hpp"
 #include "xmrstak/backend/cpu/minethd.hpp"
+#include "xmrstak/net/time_utils.hpp"
 
 #include <stdlib.h>
 #include <stdio.h>
 #include <string>
 #include <iostream>
 #include <time.h>
-#include <iostream>
 
-void help() {
+ void help() {
 	std::cout <<"Usage: xmr-stak [OPTION]..."<< std::endl;
 	std::cout <<" "<< std::endl;
 	std::cout <<"  --help            show this help"<< std::endl;
