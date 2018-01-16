@@ -100,12 +100,18 @@ private:
 	static constexpr size_t iSockBufferSize = 4096;
 
 	struct call_rsp;
+	struct call_rsp_new_style;
+
 	struct opaque_private;
+	struct opaque_private_new_style;
+
 	struct opq_json_val;
 
 	void jpsock_thread();
 	bool jpsock_thd_main();
 	bool process_line(char* line, size_t len);
+	bool process_line_new_style(char* line, size_t len);
+
 	bool process_pool_job(const opq_json_val* params);
 	bool process_pool_job_new_style(const nlohmann::json & params);
 
@@ -126,6 +132,7 @@ private:
 	pool_job oCurrentJob;
 
 	opaque_private* prv;
+	opaque_private_new_style* prv_new_style;
 	base_socket* sck;
 };
 

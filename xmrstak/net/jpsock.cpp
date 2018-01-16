@@ -24,6 +24,7 @@
 #include <stdarg.h>
 #include <assert.h>
 #include <algorithm>
+#include <memory>
 
 #include "jpsock.hpp"
 
@@ -244,6 +245,28 @@ struct jpsock::call_rsp
 	}
 };
 
+struct jpsock::call_rsp_new_style
+{
+	const bool bHaveResponse;
+	const bool bHaveError;
+	const uint64_t iCallId;
+	const std::string pCallData;
+	const std::string sCallErr;
+
+	call_rsp_new_style() : iCallId(0), pCallData(), sCallErr(), bHaveResponse(false), bHaveError(false)
+	{
+	}
+
+	call_rsp_new_style(uint64_t iCallId, const nlohmann::json & data) : iCallId(iCallId), pCallData(data.dump()), sCallErr(), bHaveResponse(true), bHaveError(false)
+	{
+	}
+
+	call_rsp_new_style(uint64_t iCallId, const std::string & error) : iCallId(iCallId), pCallData(), sCallErr(error), bHaveResponse(false), bHaveError(true)
+	{
+	}
+};
+
+
 typedef GenericDocument<UTF8<>, MemoryPoolAllocator<>, MemoryPoolAllocator<>> MemDocument;
 
 /*
@@ -279,6 +302,15 @@ struct jpsock::opaque_private
 	}
 };
 
+struct jpsock::opaque_private_new_style
+{
+	std::shared_ptr<jpsock::call_rsp_new_style> oCallRsp;
+
+	opaque_private_new_style()
+	{
+	}
+};
+
 struct jpsock::opq_json_val
 {
 	const Value* val;
@@ -294,6 +326,7 @@ jpsock::jpsock(size_t id) : pool_id(id), connect_time(0), connect_attempts(0), d
 	bJsonParseMem = (uint8_t*)malloc(iJsonMemSize);
 
 	prv = new opaque_private(bJsonCallMem, bJsonRecvMem, bJsonParseMem);
+	prv_new_style = new opaque_private_new_style();
 	sck = new plain_socket(this);
 
 	oRecvThd = nullptr;
@@ -316,6 +349,10 @@ jpsock::~jpsock()
 
 std::string&& jpsock::get_call_error()
 {
+	//	TODO: move this to something cleaner
+	if (prv_new_style->oCallRsp.get() != nullptr) {
+		prv->oCallRsp.sCallErr = prv_new_style->oCallRsp->sCallErr;
+	}
 	return std::move(prv->oCallRsp.sCallErr);
 }
 
@@ -525,6 +562,93 @@ bool jpsock::process_line(char* line, size_t len)
 		}
 		else
 			prv->oCallRsp.pCallData->CopyFrom(*mt, prv->callAllocator);
+
+		mlock.unlock();
+		call_cond.notify_one();
+
+		return true;
+	}
+}
+
+bool jpsock::process_line_new_style(char *line, size_t len)
+{
+	std::cout << __FILE__ << ":" << __LINE__ << ":jpsock::process_line_new_style: " << line << std::endl;
+	prv->jsonDoc.SetNull();
+	prv->parseAllocator.Clear();
+	prv->callAllocator.Clear();
+
+	/*NULL terminate the line instead of '\n', parsing will add some more NULLs*/
+	line[len-1] = '\0';
+
+	auto data = nlohmann::json::parse(line);
+	if (!data.is_object()) {
+		return set_socket_error("PARSE error: Invalid root");
+	}
+
+	if (data.find("method") != data.end()) {
+		if (data["method"].is_null() || !data["method"].is_string()) {
+			return set_socket_error("PARSE error: Protocol error 1");
+		}
+
+		const std::string method = data["method"].get<std::string>();
+		if(method != "job") {
+			return set_socket_error("PARSE error: Unsupported server method ", method.c_str());
+		}
+
+		if(data["params"].is_null() || !data["params"].is_object()) {
+			return set_socket_error("PARSE error: Protocol error 2");
+		}
+
+		auto params = data["params"];
+		return process_pool_job_new_style(params);
+	} else {
+		if (data["id"].is_null() || !data["id"].is_number()) {
+			return set_socket_error("PARSE error: Protocol error 3");
+		}
+
+		const uint64_t iCallId = data["id"].get<uint64_t>();
+
+		auto error_iter = data.find("error");
+		auto result_iter = data.find("result");
+
+		std::string sError = "N/A";
+
+		if (error_iter == data.end()) {
+			/* If there was no error we need a result */
+			if (result_iter == data.end() || result_iter->is_null()) {
+				return set_socket_error("PARSE error: Protocol error 7");
+			}
+		}
+		else if (error_iter->is_null()) {
+			/* If there was no error we need a result */
+			if (result_iter == data.end() || result_iter->is_null()) {
+				return set_socket_error("PARSE error: Protocol error 7");
+			}
+		}
+		else if (!error_iter->is_object()) {
+			return set_socket_error("PARSE error: Protocol error 5");
+		} else  {
+			auto error = data["error"];
+			auto message = error["message"];
+			if(message.is_null() || !message.is_string()) {
+				return set_socket_error("PARSE error: Protocol error 6");
+			}
+			sError = message.get<std::string>();
+		}
+
+		std::unique_lock<std::mutex> mlock(call_mutex);
+		if (prv_new_style->oCallRsp.get() == nullptr) {
+			/*Server sent us a call reply without us making a call*/
+			mlock.unlock();
+			return set_socket_error("PARSE error: Unexpected call response");
+		}
+
+		prv_new_style->oCallRsp = std::shared_ptr<jpsock::call_rsp_new_style>(
+				new jpsock::call_rsp_new_style(
+						iCallId,
+						sError != "N/A" ? sError : *result_iter
+				)
+		);
 
 		mlock.unlock();
 		call_cond.notify_one();
@@ -795,12 +919,11 @@ bool jpsock::cmd_ret_wait_new_style(const std::string & message_body, std::strin
 	std::cout << __FILE__ << ":" << __LINE__ << ":jpsock::cmd_ret_wait: " << message_body << std::endl;
 
 	/*Set up the call rsp for the call reply*/
-	prv->oCallValue.SetNull();
-	prv->callAllocator.Clear();
+	prv_new_style->oCallRsp = std::shared_ptr<jpsock::call_rsp_new_style>(new jpsock::call_rsp_new_style());
 
 	std::unique_lock<std::mutex> mlock(call_mutex);
-	prv->oCallRsp = call_rsp(&prv->oCallValue);
-	mlock.unlock();
+	//	prv->oCallRsp = call_rsp(&prv->oCallValue);
+	//	mlock.unlock();
 
 	if(!sck->send(message_body.c_str())) {
 		std::cout << __FILE__ << ":" << __LINE__ << ":jpsock::cmd_ret_wait:" << "Failed, disconnecting" << std::endl;
@@ -813,31 +936,28 @@ bool jpsock::cmd_ret_wait_new_style(const std::string & message_body, std::strin
 	bool bResult = call_cond.wait_for(
 			mlock,
 			std::chrono::seconds(system_constants::GetCallTimeout()),
-			[&]() { return prv->oCallRsp.bHaveResponse; }
+			[&]() { return prv_new_style->oCallRsp.get() != nullptr && prv_new_style->oCallRsp->bHaveResponse; }
 	);
 
-	bool bSuccess = prv->oCallRsp.pCallData != nullptr;
-	prv->oCallRsp.pCallData = nullptr;
 	mlock.unlock();
 
-	if(bHaveSocketError)
+	// TODO: who sets this?
+	if(bHaveSocketError) {
 		return false;
+	}
 
 	//This means that there was no socket error, but the server is not taking to us
-	if(!bResult) {
+	if(!prv_new_style->oCallRsp->bHaveResponse) {
 		set_socket_error("CALL error: Timeout while waiting for a reply");
 		disconnect();
 		return false;
 	}
 
-	StringBuffer buffer;
-	Writer<StringBuffer> writer(buffer);
-	prv->oCallValue.Accept(writer);
-	if(bSuccess) {
-		response_body = std::string(buffer.GetString());
+	if(prv_new_style->oCallRsp->bHaveResponse) {
+		response_body = prv_new_style->oCallRsp->pCallData;
 	}
 
-	return bSuccess;
+	return prv_new_style->oCallRsp->bHaveResponse;
 }
 
 bool jpsock::cmd_login()
