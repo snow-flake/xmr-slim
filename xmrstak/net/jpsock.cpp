@@ -676,20 +676,25 @@ bool jpsock::process_pool_job_new_style(const nlohmann::json & params) {
 		return set_socket_error("PARSE error: Job error 5");
 	}
 
-
-	if(!params["motd"].is_null() && params["motd"].is_string() && (params["motd"].get<std::string>().length() & 0x01) == 0) {
-		const std::string motd = params["motd"].get<std::string>();
-		std::unique_lock<std::mutex>(motd_mutex);
-		if(motd.length() > 0) {
-			pool_motd.resize(motd.length()/2 + 1);
-			if(!hex2bin(motd.c_str(), motd.length(), (unsigned char*)&pool_motd.front())) {
-				pool_motd.clear();
+	if (params.find("motd") != params.end()) {
+		auto raw_motd = params["motd"];
+		if(!raw_motd.is_null() && raw_motd.is_string()) {
+			const std::string motd = params["motd"].get<std::string>();
+			if ((motd.length() & 0x01) == 0) {
+				std::unique_lock<std::mutex>(motd_mutex);
+				if(motd.length() > 0) {
+					pool_motd.resize(motd.length()/2 + 1);
+					if(!hex2bin(motd.c_str(), motd.length(), (unsigned char*)&pool_motd.front())) {
+						pool_motd.clear();
+					}
+				}
+				else {
+					pool_motd.clear();
+				}
 			}
 		}
-		else {
-			pool_motd.clear();
-		}
 	}
+
 
 	iJobDiff = t64_to_diff(oPoolJob.iTarget);
 
@@ -871,8 +876,8 @@ bool jpsock::cmd_login()
 
 
 	//	const Value* id = GetObjectMember(*oResult.val, "id");
-	const Value* job = GetObjectMember(*oResult.val, "job");
-	const Value* ext = GetObjectMember(*oResult.val, "extensions");
+	//	const Value* job = GetObjectMember(*oResult.val, "job");
+	//	const Value* ext = GetObjectMember(*oResult.val, "extensions");
 
 	if (data["id"].is_null() || !data["id"].is_string() || data["job"].is_null()) {
 		set_socket_error("PARSE error: Login protocol error 2");
@@ -928,8 +933,8 @@ bool jpsock::cmd_login()
 	//		}
 	//	}
 
-	opq_json_val v(job);
-	if(!process_pool_job(&v)) {
+	auto params = data["job"];
+	if(!process_pool_job_new_style(params)) {
 		disconnect();
 		return false;
 	}
