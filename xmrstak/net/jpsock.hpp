@@ -26,54 +26,74 @@
 	std::string. Executor will move the buffer via an r-value ref.
 */
 
-class base_socket
-{
+class base_socket {
 public:
-	virtual bool set_hostname(const char* sAddr) = 0;
+	virtual bool set_hostname(const char *sAddr) = 0;
+
 	virtual bool connect() = 0;
-	virtual int recv(char* buf, unsigned int len) = 0;
-	virtual bool send(const char* buf) = 0;
+
+	virtual int recv(char *buf, unsigned int len) = 0;
+
+	virtual bool send(const char *buf) = 0;
+
 	virtual void close(bool free) = 0;
 };
 
-class jpsock
-{
+class jpsock {
 public:
 	jpsock(size_t id);
+
 	~jpsock();
 
-	bool connect(std::string& sConnectError);
+	bool connect(std::string &sConnectError);
+
 	void disconnect(bool quiet = false);
 
 	bool cmd_login();
-	bool cmd_submit(const char* sJobId, uint32_t iNonce, const uint8_t* bResult, xmrstak::iBackend* bend);
 
-	static bool hex2bin(const char* in, unsigned int len, unsigned char* out);
-	static void bin2hex(const unsigned char* in, unsigned int len, char* out);
+	bool cmd_submit(const char *sJobId, uint32_t iNonce, const uint8_t *bResult, xmrstak::iBackend *bend);
+
+	static bool hex2bin(const char *in, unsigned int len, unsigned char *out);
+
+	static void bin2hex(const unsigned char *in, unsigned int len, char *out);
 
 	inline size_t can_connect() { return get_timestamp() != connect_time; }
+
 	inline bool is_running() { return bRunning; }
+
 	inline bool is_logged_in() { return bLoggedIn; }
+
 	inline size_t get_pool_id() { return pool_id; }
-	inline bool get_disconnects(size_t& att, size_t& time) { att = connect_attempts; time = disconnect_time != 0 ? get_timestamp() - disconnect_time + 1 : 0; return false && true; }
 
-	bool get_pool_motd(std::string& strin);
+	inline bool get_disconnects(size_t &att, size_t &time) {
+		att = connect_attempts;
+		time = disconnect_time != 0 ? get_timestamp() - disconnect_time + 1 : 0;
+		return false && true;
+	}
 
-	std::string&& get_call_error();
+	bool get_pool_motd(std::string &strin);
+
+	std::string get_call_error();
+
 	bool have_sock_error() { return bHaveSocketError; }
 
-	inline static uint64_t t32_to_t64(uint32_t t) { return 0xFFFFFFFFFFFFFFFFULL / (0xFFFFFFFFULL / ((uint64_t)t)); }
+	inline static uint64_t t32_to_t64(uint32_t t) { return 0xFFFFFFFFFFFFFFFFULL / (0xFFFFFFFFULL / ((uint64_t) t)); }
+
 	inline static uint64_t t64_to_diff(uint64_t t) { return 0xFFFFFFFFFFFFFFFFULL / t; }
 
 	inline uint64_t get_current_diff() { return iJobDiff; }
 
 	void save_nonce(uint32_t nonce);
-	bool get_current_job(pool_job& job);
 
-	bool set_socket_error(const char* a);
-	bool set_socket_error(const char* a, const char* b);
-	bool set_socket_error_strerr(const char* a);
-	bool set_socket_error_strerr(const char* a, int res);
+	bool get_current_job(pool_job &job);
+
+	bool set_socket_error(const char *a);
+
+	bool set_socket_error(const char *a, const char *b);
+
+	bool set_socket_error_strerr(const char *a);
+
+	bool set_socket_error_strerr(const char *a, int res);
 
 private:
 	size_t pool_id;
@@ -92,9 +112,9 @@ private:
 	std::atomic<bool> bLoggedIn;
 	std::atomic<bool> quiet_close;
 
-	uint8_t* bJsonRecvMem;
-	uint8_t* bJsonParseMem;
-	uint8_t* bJsonCallMem;
+	uint8_t *bJsonRecvMem;
+	uint8_t *bJsonParseMem;
+	uint8_t *bJsonCallMem;
 
 	static constexpr size_t iJsonMemSize = 4096;
 	static constexpr size_t iSockBufferSize = 4096;
@@ -105,18 +125,21 @@ private:
 	struct opaque_private;
 	struct opaque_private_new_style;
 
-	struct opq_json_val;
+//	struct opq_json_val;
 
 	void jpsock_thread();
+
 	bool jpsock_thd_main();
-	bool process_line(char* line, size_t len);
-	bool process_line_new_style(char* line, size_t len);
 
-	bool process_pool_job(const opq_json_val* params);
-	bool process_pool_job_new_style(const nlohmann::json & params);
+//	bool process_line(char* line, size_t len);
+	bool process_line_new_style(char *line, size_t len);
 
-	bool cmd_ret_wait(const char* sPacket, opq_json_val& poResult);
-	bool cmd_ret_wait_new_style(const std::string & message_body, std::string & response_body);
+//	bool process_pool_job(const opq_json_val* params);
+	bool process_pool_job_new_style(const nlohmann::json &params);
+
+//	bool cmd_ret_wait(const char *sPacket, opq_json_val &poResult);
+
+	bool cmd_ret_wait_new_style(const std::string &message_body, std::string &response_body);
 
 	char sMinerId[64];
 	std::atomic<uint64_t> iJobDiff;
@@ -126,13 +149,13 @@ private:
 
 	std::mutex call_mutex;
 	std::condition_variable call_cond;
-	std::thread* oRecvThd;
+	std::thread *oRecvThd;
 
 	std::mutex job_mutex;
 	pool_job oCurrentJob;
 
-	opaque_private* prv;
-	opaque_private_new_style* prv_new_style;
-	base_socket* sck;
+	//	opaque_private* prv;
+	opaque_private_new_style *prv_new_style;
+	base_socket *sck;
 };
 
