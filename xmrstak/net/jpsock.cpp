@@ -813,6 +813,7 @@ bool jpsock::connect(std::string &sConnectError) {
 }
 
 void jpsock::disconnect(bool quiet) {
+	std::cout << __FILE__ << ":" << __LINE__ << ":jpsock::disconnect: Disconnecting from pool" << std::endl;
 	quiet_close = quiet;
 	sck->close(false);
 
