@@ -125,19 +125,13 @@ private:
 	struct opaque_private;
 	struct opaque_private_new_style;
 
-//	struct opq_json_val;
-
 	void jpsock_thread();
 
 	bool jpsock_thd_main();
 
-//	bool process_line(char* line, size_t len);
 	bool process_line_new_style(char *line, size_t len);
 
-//	bool process_pool_job(const opq_json_val* params);
 	bool process_pool_job_new_style(const nlohmann::json &params);
-
-//	bool cmd_ret_wait(const char *sPacket, opq_json_val &poResult);
 
 	bool cmd_ret_wait_new_style(const std::string &message_body, std::string &response_body);
 
@@ -154,7 +148,6 @@ private:
 	std::mutex job_mutex;
 	pool_job oCurrentJob;
 
-	//	opaque_private* prv;
 	opaque_private_new_style *prv_new_style;
 	base_socket *sck;
 };
