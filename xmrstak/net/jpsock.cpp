@@ -284,12 +284,6 @@ struct jpsock::opaque_private_new_style {
 	}
 };
 
-//struct jpsock::opq_json_val {
-//	const Value *val;
-//
-//	opq_json_val(const Value *val) : val(val) {}
-//};
-
 jpsock::jpsock(size_t id) : pool_id(id), connect_time(0), connect_attempts(0), disconnect_time(0), quiet_close(false) {
 	sock_init();
 
@@ -297,7 +291,6 @@ jpsock::jpsock(size_t id) : pool_id(id), connect_time(0), connect_attempts(0), d
 	bJsonRecvMem = (uint8_t *) malloc(iJsonMemSize);
 	bJsonParseMem = (uint8_t *) malloc(iJsonMemSize);
 
-	//	prv = new opaque_private(bJsonCallMem, bJsonRecvMem, bJsonParseMem);
 	prv_new_style = new opaque_private_new_style();
 	sck = new plain_socket(this);
 
@@ -310,9 +303,6 @@ jpsock::jpsock(size_t id) : pool_id(id), connect_time(0), connect_attempts(0), d
 }
 
 jpsock::~jpsock() {
-	//	delete prv;
-	//	prv = nullptr;
-
 	delete prv_new_style;
 	prv_new_style = nullptr;
 
@@ -326,12 +316,6 @@ std::string jpsock::get_call_error() {
 		return prv_new_style->oCallRsp->sCallErr;
 	}
 	return "";
-
-	//	//	TODO: move this to something cleaner
-	//	if (prv_new_style->oCallRsp.get() != nullptr) {
-	//		prv->oCallRsp.sCallErr = prv_new_style->oCallRsp->sCallErr;
-	//	}
-	//	return std::move(prv->oCallRsp.sCallErr);
 }
 
 bool jpsock::set_socket_error(const char *a) {
@@ -384,12 +368,7 @@ void jpsock::jpsock_thread() {
 		);
 		bCallWaiting = true;
 	}
-	//	if (prv->oCallRsp.pCallData != nullptr) {
-	//		prv->oCallRsp.bHaveResponse = true;
-	//		prv->oCallRsp.iCallId = 0;
-	//		prv->oCallRsp.pCallData = nullptr;
-	//		bCallWaiting = true;
-	//	}
+
 	mlock.unlock();
 
 	if (bCallWaiting)
@@ -438,10 +417,6 @@ bool jpsock::jpsock_thd_main() {
 				sck->close(false);
 				return false;
 			}
-			//			if (!process_line(lnstart, lnlen)) {
-			//				sck->close(false);
-			//				return false;
-			//			}
 
 			datalen -= lnlen;
 			lnstart = lnend;
@@ -453,96 +428,8 @@ bool jpsock::jpsock_thd_main() {
 	}
 }
 
-//bool jpsock::process_line(char *line, size_t len) {
-//	std::cout << __FILE__ << ":" << __LINE__ << ":jpsock::process_line: " << line << std::endl;
-//	prv->jsonDoc.SetNull();
-//	prv->parseAllocator.Clear();
-//	prv->callAllocator.Clear();
-//
-//	/*NULL terminate the line instead of '\n', parsing will add some more NULLs*/
-//	line[len - 1] = '\0';
-//
-//	//printf("RECV: %s\n", line);
-//
-//	if (prv->jsonDoc.ParseInsitu(line).HasParseError())
-//		return set_socket_error("PARSE error: Invalid JSON");
-//
-//	if (!prv->jsonDoc.IsObject())
-//		return set_socket_error("PARSE error: Invalid root");
-//
-//	const Value *mt;
-//	if (prv->jsonDoc.HasMember("method")) {
-//		mt = GetObjectMember(prv->jsonDoc, "method");
-//
-//		if (!mt->IsString())
-//			return set_socket_error("PARSE error: Protocol error 1");
-//
-//		if (strcmp(mt->GetString(), "job") != 0)
-//			return set_socket_error("PARSE error: Unsupported server method ", mt->GetString());
-//
-//		mt = GetObjectMember(prv->jsonDoc, "params");
-//		if (mt == nullptr || !mt->IsObject())
-//			return set_socket_error("PARSE error: Protocol error 2");
-//
-//		opq_json_val v(mt);
-//		return process_pool_job(&v);
-//	} else {
-//		uint64_t iCallId;
-//		mt = GetObjectMember(prv->jsonDoc, "id");
-//		if (mt == nullptr || !mt->IsUint64())
-//			return set_socket_error("PARSE error: Protocol error 3");
-//
-//		iCallId = mt->GetUint64();
-//
-//		mt = GetObjectMember(prv->jsonDoc, "error");
-//
-//		const char *sError = nullptr;
-//		size_t iErrorLn = 0;
-//		if (mt == nullptr || mt->IsNull()) {
-//			/* If there was no error we need a result */
-//			if ((mt = GetObjectMember(prv->jsonDoc, "result")) == nullptr)
-//				return set_socket_error("PARSE error: Protocol error 7");
-//		} else {
-//			if (!mt->IsObject())
-//				return set_socket_error("PARSE error: Protocol error 5");
-//
-//			const Value *msg = GetObjectMember(*mt, "message");
-//
-//			if (msg == nullptr || !msg->IsString())
-//				return set_socket_error("PARSE error: Protocol error 6");
-//
-//			iErrorLn = msg->GetStringLength();
-//			sError = msg->GetString();
-//		}
-//
-//		std::unique_lock<std::mutex> mlock(call_mutex);
-//		if (prv->oCallRsp.pCallData == nullptr) {
-//			/*Server sent us a call reply without us making a call*/
-//			mlock.unlock();
-//			return set_socket_error("PARSE error: Unexpected call response");
-//		}
-//
-//		prv->oCallRsp.bHaveResponse = true;
-//		prv->oCallRsp.iCallId = iCallId;
-//
-//		if (sError != nullptr) {
-//			prv->oCallRsp.pCallData = nullptr;
-//			prv->oCallRsp.sCallErr.assign(sError, iErrorLn);
-//		} else
-//			prv->oCallRsp.pCallData->CopyFrom(*mt, prv->callAllocator);
-//
-//		mlock.unlock();
-//		call_cond.notify_one();
-//
-//		return true;
-//	}
-//}
-
 bool jpsock::process_line_new_style(char *line, size_t len) {
 	std::cout << __FILE__ << ":" << __LINE__ << ":jpsock::process_line_new_style: " << line << std::endl;
-	//	prv->jsonDoc.SetNull();
-	//	prv->parseAllocator.Clear();
-	//	prv->callAllocator.Clear();
 
 	/*NULL terminate the line instead of '\n', parsing will add some more NULLs*/
 	line[len - 1] = '\0';
@@ -630,74 +517,6 @@ bool jpsock::process_line_new_style(char *line, size_t len) {
 		return true;
 	}
 }
-
-//bool jpsock::process_pool_job(const opq_json_val *params) {
-//	if (!params->val->IsObject())
-//		return set_socket_error("PARSE error: Job error 1");
-//
-//	const Value *blob, *jobid, *target, *motd;
-//	jobid = GetObjectMember(*params->val, "job_id");
-//	blob = GetObjectMember(*params->val, "blob");
-//	target = GetObjectMember(*params->val, "target");
-//	motd = GetObjectMember(*params->val, "motd");
-//
-//	if (jobid == nullptr || blob == nullptr || target == nullptr ||
-//		!jobid->IsString() || !blob->IsString() || !target->IsString()) {
-//		return set_socket_error("PARSE error: Job error 2");
-//	}
-//
-//	if (jobid->GetStringLength() >= sizeof(pool_job::sJobID)) // Note >=
-//		return set_socket_error("PARSE error: Job error 3");
-//
-//	uint32_t iWorkLn = blob->GetStringLength() / 2;
-//	if (iWorkLn > sizeof(pool_job::bWorkBlob))
-//		return set_socket_error("PARSE error: Invalid job legth. Are you sure you are mining the correct coin?");
-//
-//	pool_job oPoolJob;
-//	if (!hex2bin(blob->GetString(), iWorkLn * 2, oPoolJob.bWorkBlob))
-//		return set_socket_error("PARSE error: Job error 4");
-//
-//	oPoolJob.iWorkLen = iWorkLn;
-//	memset(oPoolJob.sJobID, 0, sizeof(pool_job::sJobID));
-//	memcpy(oPoolJob.sJobID, jobid->GetString(), jobid->GetStringLength()); //Bounds checking at proto error 3
-//
-//	size_t target_slen = target->GetStringLength();
-//	if (target_slen <= 8) {
-//		uint32_t iTempInt = 0;
-//		char sTempStr[] = "00000000"; // Little-endian CPU FTW
-//		memcpy(sTempStr, target->GetString(), target_slen);
-//		if (!hex2bin(sTempStr, 8, (unsigned char *) &iTempInt) || iTempInt == 0)
-//			return set_socket_error("PARSE error: Invalid target");
-//
-//
-//		oPoolJob.iTarget = t32_to_t64(iTempInt);
-//	} else if (target_slen <= 16) {
-//		oPoolJob.iTarget = 0;
-//		char sTempStr[] = "0000000000000000";
-//		memcpy(sTempStr, target->GetString(), target_slen);
-//		if (!hex2bin(sTempStr, 16, (unsigned char *) &oPoolJob.iTarget) || oPoolJob.iTarget == 0)
-//			return set_socket_error("PARSE error: Invalid target");
-//	} else
-//		return set_socket_error("PARSE error: Job error 5");
-//
-//	if (motd != nullptr && motd->IsString() && (motd->GetStringLength() & 0x01) == 0) {
-//		std::unique_lock<std::mutex>(motd_mutex);
-//		if (motd->GetStringLength() > 0) {
-//			pool_motd.resize(motd->GetStringLength() / 2 + 1);
-//			if (!hex2bin(motd->GetString(), motd->GetStringLength(), (unsigned char *) &pool_motd.front()))
-//				pool_motd.clear();
-//		} else
-//			pool_motd.clear();
-//	}
-//
-//	iJobDiff = t64_to_diff(oPoolJob.iTarget);
-//
-//	executor::inst()->push_event(ex_event(oPoolJob, pool_id));
-//
-//	std::unique_lock<std::mutex>(job_mutex);
-//	oCurrentJob = oPoolJob;
-//	return true;
-//}
 
 bool jpsock::process_pool_job_new_style(const nlohmann::json &params) {
 	if (!params.is_object()) {
@@ -827,51 +646,6 @@ void jpsock::disconnect(bool quiet) {
 	quiet_close = false;
 }
 
-//bool jpsock::cmd_ret_wait(const char *sPacket, opq_json_val &poResult) {
-//	//printf("SEND: %s\n", sPacket);
-//	std::cout << __FILE__ << ":" << __LINE__ << ":jpsock::cmd_ret_wait: " << sPacket << std::endl;
-//
-//	//	/*Set up the call rsp for the call reply*/
-//	//	prv->oCallValue.SetNull();
-//	//	prv->callAllocator.Clear();
-//
-//	std::unique_lock<std::mutex> mlock(call_mutex);
-//	prv_new_style->oCallReq = std::shared_ptr<std::string>(new std::string(sPacket));
-//	//	prv->oCallRsp = call_rsp(&prv->oCallValue);
-//	mlock.unlock();
-//
-//	if (!sck->send(sPacket)) {
-//		std::cout << __FILE__ << ":" << __LINE__ << ":jpsock::cmd_ret_wait:" << "Failed, disconnecting" << std::endl;
-//		disconnect(); //This will join the other thread;
-//		return false;
-//	}
-//
-//	//Success is true if the server approves, result is true if there was no socket error
-//	mlock.lock();
-//	bool bResult = call_cond.wait_for(mlock, std::chrono::seconds(system_constants::GetCallTimeout()),
-//									  [&]() { return prv_new_style->oCallRsp.get() != nullptr && prv_new_style->oCallRsp->bHaveResponse; });
-//
-//	const bool bSuccess = prv_new_style->oCallReq.get() != nullptr;
-//	//	prv->oCallRsp.pCallData = nullptr;
-//	prv_new_style->oCallReq = std::shared_ptr<std::string>();
-//	mlock.unlock();
-//
-//	if (bHaveSocketError)
-//		return false;
-//
-//	//This means that there was no socket error, but the server is not taking to us
-//	if (!bResult) {
-//		set_socket_error("CALL error: Timeout while waiting for a reply");
-//		disconnect();
-//		return false;
-//	}
-//
-//	if (bSuccess)
-//		poResult.val = &prv->oCallValue;
-//
-//	return bSuccess;
-//}
-
 bool jpsock::cmd_ret_wait_new_style(const std::string &message_body, std::string &response_body) {
 	std::cout << __FILE__ << ":" << __LINE__ << ":jpsock::cmd_ret_wait: " << message_body << std::endl;
 
@@ -879,7 +653,6 @@ bool jpsock::cmd_ret_wait_new_style(const std::string &message_body, std::string
 	prv_new_style->oCallRsp = std::shared_ptr<jpsock::call_rsp_new_style>(new jpsock::call_rsp_new_style());
 
 	std::unique_lock<std::mutex> mlock(call_mutex);
-	//	prv->oCallRsp = call_rsp(&prv->oCallValue);
 	mlock.unlock();
 
 	if (!sck->send(message_body.c_str())) {
@@ -927,15 +700,11 @@ bool jpsock::cmd_login() {
 
 	std::string cmd_buffer = data.dump();
 
-//	opq_json_val oResult(nullptr);
-
 	/*Normal error conditions (failed login etc..) will end here*/
 	std::string response_body;
 	if (!cmd_ret_wait_new_style(cmd_buffer, response_body)) {
 		return false;
 	}
-	//	if (!cmd_ret_wait(cmd_buffer.c_str(), oResult))
-	//		return false;
 
 	data = nlohmann::json::parse(response_body);
 	if (!data.is_object()) {
@@ -943,30 +712,12 @@ bool jpsock::cmd_login() {
 		disconnect();
 		return false;
 	}
-	//	if (!oResult.val->IsObject())
-	//	{
-	//		set_socket_error("PARSE error: Login protocol error 1");
-	//		disconnect();
-	//		return false;
-	//	}
-
-
-	//	const Value* id = GetObjectMember(*oResult.val, "id");
-	//	const Value* job = GetObjectMember(*oResult.val, "job");
-	//	const Value* ext = GetObjectMember(*oResult.val, "extensions");
 
 	if (data["id"].is_null() || !data["id"].is_string() || data["job"].is_null()) {
 		set_socket_error("PARSE error: Login protocol error 2");
 		disconnect();
 		return false;
 	}
-
-	//	if (id == nullptr || job == nullptr || !id->IsString())
-	//	{
-	//		set_socket_error("PARSE error: Login protocol error 2");
-	//		disconnect();
-	//		return false;
-	//	}
 
 	const std::string id = data["id"].get<std::string>();
 	if (id.length() >= sizeof(sMinerId)) {
@@ -977,7 +728,6 @@ bool jpsock::cmd_login() {
 
 	memset(sMinerId, 0, sizeof(sMinerId));
 	strcpy(sMinerId, id.c_str());
-	//	memcpy(sMinerId, id->GetString(), id->GetStringLength());
 
 	if (!data["extensions"].is_null() && data["extensions"].is_array()) {
 		for (auto &element: data["extensions"]) {
@@ -991,23 +741,6 @@ bool jpsock::cmd_login() {
 				ext_motd = true;
 		}
 	}
-
-	//	if(ext != nullptr && ext->IsArray())
-	//	{
-	//		for(size_t i=0; i < ext->Size(); i++)
-	//		{
-	//			const Value& jextname = ext->GetArray()[i];
-	//
-	//			if(!jextname.IsString())
-	//				continue;
-	//
-	//			std::string tmp(jextname.GetString());
-	//			std::transform(tmp.begin(), tmp.end(), tmp.begin(), ::tolower);
-	//
-	//			if(tmp == "motd")
-	//				ext_motd = true;
-	//		}
-	//	}
 
 	auto params = data["job"];
 	if (!process_pool_job_new_style(params)) {
