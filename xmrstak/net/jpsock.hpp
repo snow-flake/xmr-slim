@@ -119,10 +119,8 @@ private:
 	static constexpr size_t iJsonMemSize = 4096;
 	static constexpr size_t iSockBufferSize = 4096;
 
-	struct call_rsp;
 	struct call_rsp_new_style;
 
-	struct opaque_private;
 	struct opaque_private_new_style;
 
 	void jpsock_thread();

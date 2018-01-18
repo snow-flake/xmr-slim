@@ -23,16 +23,9 @@
 
 #include <assert.h>
 #include <algorithm>
-
 #include "jpsock.hpp"
-
 #include "xmrstak/misc/executor.hpp"
-#include "xmrstak/misc/jext.hpp"
-
-
-
-/* Assume that any non-Windows platform uses POSIX-style sockets instead. */
-#include <sys/socket.h>
+#include <sys/socket.h> /* Assume that any non-Windows platform uses POSIX-style sockets instead. */
 #include <arpa/inet.h>
 #include <netdb.h>  /* Needed for getaddrinfo() and freeaddrinfo() */
 
@@ -68,9 +61,6 @@ inline const char *sock_gai_strerror(int err, char *buf, size_t len) {
 	buf[0] = '\0';
 	return gai_strerror(err);
 }
-
-
-using namespace rapidjson;
 
 
 class plain_socket : public base_socket {
@@ -212,19 +202,6 @@ void plain_socket::close(bool free) {
 }
 
 
-struct jpsock::call_rsp {
-	bool bHaveResponse;
-	uint64_t iCallId;
-	Value *pCallData;
-	std::string sCallErr;
-
-	call_rsp(Value *val) : pCallData(val) {
-		bHaveResponse = false;
-		iCallId = 0;
-		sCallErr.clear();
-	}
-};
-
 struct jpsock::call_rsp_new_style {
 	const bool bHaveResponse;
 	const bool bHaveError;
@@ -243,8 +220,6 @@ struct jpsock::call_rsp_new_style {
 };
 
 
-typedef GenericDocument<UTF8<>, MemoryPoolAllocator<>, MemoryPoolAllocator<>> MemDocument;
-
 /*
  *
  * !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -257,24 +232,6 @@ typedef GenericDocument<UTF8<>, MemoryPoolAllocator<>, MemoryPoolAllocator<>> Me
  * Call values and allocators are for the calling thread (executor). When processing
  * a call, the recv thread will make a copy of the call response and then erase its copy.
  */
-
-struct jpsock::opaque_private {
-	Value oCallValue;
-
-	MemoryPoolAllocator<> callAllocator;
-	MemoryPoolAllocator<> recvAllocator;
-	MemoryPoolAllocator<> parseAllocator;
-	MemDocument jsonDoc;
-	call_rsp oCallRsp;
-
-	opaque_private(uint8_t *bCallMem, uint8_t *bRecvMem, uint8_t *bParseMem) :
-			callAllocator(bCallMem, jpsock::iJsonMemSize),
-			recvAllocator(bRecvMem, jpsock::iJsonMemSize),
-			parseAllocator(bParseMem, jpsock::iJsonMemSize),
-			jsonDoc(&recvAllocator, jpsock::iJsonMemSize, &parseAllocator),
-			oCallRsp(nullptr) {
-	}
-};
 
 struct jpsock::opaque_private_new_style {
 	std::shared_ptr<jpsock::call_rsp_new_style> oCallRsp;
