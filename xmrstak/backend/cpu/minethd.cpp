@@ -336,7 +336,7 @@ void minethd::work_main()
 			hash_fun(oWork.bWorkBlob, oWork.iWorkSize, result.bResult, ctx);
 
 			if (*piHashVal < oWork.iTarget)
-				executor::inst()->push_event(ex_event(result, oWork.iPoolId));
+				executor::inst()->push_event(ex_event(result));
 
 			std::this_thread::yield();
 		}
@@ -493,7 +493,7 @@ void minethd::multiway_work_main(cn_hash_fun_multi hash_fun_multi)
 			{
 				if (*piHashVal[i] < oWork.iTarget)
 				{
-					executor::inst()->push_event(ex_event(job_result(oWork.sJobID, iNonce - N + 1 + i, bHashOut + 32 * i, iThreadNo), oWork.iPoolId));
+					executor::inst()->push_event(ex_event(job_result(oWork.sJobID, iNonce - N + 1 + i, bHashOut + 32 * i, iThreadNo)));
 				}
 			}
 

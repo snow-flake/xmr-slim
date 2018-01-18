@@ -7,7 +7,7 @@
 #include "xmrstak/misc/environment.hpp"
 #include "xmrstak/net/msgstruct.hpp"
 #include "xmrstak/net/time_utils.hpp"
-
+#include <memory>
 #include <array>
 #include <list>
 #include <future>
@@ -60,13 +60,9 @@ private:
 	xmrstak::telemetry* telem;
 	std::vector<xmrstak::iBackend*>* pvThreads;
 
-	size_t current_pool_id = invalid_pool_id;
-	size_t last_usr_pool_id = invalid_pool_id;
 	size_t dev_timestamp;
 
-	std::list<jpsock> pools;
-
-	jpsock* pick_pool_by_id(size_t pool_id);
+	std::shared_ptr<jpsock> pool_ptr;
 
 	executor();
 
@@ -149,15 +145,15 @@ private:
 
 	double fHighestHps = 0.0;
 
-	void log_socket_error(jpsock* pool, std::string&& sError);
+	void log_socket_error(std::string&& sError);
 	void log_result_error(std::string&& sError);
 	void log_result_ok(uint64_t iActualDiff);
 
-	void on_sock_ready(size_t pool_id);
-	void on_sock_error(size_t pool_id, std::string&& sError, bool silent);
-	void on_pool_have_job(size_t pool_id, pool_job& oPoolJob);
-	void on_miner_result(size_t pool_id, job_result& oResult);
-	bool get_live_pools(std::vector<jpsock*>& eval_pools);
+	void on_sock_ready();
+	void on_sock_error(std::string&& sError, bool silent);
+	void on_pool_have_job(pool_job& oPoolJob);
+	void on_miner_result(job_result& oResult);
+	bool is_pool_live();
 	void eval_pool_choice();
 
 	inline size_t sec_to_ticks(size_t sec) { return sec * (1000 / iTickTime); }
