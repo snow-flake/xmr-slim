@@ -314,8 +314,6 @@ file(
         "xmrstak/backend/*.cpp"
         "xmrstak/misc/*.hpp"
         "xmrstak/misc/*.cpp"
-        "xmrstak/rapidjson/*/*"
-        "xmrstak/rapidjson/*"
         "xmrstak/net/*.hpp"
         "xmrstak/net/*.cpp"
         "includes/StatsdClient.hpp"
