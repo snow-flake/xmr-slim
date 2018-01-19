@@ -81,7 +81,6 @@ enum ex_event_name { EV_INVALID_VAL, EV_SOCK_READY, EV_SOCK_ERROR,
 struct ex_event
 {
 	ex_event_name iName;
-	size_t iPoolId;
 
 	union
 	{
@@ -90,11 +89,11 @@ struct ex_event
 		sock_err oSocketError;
 	};
 
-	ex_event() { iName = EV_INVALID_VAL; iPoolId = 0;}
-	ex_event(std::string&& err, bool silent, size_t id) : iName(EV_SOCK_ERROR), iPoolId(id), oSocketError(std::move(err), silent) { }
-	ex_event(job_result dat, size_t id) : iName(EV_MINER_HAVE_RESULT), iPoolId(id), oJobResult(dat) {}
-	ex_event(pool_job dat, size_t id) : iName(EV_POOL_HAVE_JOB), iPoolId(id), oPoolJob(dat) {}
-	ex_event(ex_event_name ev, size_t id = 0) : iName(ev), iPoolId(id) {}
+	ex_event() { iName = EV_INVALID_VAL;}
+	ex_event(std::string&& err, bool silent) : iName(EV_SOCK_ERROR), oSocketError(std::move(err), silent) { }
+	ex_event(job_result dat) : iName(EV_MINER_HAVE_RESULT), oJobResult(dat) {}
+	ex_event(pool_job dat) : iName(EV_POOL_HAVE_JOB), oPoolJob(dat) {}
+	ex_event(ex_event_name ev) : iName(ev) {}
 
 	// Delete the copy operators to make sure we are moving only what is needed
 	ex_event(ex_event const&) = delete;
@@ -103,8 +102,6 @@ struct ex_event
 	ex_event(ex_event&& from)
 	{
 		iName = from.iName;
-		iPoolId = from.iPoolId;
-
 		switch(iName)
 		{
 		case EV_SOCK_ERROR:
@@ -129,8 +126,6 @@ struct ex_event
 			oSocketError.~sock_err();
 
 		iName = from.iName;
-		iPoolId = from.iPoolId;
-
 		switch(iName)
 		{
 		case EV_SOCK_ERROR:
