@@ -736,11 +736,6 @@ bool jpsock::cmd_submit(const char *sJobId, uint32_t iNonce, const uint8_t *bRes
 	return success;
 }
 
-void jpsock::save_nonce(uint32_t nonce) {
-	std::unique_lock<std::mutex>(job_mutex);
-	oCurrentJob.iSavedNonce = nonce;
-}
-
 bool jpsock::get_current_job(pool_job &job) {
 	std::unique_lock<std::mutex>(job_mutex);
 

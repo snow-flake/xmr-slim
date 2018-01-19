@@ -63,8 +63,6 @@ public:
 
 	inline bool is_logged_in() { return bLoggedIn; }
 
-	inline size_t get_pool_id() { return pool_id; }
-
 	inline bool get_disconnects(size_t &att, size_t &time) {
 		att = connect_attempts;
 		time = disconnect_time != 0 ? get_timestamp() - disconnect_time + 1 : 0;
@@ -83,8 +81,6 @@ public:
 
 	inline uint64_t get_current_diff() { return iJobDiff; }
 
-	void save_nonce(uint32_t nonce);
-
 	bool get_current_job(pool_job &job);
 
 	bool set_socket_error(const char *a);
@@ -98,7 +94,6 @@ public:
 private:
 	size_t pool_id;
 
-	bool ext_algo = false;
 	bool ext_motd = false;
 
 	std::string pool_motd;
