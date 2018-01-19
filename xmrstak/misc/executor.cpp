@@ -137,7 +137,7 @@ bool executor::is_pool_live() {
  */
 void executor::eval_pool_choice()
 {
-	if (is_pool_live()) {
+	if (is_pool_live() && pool_ptr->is_running() && pool_ptr->is_logged_in()) {
 		return;
 	}
 
