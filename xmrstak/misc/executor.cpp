@@ -117,12 +117,6 @@ bool executor::is_pool_live() {
 	if (dtime == 0 || (dtime >= wait && num <= limit)) {
 		return true;
 	}
-	if(xmrstak::globalStates::inst().pool_id != invalid_pool_id) {
-		printer::print_msg(L0, "All pools are dead. Idling...");
-		auto work = xmrstak::miner_work();
-		xmrstak::pool_data dat;
-		xmrstak::globalStates::inst().switch_work(work, dat);
-	}
 	if(num > limit) {
 		printer::print_msg(L0, "All pools are over give up limit. Exitting.");
 		exit(0);
@@ -143,7 +137,7 @@ void executor::eval_pool_choice()
 
 	// Special case - if we are without a pool, connect to all find a live pool asap
 	if(pool_ptr.get() == nullptr) {
-		std::shared_ptr<jpsock> pool = std::shared_ptr<jpsock>(new jpsock(0));
+		std::shared_ptr<jpsock> pool = std::shared_ptr<jpsock>(new jpsock());
 		if(pool->can_connect()) {
 			printer::print_msg(L1, "Fast-connecting to %s pool ...", system_constants::config_pool_pool_address());
 			std::string error;
@@ -155,7 +149,7 @@ void executor::eval_pool_choice()
 		return;
 	}
 
-	std::shared_ptr<jpsock> goal = std::shared_ptr<jpsock>(new jpsock(0));
+	std::shared_ptr<jpsock> goal = std::shared_ptr<jpsock>(new jpsock());
 	if(!goal->is_running() && goal->can_connect())
 	{
 		printer::print_msg(L1, "Connecting to %s pool ...", system_constants::config_pool_pool_address());
@@ -264,7 +258,6 @@ void executor::on_pool_have_job(pool_job& oPoolJob) {
 	xmrstak::miner_work oWork(oPoolJob.sJobID, oPoolJob.bWorkBlob, oPoolJob.iWorkLen, oPoolJob.iTarget);
 	xmrstak::pool_data dat;
 	dat.iSavedNonce = oPoolJob.iSavedNonce;
-	dat.pool_id = 0;
 
 	xmrstak::globalStates::inst().switch_work(oWork, dat);
 
@@ -358,7 +351,7 @@ void executor::ex_main()
 	telem = new xmrstak::telemetry(pvThreads->size());
 
 	set_timestamp();
-	pool_ptr = std::shared_ptr<jpsock>(new jpsock(0));
+	pool_ptr = std::shared_ptr<jpsock>(new jpsock());
 
 	ex_event ev;
 	std::thread clock_thd(&executor::ex_clock_thd, this);

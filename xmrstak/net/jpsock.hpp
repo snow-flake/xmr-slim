@@ -41,7 +41,7 @@ public:
 
 class jpsock {
 public:
-	jpsock(size_t id);
+	jpsock();
 
 	~jpsock();
 
@@ -92,8 +92,6 @@ public:
 	bool set_socket_error_strerr(const char *a, int res);
 
 private:
-	size_t pool_id;
-
 	bool ext_motd = false;
 
 	std::string pool_motd;
