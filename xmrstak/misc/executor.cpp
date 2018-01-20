@@ -34,6 +34,7 @@
 #include "xmrstak/misc/console.hpp"
 #include "xmrstak/system_constants.hpp"
 #include "xmrstak/net/time_utils.hpp"
+#include "xmrstak/cli/statsd.hpp"
 
 #include <thread>
 #include <cmath>
@@ -397,9 +398,12 @@ void executor::ex_main()
 
 
 		case EV_PERF_TICK:
-			for (int i = 0; i < pvThreads->size(); i++)
-				telem->push_perf_value(i, pvThreads->at(i)->iHashCount.load(std::memory_order_relaxed),
-				pvThreads->at(i)->iTimestamp.load(std::memory_order_relaxed));
+			for (int i = 0; i < pvThreads->size(); i++) {
+				uint64_t iHashCount = pvThreads->at(i)->iHashCount.load(std::memory_order_relaxed);
+				uint64_t iTimestamp = pvThreads->at(i)->iTimestamp.load(std::memory_order_relaxed);
+				telem->push_perf_value(i, iHashCount, iTimestamp);
+				statsd::statsd_count("i_hash_count", iHashCount);
+			}
 
 			if((cnt++ & 0xF) == 0) //Every 16 ticks
 			{
