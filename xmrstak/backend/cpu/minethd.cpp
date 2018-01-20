@@ -315,7 +315,7 @@ void minethd::work_main()
 		constexpr size_t nonce_chunk = 4096; // Needs to be a power of 2
 
 		assert(sizeof(job_result::job_id) == sizeof(pool_job::job_id));
-		memcpy(result.job_id, oWork.sJobID, sizeof(job_result::job_id));
+		memcpy(result.job_id, oWork.job_id, sizeof(job_result::job_id));
 
 		while(globalStates::inst().iGlobalJobNo.load(std::memory_order_relaxed) == iJobNo)
 		{
@@ -493,7 +493,7 @@ void minethd::multiway_work_main(cn_hash_fun_multi hash_fun_multi)
 			{
 				if (*piHashVal[i] < oWork.iTarget)
 				{
-					executor::inst()->push_event(ex_event(job_result(oWork.sJobID, iNonce - N + 1 + i, bHashOut + 32 * i, iThreadNo)));
+					executor::inst()->push_event(ex_event(job_result(oWork.job_id, iNonce - N + 1 + i, bHashOut + 32 * i, iThreadNo)));
 				}
 			}
 
