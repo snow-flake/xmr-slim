@@ -44,8 +44,6 @@ namespace system_constants {
 
 	inline uint64_t GetGiveUpLimit() { return CONFIG_GIVEUP_LIMIT; }
 
-	inline bool DaemonMode() { return CONFIG_DAEMON_MODE; }
-
 	inline bool HaveHardwareAes() { return CONFIG_AES_OVERRIDE; }
 
 	inline slow_mem_cfg GetSlowMemSetting() { return CONFIG_USE_SLOW_MEMORY; }

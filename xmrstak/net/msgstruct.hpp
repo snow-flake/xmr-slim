@@ -66,7 +66,7 @@ struct sock_err
 
 enum ex_event_name { EV_INVALID_VAL, EV_SOCK_READY, EV_SOCK_ERROR,
 	EV_POOL_HAVE_JOB, EV_MINER_HAVE_RESULT, EV_PERF_TICK, EV_EVAL_POOL_CHOICE, 
-	EV_USR_HASHRATE, EV_USR_RESULTS, EV_USR_CONNSTAT, EV_HASHRATE_LOOP };
+	EV_HASHRATE_LOOP };
 
 /*
    This is how I learned to stop worrying and love c++11 =).

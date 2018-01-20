@@ -18,18 +18,6 @@ inline long long unsigned int int_port(size_t i)
 enum verbosity : size_t { L0 = 0, L1 = 1, L2 = 2, L3 = 3, L4 = 4, LINF = 100};
 
 namespace printer {
-	static inline int get_key()
-	{
-		struct termios oldattr, newattr;
-		int ch;
-		tcgetattr( STDIN_FILENO, &oldattr );
-		newattr = oldattr;
-		newattr.c_lflag &= ~( ICANON | ECHO );
-		tcsetattr( STDIN_FILENO, TCSANOW, &newattr );
-		ch = getchar();
-		tcsetattr( STDIN_FILENO, TCSANOW, &oldattr );
-		return ch;
-	}
 
 	static inline void print_msg(verbosity verbose, const char* fmt, ...)
 	{

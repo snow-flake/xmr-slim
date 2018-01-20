@@ -74,33 +74,6 @@ int main(int argc, char *argv[])
 	std::cout << "Start mining: MONERO" << std::endl;
 	std::cout << std::endl;
 
-	executor::inst()->ex_start(system_constants::DaemonMode());
-
-	uint64_t lastTime = get_timestamp_ms();
-	int key;
-	while(true) {
-		key = printer::get_key();
-		switch(key) {
-		case 'h':
-			executor::inst()->push_event(ex_event(EV_USR_HASHRATE));
-			break;
-		case 'r':
-			executor::inst()->push_event(ex_event(EV_USR_RESULTS));
-			break;
-		case 'c':
-			executor::inst()->push_event(ex_event(EV_USR_CONNSTAT));
-			break;
-		default:
-			break;
-		}
-
-		uint64_t currentTime = get_timestamp_ms();
-
-		/* Hard guard to make sure we never get called more than twice per second */
-		if( currentTime - lastTime < 500) {
-			std::this_thread::sleep_for(std::chrono::milliseconds(500 - (currentTime - lastTime)));
-		}
-		lastTime = currentTime;
-	}
+	executor::inst()->ex_main();
 	return 0;
 }
