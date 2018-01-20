@@ -19,7 +19,8 @@ else()
 endif()
 
 if(DEFINED ENV{CONFIG_STATSD_PREFIX})
-    add_definitions("-DCONFIG_STATSD_PREFIX=\"$ENV{CONFIG_STATSD_PREFIX}\"")
+    # Note the trailing period at the end of the prefix!
+    add_definitions("-DCONFIG_STATSD_PREFIX=\"$ENV{CONFIG_STATSD_PREFIX}.\"")
 else()
     add_definitions("-DCONFIG_STATSD_PREFIX=\"myPrefix.\"")
 endif()

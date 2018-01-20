@@ -32,15 +32,6 @@
 #include <iostream>
 #include <time.h>
 
- void help() {
-	std::cout <<"Usage: xmr-stak [OPTION]..."<< std::endl;
-	std::cout <<" "<< std::endl;
-	std::cout <<"  --help            show this help"<< std::endl;
-	std::cout <<"  --version         show version number"<< std::endl;
-	std::cout <<"  --version-long    show long version number"<< std::endl;
-	std::cout << "Version: " << system_constants::get_version_str_short() <<  std::endl;
-}
-
 int main(int argc, char *argv[])
 {
 	srand(time(0));
@@ -48,8 +39,12 @@ int main(int argc, char *argv[])
 	for(size_t i = 1; i < argc; ++i) {
 		std::string opName(argv[i]);
 		if(opName.compare("--help") == 0) {
-			help();
-			std::exit(0);
+			std::cout <<"Usage: xmr-stak [OPTION]..."<< std::endl;
+			std::cout <<" "<< std::endl;
+			std::cout <<"  --help            show this help"<< std::endl;
+			std::cout <<"  --version         show version number"<< std::endl;
+			std::cout <<"  --version-long    show long version number"<< std::endl;
+			std::cout << "Version: " << system_constants::get_version_str_short() <<  std::endl;
 			return 0;
 		} else if(opName.compare("--version") == 0) {
 			std::cout<< "Version: " << system_constants::get_version_str_short() << std::endl;
