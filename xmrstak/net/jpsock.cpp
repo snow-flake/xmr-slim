@@ -488,13 +488,6 @@ bool jpsock::process_pool_job_new_style(const nlohmann::json &params) {
 	if (!params.is_object()) {
 		return set_socket_error("PARSE error: Job error 1");
 	}
-
-	//	const Value *blob, *jobid, *target, *motd;
-	//	const auto job_id = params["job_id"];  // jobid = GetObjectMember(*params->val, "job_id");
-	//	const auto blob = params["blob"];  // blob = GetObjectMember(*params->val, "blob");
-	//	const auto target = params["target"];  // target = GetObjectMember(*params->val, "target");
-	//	const auto motd = params["motd"];  // motd = GetObjectMember(*params->val, "motd");
-
 	if (params["job_id"].is_null() || !params["job_id"].is_string()) {
 		return set_socket_error("PARSE error: Job error 2");
 	}
@@ -510,11 +503,10 @@ bool jpsock::process_pool_job_new_style(const nlohmann::json &params) {
 	const std::string target = params["target"].get<std::string>();
 
 	// Note >=
-	if (job_id.length() >= sizeof(pool_job::sJobID)) {
+	if (job_id.length() >= sizeof(pool_job::job_id)) {
 		return set_socket_error("PARSE error: Job error 3");
 	}
 
-	//	uint32_t iWorkLn = blob->GetStringLength() / 2;
 	if (blob.length() / 2 > sizeof(pool_job::bWorkBlob)) {
 		return set_socket_error("PARSE error: Invalid job legth. Are you sure you are mining the correct coin?");
 	}
@@ -525,9 +517,8 @@ bool jpsock::process_pool_job_new_style(const nlohmann::json &params) {
 	}
 
 	oPoolJob.iWorkLen = blob.length() / 2;
-	memset(oPoolJob.sJobID, 0, sizeof(pool_job::sJobID));
-	strcpy(oPoolJob.sJobID, job_id.c_str());
-	//	memcpy(oPoolJob.sJobID, jobid->GetString(), jobid->GetStringLength()); //Bounds checking at proto error 3
+	memset(oPoolJob.job_id, 0, sizeof(pool_job::job_id));
+	strcpy(oPoolJob.job_id, job_id.c_str());
 
 	if (target.length() <= 8) {
 		uint32_t iTempInt = 0;
@@ -721,23 +712,15 @@ bool jpsock::cmd_login() {
 	return true;
 }
 
-bool jpsock::cmd_submit(const char *sJobId, uint32_t iNonce, const uint8_t *bResult, xmrstak::iBackend *bend) {
+bool jpsock::cmd_submit(const std::string job_id, std::string nonce, const std::string result) {
 	statsd::statsd_increment("submit");
-
-	char sNonce[9];
-	bin2hex((unsigned char *) &iNonce, 4, sNonce);
-	sNonce[8] = '\0';
-
-	char sResult[65];
-	bin2hex(bResult, 32, sResult);
-	sResult[64] = '\0';
 
 	nlohmann::json data;
 	data["method"] = "submit";
 	data["params"]["id"] = sMinerId;
-	data["params"]["job_id"] = sJobId;
-	data["params"]["nonce"] = sNonce;
-	data["params"]["result"] = sResult;
+	data["params"]["job_id"] = job_id;
+	data["params"]["nonce"] = nonce;
+	data["params"]["result"] = result;
 	data["id"] = 1;
 
 	const std::string cmd_buffer = data.dump();

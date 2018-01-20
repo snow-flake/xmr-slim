@@ -10,35 +10,92 @@
 
 struct pool_job
 {
-	char		sJobID[64];
+	char		job_id[64];
 	uint8_t		bWorkBlob[112];
 	uint64_t	iTarget;
 	uint32_t	iWorkLen;
 	uint32_t	iSavedNonce;
 
 	pool_job() : iWorkLen(0), iSavedNonce(0) {}
-	pool_job(const char* sJobID, uint64_t iTarget, const uint8_t* bWorkBlob, uint32_t iWorkLen) :
+	pool_job(const char* job_id, uint64_t iTarget, const uint8_t* bWorkBlob, uint32_t iWorkLen) :
 		iTarget(iTarget), iWorkLen(iWorkLen), iSavedNonce(0)
 	{
 		assert(iWorkLen <= sizeof(pool_job::bWorkBlob));
-		memcpy(this->sJobID, sJobID, sizeof(pool_job::sJobID));
+		memcpy(this->job_id, job_id, sizeof(pool_job::job_id));
 		memcpy(this->bWorkBlob, bWorkBlob, iWorkLen);
 	}
 };
 
 struct job_result
 {
+	char		job_id[64];
 	uint8_t		bResult[32];
-	char		sJobID[64];
 	uint32_t	iNonce;
-	uint32_t	iThreadId;
+	uint32_t	thread_id;
 
 	job_result() {}
-	job_result(const char* sJobID, uint32_t iNonce, const uint8_t* bResult, uint32_t iThreadId) : iNonce(iNonce), iThreadId(iThreadId)
+	job_result(const char* job_id, uint32_t iNonce, const uint8_t* bResult, uint32_t thread_id) : iNonce(iNonce), thread_id(thread_id)
 	{
-		memcpy(this->sJobID, sJobID, sizeof(job_result::sJobID));
+		memcpy(this->job_id, job_id, sizeof(job_result::job_id));
 		memcpy(this->bResult, bResult, sizeof(job_result::bResult));
 	}
+
+	inline const std::string job_id_str() {
+		return std::string(job_id);
+	}
+
+	inline const std::string result_str() {
+		char sResult[65];
+		bin2hex(bResult, 32, sResult);
+		sResult[64] = '\0';
+		return std::string(sResult);
+
+	}
+
+	inline const std::string nonce_str() {
+		char sNonce[9];
+		bin2hex((unsigned char *) &iNonce, 4, sNonce);
+		sNonce[8] = '\0';
+		return std::string(sNonce);
+	}
+
+private:
+
+	inline unsigned char hf_hex2bin(char c, bool &err) {
+		if (c >= '0' && c <= '9')
+			return c - '0';
+		else if (c >= 'a' && c <= 'f')
+			return c - 'a' + 0xA;
+		else if (c >= 'A' && c <= 'F')
+			return c - 'A' + 0xA;
+
+		err = true;
+		return 0;
+	}
+
+	inline bool hex2bin(const char *in, unsigned int len, unsigned char *out) {
+		bool error = false;
+		for (unsigned int i = 0; i < len; i += 2) {
+			out[i / 2] = (hf_hex2bin(in[i], error) << 4) | hf_hex2bin(in[i + 1], error);
+			if (error) return false;
+		}
+		return true;
+	}
+
+	inline char hf_bin2hex(unsigned char c) {
+		if (c <= 0x9)
+			return '0' + c;
+		else
+			return 'a' - 0xA + c;
+	}
+
+	inline void bin2hex(const unsigned char *in, unsigned int len, char *out) {
+		for (unsigned int i = 0; i < len; i++) {
+			out[i * 2] = hf_bin2hex((in[i] & 0xF0) >> 4);
+			out[i * 2 + 1] = hf_bin2hex(in[i] & 0x0F);
+		}
+	}
+
 };
 
 struct sock_err
