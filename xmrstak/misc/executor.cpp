@@ -260,7 +260,7 @@ void executor::on_pool_have_job(pool_job& oPoolJob) {
 		return;
 	}
 
-	xmrstak::miner_work oWork(oPoolJob.job_id, oPoolJob.bWorkBlob, oPoolJob.iWorkLen, oPoolJob.iTarget);
+	xmrstak::miner_work oWork(oPoolJob.job_id, oPoolJob.bWorkBlob, oPoolJob.iWorkLen, oPoolJob.i_target());
 	xmrstak::pool_data dat;
 	dat.iSavedNonce = oPoolJob.iSavedNonce;
 

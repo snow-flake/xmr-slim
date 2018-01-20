@@ -12,18 +12,88 @@ struct pool_job
 {
 	char		job_id[64];
 	uint8_t		bWorkBlob[112];
-	uint64_t	iTarget;
 	uint32_t	iWorkLen;
 	uint32_t	iSavedNonce;
+	std::string target;
 
 	pool_job() : iWorkLen(0), iSavedNonce(0) {}
-	pool_job(const char* job_id, uint64_t iTarget, const uint8_t* bWorkBlob, uint32_t iWorkLen) :
-		iTarget(iTarget), iWorkLen(iWorkLen), iSavedNonce(0)
+	pool_job(const char* job_id, const std::string & target, const uint8_t* bWorkBlob, uint32_t iWorkLen) :
+		iWorkLen(iWorkLen), iSavedNonce(0), target(target)
 	{
 		assert(iWorkLen <= sizeof(pool_job::bWorkBlob));
 		memcpy(this->job_id, job_id, sizeof(pool_job::job_id));
 		memcpy(this->bWorkBlob, bWorkBlob, iWorkLen);
 	}
+
+	const uint64_t i_target() {
+		uint64_t output = 0;
+		if (target.length() <= 8) {
+			uint32_t iTempInt = 0;
+			char sTempStr[] = "00000000"; // Little-endian CPU FTW
+			memcpy(sTempStr, target.c_str(), target.length());
+			if (!hex2bin(sTempStr, 8, (unsigned char *) &iTempInt) || iTempInt == 0) {
+				throw new std::runtime_error("PARSE error: Invalid target");
+			}
+			output = t32_to_t64(iTempInt);
+		} else if (target.length() <= 16) {
+			output  = 0;
+			char sTempStr[] = "0000000000000000";
+			memcpy(sTempStr, target.c_str(), target.length());
+			if (!hex2bin(sTempStr, 16, (unsigned char *) &output ) || output  == 0) {
+				throw new std::runtime_error("PARSE error: Invalid target");
+			}
+		} else {
+			throw new std::runtime_error("PARSE error: Job error 5");
+		}
+		return output;
+	}
+
+	const uint64_t i_job_diff() {
+		return t64_to_diff(i_target());
+	}
+
+private:
+	inline static uint64_t t64_to_diff(uint64_t t) { return 0xFFFFFFFFFFFFFFFFULL / t; }
+
+	inline static uint64_t t32_to_t64(uint32_t t) {
+		return 0xFFFFFFFFFFFFFFFFULL / (0xFFFFFFFFULL / ((uint64_t) t));
+	}
+
+	inline static unsigned char hf_hex2bin(char c, bool &err) {
+		if (c >= '0' && c <= '9')
+			return c - '0';
+		else if (c >= 'a' && c <= 'f')
+			return c - 'a' + 0xA;
+		else if (c >= 'A' && c <= 'F')
+			return c - 'A' + 0xA;
+
+		err = true;
+		return 0;
+	}
+
+	inline static bool hex2bin(const char *in, unsigned int len, unsigned char *out) {
+		bool error = false;
+		for (unsigned int i = 0; i < len; i += 2) {
+			out[i / 2] = (hf_hex2bin(in[i], error) << 4) | hf_hex2bin(in[i + 1], error);
+			if (error) return false;
+		}
+		return true;
+	}
+
+	inline static char hf_bin2hex(unsigned char c) {
+		if (c <= 0x9)
+			return '0' + c;
+		else
+			return 'a' - 0xA + c;
+	}
+
+	inline static void bin2hex(const unsigned char *in, unsigned int len, char *out) {
+		for (unsigned int i = 0; i < len; i++) {
+			out[i * 2] = hf_bin2hex((in[i] & 0xF0) >> 4);
+			out[i * 2 + 1] = hf_bin2hex(in[i] & 0x0F);
+		}
+	}
+
 };
 
 struct job_result
