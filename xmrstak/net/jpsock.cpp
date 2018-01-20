@@ -488,13 +488,6 @@ bool jpsock::process_pool_job_new_style(const nlohmann::json &params) {
 	if (!params.is_object()) {
 		return set_socket_error("PARSE error: Job error 1");
 	}
-
-	//	const Value *blob, *jobid, *target, *motd;
-	//	const auto job_id = params["job_id"];  // jobid = GetObjectMember(*params->val, "job_id");
-	//	const auto blob = params["blob"];  // blob = GetObjectMember(*params->val, "blob");
-	//	const auto target = params["target"];  // target = GetObjectMember(*params->val, "target");
-	//	const auto motd = params["motd"];  // motd = GetObjectMember(*params->val, "motd");
-
 	if (params["job_id"].is_null() || !params["job_id"].is_string()) {
 		return set_socket_error("PARSE error: Job error 2");
 	}
@@ -514,7 +507,6 @@ bool jpsock::process_pool_job_new_style(const nlohmann::json &params) {
 		return set_socket_error("PARSE error: Job error 3");
 	}
 
-	//	uint32_t iWorkLn = blob->GetStringLength() / 2;
 	if (blob.length() / 2 > sizeof(pool_job::bWorkBlob)) {
 		return set_socket_error("PARSE error: Invalid job legth. Are you sure you are mining the correct coin?");
 	}
@@ -527,7 +519,6 @@ bool jpsock::process_pool_job_new_style(const nlohmann::json &params) {
 	oPoolJob.iWorkLen = blob.length() / 2;
 	memset(oPoolJob.job_id, 0, sizeof(pool_job::job_id));
 	strcpy(oPoolJob.job_id, job_id.c_str());
-	//	memcpy(oPoolJob.job_id, jobid->GetString(), jobid->GetStringLength()); //Bounds checking at proto error 3
 
 	if (target.length() <= 8) {
 		uint32_t iTempInt = 0;
