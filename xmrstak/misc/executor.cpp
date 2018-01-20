@@ -139,7 +139,8 @@ void executor::eval_pool_choice()
 	if(pool_ptr.get() == nullptr) {
 		std::shared_ptr<jpsock> pool = std::shared_ptr<jpsock>(new jpsock());
 		if(pool->can_connect()) {
-			printer::print_msg(L1, "Fast-connecting to %s pool ...", system_constants::config_pool_pool_address());
+			auto pool_address = system_constants::get_pool_pool_address();
+			printer::print_msg(L1, "Fast-connecting to %s pool ...", pool_address.c_str());
 			std::string error;
 			if(!pool->connect(error))
 				log_socket_error(std::move(error));
@@ -152,7 +153,8 @@ void executor::eval_pool_choice()
 	std::shared_ptr<jpsock> goal = std::shared_ptr<jpsock>(new jpsock());
 	if(!goal->is_running() && goal->can_connect())
 	{
-		printer::print_msg(L1, "Connecting to %s pool ...", system_constants::config_pool_pool_address());
+		auto pool_address = system_constants::get_pool_pool_address();
+		printer::print_msg(L1, "Connecting to %s pool ...", pool_address.c_str());
 
 		std::string error;
 		if(!goal->connect(error))
@@ -181,7 +183,7 @@ void executor::log_socket_error(std::string&& sError)
 {
 	std::string pool_name;
 	pool_name.reserve(128);
-	pool_name.append("[").append(system_constants::config_pool_pool_address()).append("] ");
+	pool_name.append("[").append(system_constants::get_pool_pool_address()).append("] ");
 	sError.insert(0, pool_name);
 
 	vSocketLog.emplace_back(std::move(sError));
@@ -226,7 +228,8 @@ void executor::log_result_ok(uint64_t iActualDiff)
 void executor::on_sock_ready()
 {
 	jpsock* pool = pool_ptr.get();
-	printer::print_msg(L1, "Pool %s connected. Logging in...", system_constants::config_pool_pool_address());
+	auto pool_address = system_constants::get_pool_pool_address();
+	printer::print_msg(L1, "Pool %s connected. Logging in...", pool_address.c_str());
 
 	if(!pool->cmd_login())
 	{
@@ -470,7 +473,7 @@ void executor::hashrate_report(std::string& out)
 		std::string motd;
 		motd.empty();
 		if(pool_ptr->get_pool_motd(motd) && motd_filter_console(motd)) {
-			out.append("Message from ").append(system_constants::config_pool_pool_address()).append(":\n");
+			out.append("Message from ").append(system_constants::get_pool_pool_address()).append(":\n");
 			out.append(motd).append("\n");
 			out.append("-----------------------------------------------------\n");
 		}
@@ -629,7 +632,7 @@ void executor::connection_report(std::string& out)
 	out.append("CONNECTION REPORT\n");
 
 	out.append("Pool address    : ").append(
-			pool != nullptr ? system_constants::config_pool_pool_address() : "<not connected>"
+			pool != nullptr ? system_constants::get_pool_pool_address() : "<not connected>"
 	).append(1, '\n');
 
 	if(pool != nullptr && pool->is_running() && pool->is_logged_in())

@@ -6,6 +6,32 @@ cmake_minimum_required(VERSION 3.1.0)
 # Compile time options
 ################################################################################
 
+if(DEFINED ENV{CONFIG_STATSD_ADDRESS})
+    add_definitions("-DCONFIG_STATSD_ADDRESS=\"$ENV{CONFIG_STATSD_ADDRESS}\"")
+else()
+    add_definitions("-DCONFIG_STATSD_ADDRESS=\"127.0.0.1\"")
+endif()
+
+if(DEFINED ENV{CONFIG_STATSD_PORT})
+    add_definitions("-DCONFIG_STATSD_PORT=$ENV{CONFIG_STATSD_PORT}")
+else()
+    add_definitions("-DCONFIG_STATSD_PORT=8080")
+endif()
+
+if(DEFINED ENV{CONFIG_STATSD_PREFIX})
+    add_definitions("-DCONFIG_STATSD_PREFIX=\"$ENV{CONFIG_STATSD_PREFIX}\"")
+else()
+    add_definitions("-DCONFIG_STATSD_PREFIX=\"myPrefix.\"")
+endif()
+
+if(DEFINED ENV{CONFIG_STATSD_MACHINE_ID})
+    add_definitions("-DCONFIG_STATSD_MACHINE_ID=\"$ENV{CONFIG_STATSD_MACHINE_ID}\"")
+else()
+    add_definitions("-DCONFIG_STATSD_MACHINE_ID=\"myMachine\"")
+endif()
+
+
+
 # pool_address    - Pool address should be in the form "pool.supportxmr.com:3333". Only stratum pools are supported.
 # wallet_address  - Your wallet, or pool login.
 # pool_password   - Can be empty in most cases or "x".
@@ -308,6 +334,8 @@ file(
         "c_cryptonight/*.cpp"
         "xmrstak/*.hpp"
         "xmrstak/*.cpp"
+        "xmrstak/cli/cli-miner.cpp"
+        "xmrstak/cli/statsd.cpp"
         "xmrstak/backend/cpu/*.hpp"
         "xmrstak/backend/cpu/*.cpp"
         "xmrstak/backend/*.hpp"
@@ -316,13 +344,12 @@ file(
         "xmrstak/misc/*.cpp"
         "xmrstak/net/*.hpp"
         "xmrstak/net/*.cpp"
+        "includes/StatsdClient.cpp"
+        "includes/UDPSender.cpp"
 )
-
-# compile final binary
-file(GLOB SRCFILES_CPP "xmrstak/cli/*.cpp")
 set_source_files_properties(${SRCFILES_CPP} PROPERTIES LANGUAGE CXX)
 
-add_executable(xmr-stak ${SRCFILES_CPP} ${BACKEND_CPP} xmrstak/net/time_utils.hpp)
+add_executable(xmr-stak ${SRCFILES_CPP} ${BACKEND_CPP})
 
 set(EXECUTABLE_OUTPUT_PATH "bin")
 set(LIBRARY_OUTPUT_PATH "bin")
@@ -332,7 +359,7 @@ target_link_libraries(xmr-stak ${LIBS})
 
 
 # compile final binary
-file(GLOB STATSD_TEST_CPP "includes/statsd_test.cpp")
+file(GLOB STATSD_TEST_CPP "includes/StatsdClient.cpp" "includes/UDPSender.cpp" "includes/statsd_test.cpp")
 set_source_files_properties(${STATSD_TEST_CPP} PROPERTIES LANGUAGE CXX)
 add_executable(statsd-test ${STATSD_TEST_CPP})
 target_link_libraries(statsd-test ${LIBS})

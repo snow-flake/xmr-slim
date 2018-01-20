@@ -23,11 +23,10 @@ namespace system_constants {
 		unknown_value
 	};
 
-	inline const char *config_pool_pool_address() { return CONFIG_POOL_POOL_ADDRESS; }
-
-	inline const char *config_pool_wallet_address() { return CONFIG_POOL_WALLET_ADDRESS; }
-
-	inline const char *config_pool_pool_password() { return CONFIG_POOL_POOL_PASSWORD; }
+	inline const std::string get_statsd_address() { return std::string(CONFIG_STATSD_ADDRESS); }
+	inline const uint16_t get_statsd_port() { return CONFIG_STATSD_PORT; }
+	inline const std::string get_statsd_prefix() { return CONFIG_STATSD_PREFIX; }
+	inline const std::string get_statsd_machine_id() { return CONFIG_STATSD_MACHINE_ID; }
 
 	inline const std::string get_pool_pool_address() { return std::string(CONFIG_POOL_POOL_ADDRESS); }
 	inline const std::string get_pool_wallet_address() { return std::string(CONFIG_POOL_WALLET_ADDRESS); }
