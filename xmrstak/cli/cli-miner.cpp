@@ -64,13 +64,7 @@ int main(int argc, char *argv[])
 	}
 
 	std::cout << "-------------------------------------------------------------------" << std::endl;
-	std::cout << system_constants::get_version_str_short() << std::endl;
-	std::cout << std::endl;
-	std::cout << "You can use following keys to display reports:" << std::endl;
-	std::cout << "'h' - hashrate" << std::endl;
-	std::cout << "'r' - results" << std::endl;
-	std::cout << "'c' - connection" << std::endl;
-	std::cout << "-------------------------------------------------------------------" << std::endl;
+	std::cout << "Version: " << system_constants::get_version_str_short() << std::endl;
 	std::cout << "Start mining: MONERO" << std::endl;
 	std::cout << std::endl;
 
