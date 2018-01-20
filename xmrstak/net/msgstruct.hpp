@@ -10,33 +10,33 @@
 
 struct pool_job
 {
-	char		sJobID[64];
+	char		job_id[64];
 	uint8_t		bWorkBlob[112];
 	uint64_t	iTarget;
 	uint32_t	iWorkLen;
 	uint32_t	iSavedNonce;
 
 	pool_job() : iWorkLen(0), iSavedNonce(0) {}
-	pool_job(const char* sJobID, uint64_t iTarget, const uint8_t* bWorkBlob, uint32_t iWorkLen) :
+	pool_job(const char* job_id, uint64_t iTarget, const uint8_t* bWorkBlob, uint32_t iWorkLen) :
 		iTarget(iTarget), iWorkLen(iWorkLen), iSavedNonce(0)
 	{
 		assert(iWorkLen <= sizeof(pool_job::bWorkBlob));
-		memcpy(this->sJobID, sJobID, sizeof(pool_job::sJobID));
+		memcpy(this->job_id, job_id, sizeof(pool_job::job_id));
 		memcpy(this->bWorkBlob, bWorkBlob, iWorkLen);
 	}
 };
 
 struct job_result
 {
+	char		job_id[64];
 	uint8_t		bResult[32];
-	char		sJobID[64];
 	uint32_t	iNonce;
 	uint32_t	iThreadId;
 
 	job_result() {}
-	job_result(const char* sJobID, uint32_t iNonce, const uint8_t* bResult, uint32_t iThreadId) : iNonce(iNonce), iThreadId(iThreadId)
+	job_result(const char* job_id, uint32_t iNonce, const uint8_t* bResult, uint32_t iThreadId) : iNonce(iNonce), iThreadId(iThreadId)
 	{
-		memcpy(this->sJobID, sJobID, sizeof(job_result::sJobID));
+		memcpy(this->job_id, job_id, sizeof(job_result::job_id));
 		memcpy(this->bResult, bResult, sizeof(job_result::bResult));
 	}
 };

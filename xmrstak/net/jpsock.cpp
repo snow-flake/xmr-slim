@@ -510,7 +510,7 @@ bool jpsock::process_pool_job_new_style(const nlohmann::json &params) {
 	const std::string target = params["target"].get<std::string>();
 
 	// Note >=
-	if (job_id.length() >= sizeof(pool_job::sJobID)) {
+	if (job_id.length() >= sizeof(pool_job::job_id)) {
 		return set_socket_error("PARSE error: Job error 3");
 	}
 
@@ -525,9 +525,9 @@ bool jpsock::process_pool_job_new_style(const nlohmann::json &params) {
 	}
 
 	oPoolJob.iWorkLen = blob.length() / 2;
-	memset(oPoolJob.sJobID, 0, sizeof(pool_job::sJobID));
-	strcpy(oPoolJob.sJobID, job_id.c_str());
-	//	memcpy(oPoolJob.sJobID, jobid->GetString(), jobid->GetStringLength()); //Bounds checking at proto error 3
+	memset(oPoolJob.job_id, 0, sizeof(pool_job::job_id));
+	strcpy(oPoolJob.job_id, job_id.c_str());
+	//	memcpy(oPoolJob.job_id, jobid->GetString(), jobid->GetStringLength()); //Bounds checking at proto error 3
 
 	if (target.length() <= 8) {
 		uint32_t iTempInt = 0;
