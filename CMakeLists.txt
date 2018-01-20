@@ -342,7 +342,7 @@ file(
 )
 set_source_files_properties(${SRCFILES_CPP} PROPERTIES LANGUAGE CXX)
 
-add_executable(xmr-stak ${SRCFILES_CPP} ${BACKEND_CPP})
+add_executable(xmr-stak ${SRCFILES_CPP} ${BACKEND_CPP} xmrstak/cli/logger.cpp xmrstak/cli/logger.h)
 
 set(EXECUTABLE_OUTPUT_PATH "bin")
 set(LIBRARY_OUTPUT_PATH "bin")

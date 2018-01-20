@@ -29,6 +29,7 @@
 #include <arpa/inet.h>
 #include <netdb.h>  /* Needed for getaddrinfo() and freeaddrinfo() */
 #include "xmrstak/cli/statsd.hpp"
+#include "xmrstak/cli/logger.h"
 
 #if defined(__FreeBSD__)
 #include <netinet/in.h> /* Needed for IPPROTO_TCP */
@@ -566,6 +567,7 @@ bool jpsock::process_pool_job_new_style(const nlohmann::json &params) {
 		}
 	}
 
+	logger::log_new_job(job_id, blob, target);
 
 	iJobDiff = t64_to_diff(oPoolJob.iTarget);
 
@@ -739,6 +741,7 @@ bool jpsock::cmd_submit(const char *sJobId, uint32_t iNonce, const uint8_t *bRes
 	data["params"]["nonce"] = sNonce;
 	data["params"]["result"] = sResult;
 	data["id"] = 1;
+	logger::log_job_result(sJobId, blob, target, sNonce, sResult);
 
 	const std::string cmd_buffer = data.dump();
 	std::cout << __FILE__ << ":" << __LINE__ << ":jpsock::cmd_submit: " << cmd_buffer << std::endl;
