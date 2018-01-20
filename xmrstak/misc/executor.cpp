@@ -296,7 +296,7 @@ void executor::on_miner_result(job_result& oResult) {
 	}
 
 	size_t t_start = get_timestamp_ms();
-	bool bResult = pool->cmd_submit(oResult.job_id, oResult.iNonce, oResult.bResult, pvThreads->at(oResult.iThreadId));
+	bool bResult = pool->cmd_submit(oResult.job_id, oResult.iNonce, oResult.bResult, pvThreads->at(oResult.thread_id));
 	size_t t_len = get_timestamp_ms() - t_start;
 
 	if(t_len > 0xFFFF) {

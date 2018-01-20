@@ -293,7 +293,7 @@ void minethd::work_main()
 	piHashVal = (uint64_t*)(result.bResult + 24);
 	piNonce = (uint32_t*)(oWork.bWorkBlob + 39);
 	globalStates::inst().inst().iConsumeCnt++;
-	result.iThreadId = iThreadNo;
+	result.thread_id = iThreadNo;
 
 	while (bQuit == 0)
 	{
