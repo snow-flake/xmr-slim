@@ -241,7 +241,7 @@ struct jpsock::opaque_private_new_style {
 	}
 };
 
-jpsock::jpsock(size_t id) : pool_id(id), connect_time(0), connect_attempts(0), disconnect_time(0), quiet_close(false) {
+jpsock::jpsock() : connect_time(0), connect_attempts(0), disconnect_time(0), quiet_close(false) {
 	sock_init();
 
 	bJsonCallMem = (uint8_t *) malloc(iJsonMemSize);

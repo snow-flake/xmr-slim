@@ -43,10 +43,6 @@ void globalStates::switch_work(miner_work& pWork, pool_data& dat)
 	while (iConsumeCnt.load(std::memory_order_seq_cst) < iThreadCount)
 		std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
-	size_t xid = dat.pool_id;
-	dat.pool_id = pool_id;
-	pool_id = xid;
-
 	dat.iSavedNonce = iGlobalNonce.exchange(dat.iSavedNonce, std::memory_order_seq_cst);
 	oGlobalWork = pWork;
 	iConsumeCnt.store(0, std::memory_order_seq_cst);
