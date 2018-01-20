@@ -441,14 +441,8 @@ void executor::ex_main()
 			}
 			break;
 
-		case EV_USR_HASHRATE:
-		case EV_USR_RESULTS:
-		case EV_USR_CONNSTAT:
-			print_report(ev.iName);
-			break;
-
 		case EV_HASHRATE_LOOP:
-			print_report(EV_USR_HASHRATE);
+			print_report();
 			push_timed_event(ex_event(EV_HASHRATE_LOOP), system_constants::GetAutohashTime());
 			break;
 
@@ -480,8 +474,9 @@ bool executor::motd_filter_console(std::string& motd)
 	return motd.size() > 0;
 }
 
-void executor::hashrate_report(std::string& out)
+std::string executor::hashrate_report()
 {
+	std::string out;
 	out.reserve(2048 + pvThreads->size() * 64);
 
 	if(system_constants::PrintMotd() && pool_ptr.get() != nullptr) {
@@ -555,6 +550,7 @@ void executor::hashrate_report(std::string& out)
 	out.append(" H/s\nHighest: ");
 	out.append(hps_format(fHighestHps, num, sizeof(num)));
 	out.append(" H/s\n");
+	return out;
 }
 
 char* time_format(char* buf, size_t len, std::chrono::system_clock::time_point time)
@@ -572,8 +568,9 @@ char* time_format(char* buf, size_t len, std::chrono::system_clock::time_point t
 	return buf;
 }
 
-void executor::result_report(std::string& out)
+std::string executor::result_report()
 {
+	std::string out;
 	char num[128];
 	char date[32];
 
@@ -589,7 +586,7 @@ void executor::result_report(std::string& out)
 	if(iTotalRes == 0)
 	{
 		out.append("You haven't found any results yet.\n");
-		return;
+		return "";
 	}
 
 	double dConnSec;
@@ -633,10 +630,12 @@ void executor::result_report(std::string& out)
 	}
 	else
 		out.append("Yay! No errors.\n");
+	return "";
 }
 
-void executor::connection_report(std::string& out)
+std::string executor::connection_report()
 {
+	std::string out;
 	char num[128];
 	char date[32];
 
@@ -678,28 +677,12 @@ void executor::connection_report(std::string& out)
 	}
 	else
 		out.append("Yay! No errors.\n");
+	return out;
 }
 
-void executor::print_report(ex_event_name ev)
+void executor::print_report()
 {
-	std::string out;
-	switch(ev)
-	{
-	case EV_USR_HASHRATE:
-		hashrate_report(out);
-		break;
-
-	case EV_USR_RESULTS:
-		result_report(out);
-		break;
-
-	case EV_USR_CONNSTAT:
-		connection_report(out);
-		break;
-	default:
-		assert(false);
-		break;
-	}
-
-	std::cout << out << std::endl;
+	std::cout << hashrate_report() << std::endl;
+	std::cout << result_report() << std::endl;
+	std::cout << connection_report() << std::endl;
 }

@@ -34,7 +34,7 @@ public:
 		return env.pExecutor;
 	};
 
-	void ex_start(bool daemon) { daemon ? ex_main() : std::thread(&executor::ex_main, this).detach(); }
+	void ex_main();
 
 	inline void push_event(ex_event&& ev) { oEventQ.push(std::move(ev)); }
 	void push_timed_event(ex_event&& ev, size_t sec);
@@ -66,16 +66,15 @@ private:
 
 	executor();
 
-	void ex_main();
 
 	void ex_clock_thd();
 
 	constexpr static size_t motd_max_length = 512;
 	bool motd_filter_console(std::string& motd);
-	void hashrate_report(std::string& out);
-	void result_report(std::string& out);
-	void connection_report(std::string& out);
-	void print_report(ex_event_name ev);
+	std::string hashrate_report();
+	std::string result_report();
+	std::string connection_report();
+	void print_report();
 
 	struct sck_error_log
 	{
