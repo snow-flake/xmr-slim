@@ -721,23 +721,15 @@ bool jpsock::cmd_login() {
 	return true;
 }
 
-bool jpsock::cmd_submit(const char *sJobId, uint32_t iNonce, const uint8_t *bResult, xmrstak::iBackend *bend) {
+bool jpsock::cmd_submit(const std::string job_id, std::string nonce, const std::string result) {
 	statsd::statsd_increment("submit");
-
-	char sNonce[9];
-	bin2hex((unsigned char *) &iNonce, 4, sNonce);
-	sNonce[8] = '\0';
-
-	char sResult[65];
-	bin2hex(bResult, 32, sResult);
-	sResult[64] = '\0';
 
 	nlohmann::json data;
 	data["method"] = "submit";
 	data["params"]["id"] = sMinerId;
-	data["params"]["job_id"] = sJobId;
-	data["params"]["nonce"] = sNonce;
-	data["params"]["result"] = sResult;
+	data["params"]["job_id"] = job_id;
+	data["params"]["nonce"] = nonce;
+	data["params"]["result"] = result;
 	data["id"] = 1;
 
 	const std::string cmd_buffer = data.dump();
