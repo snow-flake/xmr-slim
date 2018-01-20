@@ -316,8 +316,6 @@ file(
         "xmrstak/misc/*.cpp"
         "xmrstak/net/*.hpp"
         "xmrstak/net/*.cpp"
-        "includes/StatsdClient.hpp"
-        "includes/UDPSender.hpp"
 )
 
 # compile final binary

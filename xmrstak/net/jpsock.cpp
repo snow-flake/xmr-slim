@@ -28,6 +28,7 @@
 #include <sys/socket.h> /* Assume that any non-Windows platform uses POSIX-style sockets instead. */
 #include <arpa/inet.h>
 #include <netdb.h>  /* Needed for getaddrinfo() and freeaddrinfo() */
+#include "includes/StatsdClient.hpp"
 
 #if defined(__FreeBSD__)
 #include <netinet/in.h> /* Needed for IPPROTO_TCP */
@@ -276,6 +277,9 @@ std::string jpsock::get_call_error() {
 }
 
 bool jpsock::set_socket_error(const char *a) {
+	Statsd::StatsdClient client{ "127.0.0.1", 8080, "myPrefix.", 20 };
+	client.increment("socket_error");
+
 	if (!bHaveSocketError) {
 		bHaveSocketError = true;
 		sSocketError.assign(a);
@@ -285,6 +289,9 @@ bool jpsock::set_socket_error(const char *a) {
 }
 
 bool jpsock::set_socket_error(const char *a, const char *b) {
+	Statsd::StatsdClient client{ "127.0.0.1", 8080, "myPrefix.", 20 };
+	client.increment("socket_error");
+
 	if (!bHaveSocketError) {
 		bHaveSocketError = true;
 		size_t ln_a = strlen(a);
@@ -300,11 +307,17 @@ bool jpsock::set_socket_error(const char *a, const char *b) {
 
 
 bool jpsock::set_socket_error_strerr(const char *a) {
+	Statsd::StatsdClient client{ "127.0.0.1", 8080, "myPrefix.", 20 };
+	client.increment("socket_error");
+
 	char sSockErrText[512];
 	return set_socket_error(a, sock_strerror(sSockErrText, sizeof(sSockErrText)));
 }
 
 bool jpsock::set_socket_error_strerr(const char *a, int res) {
+	Statsd::StatsdClient client{ "127.0.0.1", 8080, "myPrefix.", 20 };
+	client.increment("socket_error");
+
 	char sSockErrText[512];
 	return set_socket_error(a, sock_gai_strerror(res, sSockErrText, sizeof(sSockErrText)));
 }
@@ -648,6 +661,9 @@ bool jpsock::cmd_ret_wait_new_style(const std::string &message_body, std::string
 }
 
 bool jpsock::cmd_login() {
+	Statsd::StatsdClient client{ "127.0.0.1", 8080, "myPrefix." };
+	client.increment("login");
+
 	nlohmann::json data;
 	data["method"] = "login";
 	data["id"] = 1;
@@ -711,6 +727,9 @@ bool jpsock::cmd_login() {
 }
 
 bool jpsock::cmd_submit(const char *sJobId, uint32_t iNonce, const uint8_t *bResult, xmrstak::iBackend *bend) {
+	Statsd::StatsdClient client{ "127.0.0.1", 8080, "myPrefix." };
+	client.increment("submit");
+
 	char sNonce[9];
 	bin2hex((unsigned char *) &iNonce, 4, sNonce);
 	sNonce[8] = '\0';
