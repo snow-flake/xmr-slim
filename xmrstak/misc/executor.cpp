@@ -52,8 +52,9 @@ std::vector<xmrstak::iBackend*>* thread_starter(xmrstak::miner_work& pWork)
 
 	auto cpuThreads = xmrstak::cpu::minethd::thread_starter(static_cast<uint32_t>(pvThreads->size()), pWork);
 	pvThreads->insert(std::end(*pvThreads), std::begin(cpuThreads), std::end(cpuThreads));
-	if(cpuThreads.size() == 0)
-		printer::print_msg(L0, "WARNING: backend CPU disabled.");
+	if(cpuThreads.size() == 0) {
+		throw new std::runtime_error("Error: Backend CPU disabled.");
+	}
 
 	xmrstak::globalStates::inst().iThreadCount = pvThreads->size();
 	return pvThreads;
@@ -377,32 +378,38 @@ void executor::ex_main()
 		switch (ev.iName)
 		{
 		case EV_SOCK_READY:
+			statsd::statsd_increment("ev.sock_ready");
 			on_sock_ready();
 			break;
 
 		case EV_SOCK_ERROR:
+			statsd::statsd_increment("ev.sock_error");
 			on_sock_error(std::move(ev.oSocketError.sSocketError), ev.oSocketError.silent);
 			break;
 
 		case EV_POOL_HAVE_JOB:
+			statsd::statsd_increment("ev.pool_have_job");
 			on_pool_have_job(ev.oPoolJob);
 			break;
 
 		case EV_MINER_HAVE_RESULT:
+			statsd::statsd_increment("ev.miner_have_result");
 			on_miner_result(ev.oJobResult);
 			break;
 
 		case EV_EVAL_POOL_CHOICE:
+			statsd::statsd_increment("ev.eval_pool_choice");
 			eval_pool_choice();
 			break;
 
 
 		case EV_PERF_TICK:
+			statsd::statsd_increment("ev.perf_tick");
 			for (int i = 0; i < pvThreads->size(); i++) {
 				uint64_t iHashCount = pvThreads->at(i)->iHashCount.load(std::memory_order_relaxed);
 				uint64_t iTimestamp = pvThreads->at(i)->iTimestamp.load(std::memory_order_relaxed);
 				telem->push_perf_value(i, iHashCount, iTimestamp);
-				statsd::statsd_count("i_hash_count", iHashCount);
+				statsd::statsd_gauge("i_hash_count", iHashCount);
 			}
 
 			if((cnt++ & 0xF) == 0) //Every 16 ticks
@@ -417,6 +424,7 @@ void executor::ex_main()
 					if(std::isnormal(fTelem))
 					{
 						fHps += fTelem;
+
 					}
 					else
 					{
@@ -427,6 +435,9 @@ void executor::ex_main()
 
 				if(normal && fHighestHps < fHps)
 					fHighestHps = fHps;
+
+				statsd::statsd_gauge("f_hps", fHps);
+				statsd::statsd_gauge("max_f_hps", fHighestHps);
 			}
 			break;
 
