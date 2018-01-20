@@ -10,38 +10,113 @@
 
 struct pool_job
 {
-	char		job_id[64];
+
 	uint8_t		bWorkBlob[112];
-	uint64_t	iTarget;
 	uint32_t	iWorkLen;
 	uint32_t	iSavedNonce;
 
+	std::string job_id;
+	std::string target;
+	std::string blob;
+
+
 	pool_job() : iWorkLen(0), iSavedNonce(0) {}
-	pool_job(const char* job_id, uint64_t iTarget, const uint8_t* bWorkBlob, uint32_t iWorkLen) :
-		iTarget(iTarget), iWorkLen(iWorkLen), iSavedNonce(0)
+	pool_job(const std::string & job_id, const std::string & target, const std::string & blob) :
+			job_id(job_id), target(target), blob(blob), iSavedNonce(0)
 	{
+		iWorkLen = blob.length() / 2;
 		assert(iWorkLen <= sizeof(pool_job::bWorkBlob));
-		memcpy(this->job_id, job_id, sizeof(pool_job::job_id));
-		memcpy(this->bWorkBlob, bWorkBlob, iWorkLen);
+
+		iTarget();
+
+		if (!hex2bin(blob.c_str(), blob.length(), bWorkBlob)) {
+			throw new std::runtime_error("PARSE error: Failed to parse blob");
+		}
+	}
+
+	const uint64_t iTarget() {
+		uint64_t output = 0;
+		// Parse the target ID
+		if (target.length() <= 8) {
+			uint32_t iTempInt = 0;
+			char sTempStr[] = "00000000"; // Little-endian CPU FTW
+			memcpy(sTempStr, target.c_str(), target.length());
+			if (!hex2bin(sTempStr, 8, (unsigned char *) &iTempInt) || iTempInt == 0) {
+				throw new std::runtime_error("PARSE error: Invalid target");
+			}
+			output = t32_to_t64(iTempInt);
+		} else if (target.length() <= 16) {
+			output = 0;
+			char sTempStr[] = "0000000000000000";
+			memcpy(sTempStr, target.c_str(), target.length());
+			if (!hex2bin(sTempStr, 16, (unsigned char *) &output) || output == 0) {
+				throw new std::runtime_error("PARSE error: Invalid target");
+			}
+		} else {
+			throw new std::runtime_error("PARSE error: Job error 5");
+		}
+		return output;
+	}
+
+
+private:
+
+	inline static uint64_t t32_to_t64(uint32_t t) {
+		return 0xFFFFFFFFFFFFFFFFULL / (0xFFFFFFFFULL / ((uint64_t) t));
+	}
+
+	inline unsigned char hf_hex2bin(char c, bool &err) {
+		if (c >= '0' && c <= '9')
+			return c - '0';
+		else if (c >= 'a' && c <= 'f')
+			return c - 'a' + 0xA;
+		else if (c >= 'A' && c <= 'F')
+			return c - 'A' + 0xA;
+
+		err = true;
+		return 0;
+	}
+
+	inline bool hex2bin(const char *in, unsigned int len, unsigned char *out) {
+		bool error = false;
+		for (unsigned int i = 0; i < len; i += 2) {
+			out[i / 2] = (hf_hex2bin(in[i], error) << 4) | hf_hex2bin(in[i + 1], error);
+			if (error) {
+				return false;
+			}
+		}
+		return true;
 	}
 };
 
 struct job_result
 {
-	char		job_id[64];
 	uint8_t		bResult[32];
 	uint32_t	iNonce;
 	uint32_t	thread_id;
 
+	std::string job_id;
+	std::string target;
+	std::string blob;
+
 	job_result() {}
-	job_result(const char* job_id, uint32_t iNonce, const uint8_t* bResult, uint32_t thread_id) : iNonce(iNonce), thread_id(thread_id)
+	job_result(const std::string & job_id, const std::string & target, const std::string & blob, uint32_t iNonce, const uint8_t* bResult, uint32_t thread_id) :
+		job_id(job_id), target(target), blob(blob),
+			iNonce(iNonce), thread_id(thread_id)
 	{
-		memcpy(this->job_id, job_id, sizeof(job_result::job_id));
 		memcpy(this->bResult, bResult, sizeof(job_result::bResult));
 	}
 
 	inline const std::string job_id_str() {
 		return std::string(job_id);
+	}
+
+	inline const std::string blob_str() {
+		return std::string(blob);
+	}
+
+	inline const std::string target_str() {
+		return std::string(target);
 	}
 
 	inline const std::string result_str() {

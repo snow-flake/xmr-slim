@@ -511,33 +511,7 @@ bool jpsock::process_pool_job_new_style(const nlohmann::json &params) {
 		return set_socket_error("PARSE error: Invalid job legth. Are you sure you are mining the correct coin?");
 	}
 
-	pool_job oPoolJob;
-	if (!hex2bin(blob.c_str(), blob.length(), oPoolJob.bWorkBlob)) {
-		return set_socket_error("PARSE error: Job error 4");
-	}
-
-	oPoolJob.iWorkLen = blob.length() / 2;
-	memset(oPoolJob.job_id, 0, sizeof(pool_job::job_id));
-	strcpy(oPoolJob.job_id, job_id.c_str());
-
-	if (target.length() <= 8) {
-		uint32_t iTempInt = 0;
-		char sTempStr[] = "00000000"; // Little-endian CPU FTW
-		memcpy(sTempStr, target.c_str(), target.length());
-		if (!hex2bin(sTempStr, 8, (unsigned char *) &iTempInt) || iTempInt == 0) {
-			return set_socket_error("PARSE error: Invalid target");
-		}
-		oPoolJob.iTarget = t32_to_t64(iTempInt);
-	} else if (target.length() <= 16) {
-		oPoolJob.iTarget = 0;
-		char sTempStr[] = "0000000000000000";
-		memcpy(sTempStr, target.c_str(), target.length());
-		if (!hex2bin(sTempStr, 16, (unsigned char *) &oPoolJob.iTarget) || oPoolJob.iTarget == 0) {
-			return set_socket_error("PARSE error: Invalid target");
-		}
-	} else {
-		return set_socket_error("PARSE error: Job error 5");
-	}
+	pool_job oPoolJob { job_id, target, blob };
 
 	if (params.find("motd") != params.end()) {
 		auto raw_motd = params["motd"];
@@ -558,7 +532,7 @@ bool jpsock::process_pool_job_new_style(const nlohmann::json &params) {
 	}
 
 
-	iJobDiff = t64_to_diff(oPoolJob.iTarget);
+	iJobDiff = t64_to_diff(oPoolJob.iTarget());
 
 	executor::inst()->push_event(ex_event(oPoolJob));
 
@@ -712,7 +686,7 @@ bool jpsock::cmd_login() {
 	return true;
 }
 
-bool jpsock::cmd_submit(const std::string job_id, std::string nonce, const std::string result) {
+bool jpsock::cmd_submit(const std::string job_id, const std::string blob, std::string nonce, const std::string result) {
 	statsd::statsd_increment("submit");
 
 	nlohmann::json data;

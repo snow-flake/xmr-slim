@@ -51,7 +51,7 @@ public:
 
 	bool cmd_login();
 
-	bool cmd_submit(const std::string job_id, const std::string nonce, const std::string result);
+	bool cmd_submit(const std::string job_id, const std::string blob, const std::string nonce, const std::string result);
 
 	static bool hex2bin(const char *in, unsigned int len, unsigned char *out);
 

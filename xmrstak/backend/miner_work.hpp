@@ -12,7 +12,7 @@ namespace xmrstak
 {
 	struct miner_work
 	{
-		char        job_id[64];
+		std::string job_id;  // const char job_id[64];
 		uint8_t     bWorkBlob[112];
 		uint32_t    iWorkSize;
 		uint64_t    iTarget;
@@ -20,12 +20,11 @@ namespace xmrstak
 
 		miner_work() : iWorkSize(0), bStall(true) { }
 
-		miner_work(const char* job_id, const uint8_t* bWork, uint32_t iWorkSize,
+		miner_work(const std::string & job_id, const uint8_t* bWork, uint32_t iWorkSize,
 			uint64_t iTarget) : iWorkSize(iWorkSize),
-			iTarget(iTarget), bStall(false)
+			iTarget(iTarget), bStall(false), job_id(job_id)
 		{
 			assert(iWorkSize <= sizeof(bWorkBlob));
-			memcpy(this->job_id, job_id, sizeof(miner_work::job_id));
 			memcpy(this->bWorkBlob, bWork, iWorkSize);
 		}
 
@@ -47,10 +46,9 @@ namespace xmrstak
 		}
 
 		miner_work(miner_work&& from) : iWorkSize(from.iWorkSize), iTarget(from.iTarget),
-			bStall(from.bStall)
+			bStall(from.bStall), job_id(from.job_id)
 		{
 			assert(iWorkSize <= sizeof(bWorkBlob));
-			memcpy(job_id, from.job_id, sizeof(job_id));
 			memcpy(bWorkBlob, from.bWorkBlob, iWorkSize);
 		}
 
@@ -63,7 +61,7 @@ namespace xmrstak
 			bStall = from.bStall;
 
 			assert(iWorkSize <= sizeof(bWorkBlob));
-			memcpy(job_id, from.job_id, sizeof(job_id));
+			job_id = from.job_id;
 			memcpy(bWorkBlob, from.bWorkBlob, iWorkSize);
 
 			return *this;

@@ -314,8 +314,7 @@ void minethd::work_main()
 		size_t nonce_ctr = 0;
 		constexpr size_t nonce_chunk = 4096; // Needs to be a power of 2
 
-		assert(sizeof(job_result::job_id) == sizeof(pool_job::job_id));
-		memcpy(result.job_id, oWork.job_id, sizeof(job_result::job_id));
+		result.job_id = oWork.job_id;
 
 		while(globalStates::inst().iGlobalJobNo.load(std::memory_order_relaxed) == iJobNo)
 		{

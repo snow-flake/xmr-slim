@@ -260,7 +260,7 @@ void executor::on_pool_have_job(pool_job& oPoolJob) {
 		return;
 	}
 
-	xmrstak::miner_work oWork(oPoolJob.job_id, oPoolJob.bWorkBlob, oPoolJob.iWorkLen, oPoolJob.iTarget);
+	xmrstak::miner_work oWork(oPoolJob->job_id, oPoolJob.bWorkBlob, oPoolJob.iWorkLen, oPoolJob->iTarget());
 	xmrstak::pool_data dat;
 	dat.iSavedNonce = oPoolJob.iSavedNonce;
 
@@ -276,6 +276,7 @@ void executor::on_pool_have_job(pool_job& oPoolJob) {
 
 void executor::on_miner_result(job_result& oResult) {
 	const std::string job_id = oResult.job_id_str();
+	const std::string blob = oResult.blob_str();
 	const std::string nonce = oResult.nonce_str();
 	const std::string result = oResult.result_str();
 
@@ -296,7 +297,7 @@ void executor::on_miner_result(job_result& oResult) {
 	}
 
 	size_t t_start = get_timestamp_ms();
-	bool bResult = pool->cmd_submit(job_id, nonce, result);
+	bool bResult = pool->cmd_submit(job_id, blob, nonce, result);
 	size_t t_len = get_timestamp_ms() - t_start;
 
 	if(t_len > 0xFFFF) {
