@@ -349,7 +349,7 @@ file(
 )
 set_source_files_properties(${SRCFILES_CPP} PROPERTIES LANGUAGE CXX)
 
-add_executable(xmr-stak ${SRCFILES_CPP} ${BACKEND_CPP} xmrstak/net/time_utils.hpp xmrstak/cli/statsd.hpp xmrstak/cli/statsd.cpp)
+add_executable(xmr-stak ${SRCFILES_CPP} ${BACKEND_CPP})
 
 set(EXECUTABLE_OUTPUT_PATH "bin")
 set(LIBRARY_OUTPUT_PATH "bin")
