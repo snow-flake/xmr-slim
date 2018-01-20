@@ -31,10 +31,9 @@ struct job_result
 	char		job_id[64];
 	uint8_t		bResult[32];
 	uint32_t	iNonce;
-	uint32_t	thread_id;
 
 	job_result() {}
-	job_result(const char* job_id, uint32_t iNonce, const uint8_t* bResult, uint32_t thread_id) : iNonce(iNonce), thread_id(thread_id)
+	job_result(const char* job_id, uint32_t iNonce, const uint8_t* bResult) : iNonce(iNonce)
 	{
 		memcpy(this->job_id, job_id, sizeof(job_result::job_id));
 		memcpy(this->bResult, bResult, sizeof(job_result::bResult));
@@ -122,7 +121,7 @@ struct sock_err
 };
 
 enum ex_event_name { EV_INVALID_VAL, EV_SOCK_READY, EV_SOCK_ERROR,
-	EV_POOL_HAVE_JOB, EV_MINER_HAVE_RESULT, EV_PERF_TICK, EV_EVAL_POOL_CHOICE, 
+	EV_POOL_HAVE_JOB, EV_MINER_HAVE_RESULT, EV_PERF_TICK, EV_EVAL_POOL_CHOICE,
 	EV_HASHRATE_LOOP };
 
 /*

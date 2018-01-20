@@ -293,7 +293,6 @@ void minethd::work_main()
 	piHashVal = (uint64_t*)(result.bResult + 24);
 	piNonce = (uint32_t*)(oWork.bWorkBlob + 39);
 	globalStates::inst().inst().iConsumeCnt++;
-	result.thread_id = iThreadNo;
 
 	while (bQuit == 0)
 	{
@@ -493,7 +492,7 @@ void minethd::multiway_work_main(cn_hash_fun_multi hash_fun_multi)
 			{
 				if (*piHashVal[i] < oWork.iTarget)
 				{
-					executor::inst()->push_event(ex_event(job_result(oWork.job_id, iNonce - N + 1 + i, bHashOut + 32 * i, iThreadNo)));
+					executor::inst()->push_event(ex_event(job_result(oWork.job_id, iNonce - N + 1 + i, bHashOut + 32 * i)));
 				}
 			}
 
