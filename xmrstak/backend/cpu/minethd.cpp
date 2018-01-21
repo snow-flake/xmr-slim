@@ -290,7 +290,7 @@ void minethd::work_main()
 	ctx = minethd_alloc_ctx();
 
 	piHashVal = (uint64_t*)(&result.result_data[0] + 24);
-	piNonce = (uint32_t*)(oWork.bWorkBlob + 39);
+	piNonce = (uint32_t*)(&oWork.work_blob_data[0] + 39);
 	globalStates::inst().inst().iConsumeCnt++;
 
 	while (bQuit == 0)
@@ -331,7 +331,7 @@ void minethd::work_main()
 			*piNonce = ++result.iNonce;
 
 			// TODO: be specific about the data size
-			hash_fun(oWork.bWorkBlob, oWork.iWorkSize, &result.result_data[0], ctx);
+			hash_fun(&oWork.work_blob_data[0], oWork.iWorkSize, &result.result_data[0], ctx);
 
 			if (*piHashVal < oWork.iTarget) {
 				executor::inst()->push_event_job_result(result);
@@ -410,7 +410,7 @@ void minethd::prep_multiway_work(uint8_t *bWorkBlob, uint32_t **piNonce)
 {
 	for (size_t i = 0; i < N; i++)
 	{
-		memcpy(bWorkBlob + oWork.iWorkSize * i, oWork.bWorkBlob, oWork.iWorkSize);
+		memcpy(bWorkBlob + oWork.iWorkSize * i, &oWork.work_blob_data[0], oWork.iWorkSize);
 		if (i > 0)
 			piNonce[i] = (uint32_t*)(bWorkBlob + oWork.iWorkSize * i + 39);
 	}
@@ -432,7 +432,7 @@ void minethd::multiway_work_main(cn_hash_fun_multi hash_fun_multi)
 	uint64_t *piHashVal[MAX_N];
 	uint32_t *piNonce[MAX_N];
 	uint8_t bHashOut[MAX_N * 32];
-	uint8_t bWorkBlob[sizeof(msgstruct::miner_work::bWorkBlob) * MAX_N];
+	uint8_t bWorkBlob[sizeof(msgstruct::miner_work::work_blob_data) * MAX_N];
 	uint32_t iNonce;
 	msgstruct::job_result res;
 

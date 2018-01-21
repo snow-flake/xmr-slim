@@ -15,20 +15,21 @@ namespace msgstruct {
 
 	struct pool_job {
 		msgstruct_v2::job_id_str_t job_id_data;
-		uint8_t bWorkBlob[112];
+		msgstruct_v2::work_blob_byte_t work_blob_data;
 		uint32_t iWorkLen;
 		uint32_t iSavedNonce;
 		std::string target;
 
 		pool_job() : iWorkLen(0), iSavedNonce(0) {}
 
-		pool_job(const char *job_id, const std::string &target, const uint8_t *bWorkBlob, uint32_t iWorkLen) :
+		pool_job(const char *job_id, const std::string &target, const msgstruct_v2::work_blob_byte_t & work_blob_data, uint32_t iWorkLen) :
 				iWorkLen(iWorkLen), iSavedNonce(0), target(target) {
-			assert(iWorkLen <= sizeof(pool_job::bWorkBlob));
+			assert(iWorkLen <= sizeof(msgstruct_v2::work_blob_byte_t));
 			assert(strlen(job_id) < sizeof(pool_job::job_id_data));
 
 			strcpy(&job_id_data[0], job_id);
-			memcpy(this->bWorkBlob, bWorkBlob, iWorkLen);
+			this->work_blob_data.fill(0);
+			this->work_blob_data = work_blob_data;
 		}
 
 		const uint64_t i_target() const {
@@ -168,16 +169,6 @@ namespace msgstruct {
 		EV_HASHRATE_LOOP
 	};
 
-/*
-   This is how I learned to stop worrying and love c++11 =).
-   Ghosts of endless heap allocations have finally been exorcised. Thanks
-   to the nifty magic of move semantics, string will only be allocated
-   once on the heap. Considering that it makes a jorney across stack,
-   heap alloced queue, to another stack before being finally processed
-   I think it is kind of nifty, don't you?
-   Also note that for non-arg events we only copy two qwords
-*/
-
 	struct ex_event {
 		ex_event_name iName;
 
@@ -252,20 +243,20 @@ namespace msgstruct {
 
 	struct miner_work {
 		msgstruct_v2::job_id_str_t job_id_data;
-		uint8_t bWorkBlob[112];
+		msgstruct_v2::work_blob_byte_t work_blob_data;
 		uint32_t iWorkSize;
 		uint64_t iTarget;
 		bool bStall;
 
 		miner_work() : iWorkSize(0), bStall(true) {}
 
-		miner_work(const msgstruct_v2::job_id_str_t & job_id_data, const uint8_t *bWork, uint32_t iWorkSize,
-				   uint64_t iTarget) : iWorkSize(iWorkSize),
-									   iTarget(iTarget), bStall(false) {
+		miner_work(const msgstruct_v2::job_id_str_t & job_id_data, const msgstruct_v2::work_blob_byte_t & work_blob_data, uint32_t iWorkSize,
+				   uint64_t iTarget) : iWorkSize(iWorkSize), iTarget(iTarget), bStall(false) {
 			this->job_id_data = job_id_data;
 
-			assert(iWorkSize <= sizeof(bWorkBlob));
-			memcpy(this->bWorkBlob, bWork, iWorkSize);
+			assert(iWorkSize <= sizeof(msgstruct_v2::work_blob_byte_t));
+			this->work_blob_data.fill(0);
+			this->work_blob_data = work_blob_data;
 		}
 
 		miner_work(miner_work const &) = delete;
@@ -277,18 +268,18 @@ namespace msgstruct {
 			iTarget = from.iTarget;
 			bStall = from.bStall;
 
-			assert(iWorkSize <= sizeof(bWorkBlob));
+			assert(iWorkSize <= sizeof(msgstruct_v2::work_blob_byte_t));
 			job_id_data = from.job_id_data;
-			memcpy(bWorkBlob, from.bWorkBlob, iWorkSize);
+			work_blob_data = from.work_blob_data;
 
 			return *this;
 		}
 
 		miner_work(miner_work &&from) : iWorkSize(from.iWorkSize), iTarget(from.iTarget),
 										bStall(from.bStall) {
-			assert(iWorkSize <= sizeof(bWorkBlob));
+			assert(iWorkSize <= sizeof(msgstruct_v2::work_blob_byte_t));
 			job_id_data = from.job_id_data;
-			memcpy(bWorkBlob, from.bWorkBlob, iWorkSize);
+			work_blob_data = from.work_blob_data;
 		}
 
 		miner_work &operator=(miner_work &&from) {
@@ -298,9 +289,9 @@ namespace msgstruct {
 			iTarget = from.iTarget;
 			bStall = from.bStall;
 
-			assert(iWorkSize <= sizeof(bWorkBlob));
+			assert(iWorkSize <= sizeof(msgstruct_v2::work_blob_byte_t));
 			job_id_data = from.job_id_data;
-			memcpy(bWorkBlob, from.bWorkBlob, iWorkSize);
+			work_blob_data = from.work_blob_data;
 
 			return *this;
 		}

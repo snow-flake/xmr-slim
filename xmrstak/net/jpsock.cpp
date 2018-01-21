@@ -310,7 +310,7 @@ bool jpsock::process_pool_job_new_style(const nlohmann::json &params) {
 		return false;
 	}
 
-	if (blob.length() / 2 > sizeof(msgstruct::pool_job::bWorkBlob)) {
+	if (blob.length() / 2 > sizeof(msgstruct::pool_job::work_blob_data)) {
 		set_socket_error("PARSE error: Invalid job legth. Are you sure you are mining the correct coin?");
 		return false;
 	}
@@ -319,7 +319,7 @@ bool jpsock::process_pool_job_new_style(const nlohmann::json &params) {
 	oPoolJob.target = target;
 	iJobDiff = oPoolJob.i_job_diff();
 
-	if (!msgstruct_v2::utils::hex2bin(blob.c_str(), blob.length(), oPoolJob.bWorkBlob)) {
+	if (!msgstruct_v2::utils::hex2bin(blob.c_str(), blob.length(), &oPoolJob.work_blob_data[0])) {
 		set_socket_error("PARSE error: Job error 4");
 		return false;
 	}
