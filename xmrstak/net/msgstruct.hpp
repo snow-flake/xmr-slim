@@ -14,7 +14,7 @@
 namespace msgstruct {
 
 	struct pool_job {
-		char job_id[64];
+		msgstruct_v2::job_id_str_t job_id_data;
 		uint8_t bWorkBlob[112];
 		uint32_t iWorkLen;
 		uint32_t iSavedNonce;
@@ -25,7 +25,9 @@ namespace msgstruct {
 		pool_job(const char *job_id, const std::string &target, const uint8_t *bWorkBlob, uint32_t iWorkLen) :
 				iWorkLen(iWorkLen), iSavedNonce(0), target(target) {
 			assert(iWorkLen <= sizeof(pool_job::bWorkBlob));
-			memcpy(this->job_id, job_id, sizeof(pool_job::job_id));
+			assert(strlen(job_id) <= sizeof(pool_job::job_id_data));
+
+			strcpy(&job_id_data[0], job_id);
 			memcpy(this->bWorkBlob, bWorkBlob, iWorkLen);
 		}
 
@@ -101,19 +103,21 @@ namespace msgstruct {
 	};
 
 	struct job_result {
-		char job_id[64];
+		msgstruct_v2::job_id_str_t job_id_data;
 		uint8_t bResult[32];
 		uint32_t iNonce;
 
 		job_result() {}
 
-		job_result(const char *job_id, uint32_t iNonce, const uint8_t *bResult) : iNonce(iNonce) {
-			memcpy(this->job_id, job_id, sizeof(job_result::job_id));
+		job_result(const msgstruct_v2::job_id_str_t & job_id_data, uint32_t iNonce, const uint8_t *bResult) : iNonce(iNonce) {
+			this->job_id_data.fill(0);
+			this->job_id_data = job_id_data;
 			memcpy(this->bResult, bResult, sizeof(job_result::bResult));
 		}
 
 		inline const std::string job_id_str() const {
-			return std::string(job_id);
+			auto const len = strlen(&job_id_data[0]);
+			return std::string(&job_id_data[0], len);
 		}
 
 		inline const std::string result_str() const {
@@ -245,7 +249,7 @@ namespace msgstruct {
 	};
 
 	struct miner_work {
-		char job_id[64];
+		msgstruct_v2::job_id_str_t job_id_data;
 		uint8_t bWorkBlob[112];
 		uint32_t iWorkSize;
 		uint64_t iTarget;
@@ -253,11 +257,12 @@ namespace msgstruct {
 
 		miner_work() : iWorkSize(0), bStall(true) {}
 
-		miner_work(const char *job_id, const uint8_t *bWork, uint32_t iWorkSize,
+		miner_work(const msgstruct_v2::job_id_str_t & job_id_data, const uint8_t *bWork, uint32_t iWorkSize,
 				   uint64_t iTarget) : iWorkSize(iWorkSize),
 									   iTarget(iTarget), bStall(false) {
+			this->job_id_data = job_id_data;
+
 			assert(iWorkSize <= sizeof(bWorkBlob));
-			memcpy(this->job_id, job_id, sizeof(miner_work::job_id));
 			memcpy(this->bWorkBlob, bWork, iWorkSize);
 		}
 
@@ -271,7 +276,7 @@ namespace msgstruct {
 			bStall = from.bStall;
 
 			assert(iWorkSize <= sizeof(bWorkBlob));
-			memcpy(job_id, from.job_id, sizeof(job_id));
+			job_id_data = from.job_id_data;
 			memcpy(bWorkBlob, from.bWorkBlob, iWorkSize);
 
 			return *this;
@@ -280,7 +285,7 @@ namespace msgstruct {
 		miner_work(miner_work &&from) : iWorkSize(from.iWorkSize), iTarget(from.iTarget),
 										bStall(from.bStall) {
 			assert(iWorkSize <= sizeof(bWorkBlob));
-			memcpy(job_id, from.job_id, sizeof(job_id));
+			job_id_data = from.job_id_data;
 			memcpy(bWorkBlob, from.bWorkBlob, iWorkSize);
 		}
 
@@ -292,7 +297,7 @@ namespace msgstruct {
 			bStall = from.bStall;
 
 			assert(iWorkSize <= sizeof(bWorkBlob));
-			memcpy(job_id, from.job_id, sizeof(job_id));
+			job_id_data = from.job_id_data;
 			memcpy(bWorkBlob, from.bWorkBlob, iWorkSize);
 
 			return *this;

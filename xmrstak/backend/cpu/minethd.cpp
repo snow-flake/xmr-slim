@@ -312,8 +312,7 @@ void minethd::work_main()
 		size_t nonce_ctr = 0;
 		constexpr size_t nonce_chunk = 4096; // Needs to be a power of 2
 
-		assert(sizeof(msgstruct::job_result::job_id) == sizeof(msgstruct::pool_job::job_id));
-		memcpy(result.job_id, oWork.job_id, sizeof(msgstruct::job_result::job_id));
+		result.job_id_data = oWork.job_id_data;
 
 		while(globalStates::inst().iGlobalJobNo.load(std::memory_order_relaxed) == iJobNo)
 		{
@@ -467,8 +466,6 @@ void minethd::multiway_work_main(cn_hash_fun_multi hash_fun_multi)
 		constexpr uint32_t nonce_chunk = 4096;
 		int64_t nonce_ctr = 0;
 
-		assert(sizeof(msgstruct::job_result::job_id) == sizeof(msgstruct::pool_job::job_id));
-
 		while (globalStates::inst().iGlobalJobNo.load(std::memory_order_relaxed) == iJobNo)
 		{
 			if ((iCount++ & 0x7) == 0)  //Store stats every 8*N hashes
@@ -494,7 +491,7 @@ void minethd::multiway_work_main(cn_hash_fun_multi hash_fun_multi)
 			{
 				if (*piHashVal[i] < oWork.iTarget)
 				{
-					const msgstruct::job_result result(oWork.job_id, iNonce - N + 1 + i, bHashOut + 32 * i);
+					const msgstruct::job_result result(oWork.job_id_data, iNonce - N + 1 + i, bHashOut + 32 * i);
 					executor::inst()->push_event_job_result(result);
 				} else {
 					// TODO: Log the hash was abandoned

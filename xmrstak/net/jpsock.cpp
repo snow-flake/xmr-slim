@@ -305,7 +305,7 @@ bool jpsock::process_pool_job_new_style(const nlohmann::json &params) {
 	const std::string target = params["target"].get<std::string>();
 
 	// Note >=
-	if (job_id.length() >= sizeof(msgstruct::pool_job::job_id)) {
+	if (job_id.length() >= sizeof(msgstruct::pool_job::job_id_data)) {
 		set_socket_error("PARSE error: Job error 3");
 		return false;
 	}
@@ -325,8 +325,8 @@ bool jpsock::process_pool_job_new_style(const nlohmann::json &params) {
 	}
 
 	oPoolJob.iWorkLen = blob.length() / 2;
-	memset(oPoolJob.job_id, 0, sizeof(msgstruct::pool_job::job_id));
-	strcpy(oPoolJob.job_id, job_id.c_str());
+	oPoolJob.job_id_data.fill(0);
+	strcpy(&oPoolJob.job_id_data[0], job_id.c_str());
 
 
 	if (params.find("motd") != params.end()) {
