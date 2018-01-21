@@ -7,21 +7,12 @@
 #include "xmrstak/misc/environment.hpp"
 #include "xmrstak/net/msgstruct.hpp"
 #include "xmrstak/net/time_utils.hpp"
+#include "xmrstak/net/jpsock.hpp"
 #include <memory>
 #include <array>
 #include <list>
 #include <future>
 
-class jpsock;
-
-namespace xmrstak
-{
-namespace cpu
-{
-class minethd;
-
-} // namespace cpu
-} // namepsace xmrstak
 
 class executor
 {
