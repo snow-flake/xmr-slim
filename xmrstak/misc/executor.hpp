@@ -149,9 +149,11 @@ private:
 	void log_result_ok(uint64_t iActualDiff);
 
 	void on_sock_ready();
+
 	void on_sock_error(std::string&& sError, bool silent);
 	void on_pool_have_job(msgstruct::pool_job& oPoolJob);
 	void on_miner_result(msgstruct::job_result& oResult);
+
 	bool is_pool_live();
 	void eval_pool_choice();
 
