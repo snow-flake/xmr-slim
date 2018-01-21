@@ -28,17 +28,16 @@
 #include "xmrstak/misc/executor.hpp"
 #include "minethd.hpp"
 #include "c_hwlock/do_hwlock.hpp"
-#include "xmrstak/backend/miner_work.hpp"
 #include "autoAdjust.hpp"
 #include "xmrstak/system_constants.hpp"
 #include "xmrstak/net/time_utils.hpp"
+#include "xmrstak/net/msgstruct.hpp"
 
 
 #include <cmath>
 #include <chrono>
 #include <cstring>
 #include <thread>
-#include <bitset>
 
 #if defined(__APPLE__)
 #include <mach/thread_policy.h>
