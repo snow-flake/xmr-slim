@@ -6,6 +6,8 @@
 #include <assert.h>
 #include <cassert>
 #include <array>
+#include <memory>
+
 
 namespace msgstruct_v2 {
 
