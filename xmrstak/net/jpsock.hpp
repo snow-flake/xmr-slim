@@ -41,9 +41,6 @@ public:
 
 	bool cmd_submit(const std::string job_id, const std::string nonce, const std::string result);
 
-	static bool hex2bin(const char *in, unsigned int len, unsigned char *out);
-
-	static void bin2hex(const unsigned char *in, unsigned int len, char *out);
 
 	inline size_t can_connect() { return get_timestamp() != connect_time; }
 

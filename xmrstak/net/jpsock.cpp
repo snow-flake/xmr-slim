@@ -334,7 +334,7 @@ bool jpsock::process_pool_job_new_style(const nlohmann::json &params) {
 	oPoolJob.target = target;
 	iJobDiff = oPoolJob.i_job_diff();
 
-	if (!hex2bin(blob.c_str(), blob.length(), oPoolJob.bWorkBlob)) {
+	if (!msgstruct_v2::utils::hex2bin(blob.c_str(), blob.length(), oPoolJob.bWorkBlob)) {
 		set_socket_error("PARSE error: Job error 4");
 		return false;
 	}
@@ -352,7 +352,7 @@ bool jpsock::process_pool_job_new_style(const nlohmann::json &params) {
 				std::unique_lock<std::mutex>(motd_mutex);
 				if (motd.length() > 0) {
 					pool_motd.resize(motd.length() / 2 + 1);
-					if (!hex2bin(motd.c_str(), motd.length(), (unsigned char *) &pool_motd.front())) {
+					if (!msgstruct_v2::utils::hex2bin(motd.c_str(), motd.length(), (unsigned char *) &pool_motd.front())) {
 						pool_motd.clear();
 					}
 				} else {
@@ -555,39 +555,4 @@ bool jpsock::get_pool_motd(std::string &strin) {
 	}
 
 	return false;
-}
-
-inline unsigned char hf_hex2bin(char c, bool &err) {
-	if (c >= '0' && c <= '9')
-		return c - '0';
-	else if (c >= 'a' && c <= 'f')
-		return c - 'a' + 0xA;
-	else if (c >= 'A' && c <= 'F')
-		return c - 'A' + 0xA;
-
-	err = true;
-	return 0;
-}
-
-bool jpsock::hex2bin(const char *in, unsigned int len, unsigned char *out) {
-	bool error = false;
-	for (unsigned int i = 0; i < len; i += 2) {
-		out[i / 2] = (hf_hex2bin(in[i], error) << 4) | hf_hex2bin(in[i + 1], error);
-		if (error) return false;
-	}
-	return true;
-}
-
-inline char hf_bin2hex(unsigned char c) {
-	if (c <= 0x9)
-		return '0' + c;
-	else
-		return 'a' - 0xA + c;
-}
-
-void jpsock::bin2hex(const unsigned char *in, unsigned int len, char *out) {
-	for (unsigned int i = 0; i < len; i++) {
-		out[i * 2] = hf_bin2hex((in[i] & 0xF0) >> 4);
-		out[i * 2 + 1] = hf_bin2hex(in[i] & 0x0F);
-	}
 }
