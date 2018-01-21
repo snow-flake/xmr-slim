@@ -6,6 +6,8 @@
 #include <assert.h>
 #include <cassert>
 
+#include "msgstruct_v2.hpp"
+
 // Structures that we use to pass info between threads constructors are here just to make
 // the stack allocation take up less space, heap is a shared resouce that needs locks too of course
 

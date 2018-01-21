@@ -335,6 +335,8 @@ file(
         "xmrstak/backend/*.cpp"
         "xmrstak/misc/*.hpp"
         "xmrstak/misc/*.cpp"
+        "xmrstak/net/msgstruct.hpp"
+        "xmrstak/net/msgstruct_v2.hpp"
         "xmrstak/net/*.hpp"
         "xmrstak/net/*.cpp"
         "includes/StatsdClient.cpp"
