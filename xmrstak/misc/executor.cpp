@@ -382,27 +382,27 @@ void executor::ex_main()
 		switch (ev->iName)
 		{
 		case msgstruct::EV_SOCK_READY:
-			statsd::statsd_increment("ev->sock_ready");
+			statsd::statsd_increment("ev.sock_ready");
 			on_sock_ready();
 			break;
 
 		case msgstruct::EV_SOCK_ERROR:
-			statsd::statsd_increment("ev->sock_error");
+			statsd::statsd_increment("ev.sock_error");
 			on_sock_error(ev->oSocketError);
 			break;
 
 		case msgstruct::EV_POOL_HAVE_JOB:
-			statsd::statsd_increment("ev->pool_have_job");
+			statsd::statsd_increment("ev.pool_have_job");
 			on_pool_have_job(ev->oPoolJob);
 			break;
 
 		case msgstruct::EV_MINER_HAVE_RESULT:
-			statsd::statsd_increment("ev->miner_have_result");
+			statsd::statsd_increment("ev.miner_have_result");
 			on_miner_result(ev->oJobResult);
 			break;
 
 		case msgstruct::EV_EVAL_POOL_CHOICE:
-			statsd::statsd_increment("ev->eval_pool_choice");
+			statsd::statsd_increment("ev.eval_pool_choice");
 			eval_pool_choice();
 			break;
 
