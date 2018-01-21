@@ -6,6 +6,9 @@
 #include <assert.h>
 #include <cassert>
 #include <array>
+#include <memory>
+#include <bitset>
+
 
 namespace msgstruct_v2 {
 
