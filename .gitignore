@@ -28,3 +28,4 @@ cpu.txt
 *.cbp
 venv
 *.log
+install_manifest.txt
