@@ -178,10 +178,10 @@ execute_process(
         OUTPUT_STRIP_TRAILING_WHITESPACE
 )
 
-if(NOT SYSTEM_NPROC STREQUAL "")
-    add_definitions("-DCONFIG_SYSTEM_NPROC=${SYSTEM_NPROC}")
-elseif(NOT "$ENV{SYSTEM_NPROC}" STREQUAL "")
+if(NOT "$ENV{SYSTEM_NPROC}" STREQUAL "")
     add_definitions("-DCONFIG_SYSTEM_NPROC=$ENV{SYSTEM_NPROC}")
+elseif(NOT SYSTEM_NPROC STREQUAL "")
+    add_definitions("-DCONFIG_SYSTEM_NPROC=${SYSTEM_NPROC}")
 else()
     message(FATAL_ERROR "Failed to detect number of cores")
 endif()
