@@ -131,7 +131,7 @@ namespace msgstruct_v2 {
 				i_saved_nonce(i_saved_nonce)
 		{}
 
-		const uint64_t i_job_diff() {
+		const uint64_t i_job_diff() const {
 			return msgstruct_v2::utils::t64_to_diff(this->i_target);
 		}
 

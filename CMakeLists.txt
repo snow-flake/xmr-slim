@@ -339,6 +339,8 @@ file(
         "xmrstak/net/msgstruct_v2.hpp"
         "xmrstak/net/plain_socket.h"
         "xmrstak/net/plain_socket.cpp"
+        "xmrstak/net/jpsock_v2.hpp"
+        "xmrstak/net/jpsock_v2.cpp"
         "xmrstak/net/*.hpp"
         "xmrstak/net/*.cpp"
         "includes/StatsdClient.cpp"
