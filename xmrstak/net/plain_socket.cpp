@@ -6,6 +6,7 @@
 #include <vector>
 #include <unistd.h>
 #include <errno.h>
+#include <cstring>
 
 
 inline void sock_close(SOCKET s) {
