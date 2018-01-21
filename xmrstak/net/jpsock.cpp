@@ -34,174 +34,16 @@
 #include <netinet/in.h> /* Needed for IPPROTO_TCP */
 #endif
 
-inline void sock_init() {}
 
 typedef int SOCKET;
 
-#define INVALID_SOCKET  (-1)
 #define SOCKET_ERROR    (-1)
 
-inline void sock_close(SOCKET s) {
-	shutdown(s, SHUT_RDWR);
-	close(s);
-}
-
-inline const char *sock_strerror(char *buf, size_t len) {
-	buf[0] = '\0';
-
-#if defined(__APPLE__) || defined(__FreeBSD__) || !defined(_GNU_SOURCE) || !defined(__GLIBC__)
-
-	strerror_r(errno, buf, len);
-	return buf;
-#else
-	return strerror_r(errno, buf, len);
-#endif
-}
 
 inline const char *sock_gai_strerror(int err, char *buf, size_t len) {
 	buf[0] = '\0';
 	return gai_strerror(err);
 }
-
-
-class plain_socket : public base_socket {
-public:
-	plain_socket(jpsock *err_callback);
-
-	bool set_hostname(const char *sAddr);
-
-	bool connect();
-
-	int recv(char *buf, unsigned int len);
-
-	bool send(const char *buf);
-
-	void close(bool free);
-
-private:
-	jpsock *pCallback;
-	addrinfo *pSockAddr;
-	addrinfo *pAddrRoot;
-	SOCKET hSocket;
-};
-
-plain_socket::plain_socket(jpsock *err_callback) : pCallback(err_callback) {
-	hSocket = INVALID_SOCKET;
-	pSockAddr = nullptr;
-}
-
-bool plain_socket::set_hostname(const char *sAddr) {
-	char sAddrMb[256];
-	char *sTmp, *sPort;
-
-	size_t ln = strlen(sAddr);
-	if (ln >= sizeof(sAddrMb))
-		return pCallback->set_socket_error("CONNECT error: Pool address overflow.");
-
-	memcpy(sAddrMb, sAddr, ln);
-	sAddrMb[ln] = '\0';
-
-	if ((sTmp = strstr(sAddrMb, "//")) != nullptr) {
-		sTmp += 2;
-		memmove(sAddrMb, sTmp, strlen(sTmp) + 1);
-	}
-
-	if ((sPort = strchr(sAddrMb, ':')) == nullptr)
-		return pCallback->set_socket_error("CONNECT error: Pool port number not specified, please use format <hostname>:<port>.");
-
-	sPort[0] = '\0';
-	sPort++;
-
-	addrinfo hints = {0};
-	hints.ai_family = AF_UNSPEC;
-	hints.ai_socktype = SOCK_STREAM;
-	hints.ai_protocol = IPPROTO_TCP;
-
-	pAddrRoot = nullptr;
-	int err;
-	if ((err = getaddrinfo(sAddrMb, sPort, &hints, &pAddrRoot)) != 0)
-		return pCallback->set_socket_error_strerr("CONNECT error: GetAddrInfo: ", err);
-
-	addrinfo *ptr = pAddrRoot;
-	std::vector<addrinfo *> ipv4;
-	std::vector<addrinfo *> ipv6;
-
-	while (ptr != nullptr) {
-		if (ptr->ai_family == AF_INET) {
-			ipv4.push_back(ptr);
-		}
-		if (ptr->ai_family == AF_INET6) {
-			ipv6.push_back(ptr);
-		}
-		ptr = ptr->ai_next;
-	}
-
-	if (ipv4.empty() && ipv6.empty()) {
-		freeaddrinfo(pAddrRoot);
-		pAddrRoot = nullptr;
-		return pCallback->set_socket_error("CONNECT error: I found some DNS records but no IPv4 or IPv6 addresses.");
-	} else if (!ipv4.empty() && ipv6.empty()) {
-		pSockAddr = ipv4[rand() % ipv4.size()];
-	} else if (ipv4.empty() && !ipv6.empty()) {
-		pSockAddr = ipv6[rand() % ipv6.size()];
-	} else if (!ipv4.empty() && !ipv6.empty()) {
-		pSockAddr = ipv4[rand() % ipv4.size()];
-	}
-
-	hSocket = socket(pSockAddr->ai_family, pSockAddr->ai_socktype, pSockAddr->ai_protocol);
-	if (hSocket == INVALID_SOCKET) {
-		freeaddrinfo(pAddrRoot);
-		pAddrRoot = nullptr;
-		return pCallback->set_socket_error_strerr("CONNECT error: Socket creation failed ");
-	}
-
-	return true;
-}
-
-bool plain_socket::connect() {
-	int ret = ::connect(hSocket, pSockAddr->ai_addr, (int) pSockAddr->ai_addrlen);
-
-	freeaddrinfo(pAddrRoot);
-	pAddrRoot = nullptr;
-
-	if (ret != 0)
-		return pCallback->set_socket_error_strerr("CONNECT error: ");
-	else
-		return true;
-}
-
-int plain_socket::recv(char *buf, unsigned int len) {
-	int ret = ::recv(hSocket, buf, len, 0);
-
-	if (ret == 0)
-		pCallback->set_socket_error("RECEIVE error: socket closed");
-	if (ret == SOCKET_ERROR || ret < 0)
-		pCallback->set_socket_error_strerr("RECEIVE error: ");
-
-	return ret;
-}
-
-bool plain_socket::send(const char *buf) {
-	int pos = 0, slen = strlen(buf);
-	while (pos != slen) {
-		int ret = ::send(hSocket, buf + pos, slen - pos, 0);
-		if (ret == SOCKET_ERROR) {
-			pCallback->set_socket_error_strerr("SEND error: ");
-			return false;
-		} else
-			pos += ret;
-	}
-
-	return true;
-}
-
-void plain_socket::close(bool free) {
-	if (hSocket != INVALID_SOCKET) {
-		sock_close(hSocket);
-		hSocket = INVALID_SOCKET;
-	}
-}
-
 
 struct jpsock::call_rsp_new_style {
 	const bool bHaveResponse;
@@ -243,12 +85,6 @@ struct jpsock::opaque_private_new_style {
 };
 
 jpsock::jpsock() : connect_time(0), connect_attempts(0), disconnect_time(0), quiet_close(false) {
-	sock_init();
-
-	bJsonCallMem = (uint8_t *) malloc(iJsonMemSize);
-	bJsonRecvMem = (uint8_t *) malloc(iJsonMemSize);
-	bJsonParseMem = (uint8_t *) malloc(iJsonMemSize);
-
 	prv_new_style = new opaque_private_new_style();
 	sck = new plain_socket(this);
 
@@ -263,10 +99,6 @@ jpsock::jpsock() : connect_time(0), connect_attempts(0), disconnect_time(0), qui
 jpsock::~jpsock() {
 	delete prv_new_style;
 	prv_new_style = nullptr;
-
-	free(bJsonCallMem);
-	free(bJsonRecvMem);
-	free(bJsonParseMem);
 }
 
 std::string jpsock::get_call_error() {
@@ -276,47 +108,16 @@ std::string jpsock::get_call_error() {
 	return "";
 }
 
-bool jpsock::set_socket_error(const char *a) {
+void jpsock::set_socket_error(const std::string & err) {
 	statsd::statsd_increment("socket_error");
-
 	if (!bHaveSocketError) {
 		bHaveSocketError = true;
-		sSocketError.assign(a);
+		sSocketError = err;
 	}
-
-	return false;
-}
-
-bool jpsock::set_socket_error(const char *a, const char *b) {
-	statsd::statsd_increment("socket_error");
-
-	if (!bHaveSocketError) {
-		bHaveSocketError = true;
-		size_t ln_a = strlen(a);
-		size_t ln_b = strlen(b);
-
-		sSocketError.reserve(ln_a + ln_b + 2);
-		sSocketError.assign(a, ln_a);
-		sSocketError.append(b, ln_b);
-	}
-
-	return false;
 }
 
 
-bool jpsock::set_socket_error_strerr(const char *a) {
-	statsd::statsd_increment("socket_error");
 
-	char sSockErrText[512];
-	return set_socket_error(a, sock_strerror(sSockErrText, sizeof(sSockErrText)));
-}
-
-bool jpsock::set_socket_error_strerr(const char *a, int res) {
-	statsd::statsd_increment("socket_error");
-
-	char sSockErrText[512];
-	return set_socket_error(a, sock_gai_strerror(res, sSockErrText, sizeof(sSockErrText)));
-}
 
 void jpsock::jpsock_thread() {
 	jpsock_thd_main();
@@ -358,6 +159,7 @@ bool jpsock::jpsock_thd_main() {
 
 	executor::inst()->push_event(msgstruct::ex_event(msgstruct::EV_SOCK_READY));
 
+	static constexpr size_t iSockBufferSize = 4096;
 	char buf[iSockBufferSize];
 	size_t datalen = 0;
 	while (true) {
@@ -370,7 +172,8 @@ bool jpsock::jpsock_thd_main() {
 
 		if (datalen >= sizeof(buf)) {
 			sck->close(false);
-			return set_socket_error("RECEIVE error: data overflow");
+			set_socket_error("RECEIVE error: data overflow");
+			return false;
 		}
 
 		char *lnend;
@@ -402,28 +205,33 @@ bool jpsock::process_line_new_style(char *line, size_t len) {
 
 	auto data = nlohmann::json::parse(line);
 	if (!data.is_object()) {
-		return set_socket_error("PARSE error: Invalid root");
+		set_socket_error("PARSE error: Invalid root");
+		return false;
 	}
 
 	if (data.find("method") != data.end()) {
 		if (data["method"].is_null() || !data["method"].is_string()) {
-			return set_socket_error("PARSE error: Protocol error 1");
+			set_socket_error("PARSE error: Protocol error 1");
+			return false;
 		}
 
 		const std::string method = data["method"].get<std::string>();
 		if (method != "job") {
-			return set_socket_error("PARSE error: Unsupported server method ", method.c_str());
+			set_socket_error("PARSE error: Unsupported server method " + method);
+			return false;
 		}
 
 		if (data["params"].is_null() || !data["params"].is_object()) {
-			return set_socket_error("PARSE error: Protocol error 2");
+			set_socket_error("PARSE error: Protocol error 2");
+			return false;
 		}
 
 		auto params = data["params"];
 		return process_pool_job_new_style(params);
 	} else {
 		if (data["id"].is_null() || !data["id"].is_number()) {
-			return set_socket_error("PARSE error: Protocol error 3");
+			set_socket_error("PARSE error: Protocol error 3");
+			return false;
 		}
 
 		const uint64_t iCallId = data["id"].get<uint64_t>();
@@ -436,20 +244,24 @@ bool jpsock::process_line_new_style(char *line, size_t len) {
 		if (error_iter == data.end()) {
 			/* If there was no error we need a result */
 			if (result_iter == data.end() || result_iter->is_null()) {
-				return set_socket_error("PARSE error: Protocol error 7");
+				set_socket_error("PARSE error: Protocol error 7");
+				return false;
 			}
 		} else if (error_iter->is_null()) {
 			/* If there was no error we need a result */
 			if (result_iter == data.end() || result_iter->is_null()) {
-				return set_socket_error("PARSE error: Protocol error 7");
+				set_socket_error("PARSE error: Protocol error 7");
+				return false;
 			}
 		} else if (!error_iter->is_object()) {
-			return set_socket_error("PARSE error: Protocol error 5");
+			set_socket_error("PARSE error: Protocol error 5");
+			return false;
 		} else {
 			auto error = data["error"];
 			auto message = error["message"];
 			if (message.is_null() || !message.is_string()) {
-				return set_socket_error("PARSE error: Protocol error 6");
+				set_socket_error("PARSE error: Protocol error 6");
+				return false;
 			}
 			sError = message.get<std::string>();
 		}
@@ -458,7 +270,8 @@ bool jpsock::process_line_new_style(char *line, size_t len) {
 		if (prv_new_style->oCallRsp.get() == nullptr) {
 			/*Server sent us a call reply without us making a call*/
 			mlock.unlock();
-			return set_socket_error("PARSE error: Unexpected call response");
+			set_socket_error("PARSE error: Unexpected call response");
+			return false;
 		}
 
 		if (sError != "N/A") {
@@ -486,16 +299,20 @@ bool jpsock::process_line_new_style(char *line, size_t len) {
 
 bool jpsock::process_pool_job_new_style(const nlohmann::json &params) {
 	if (!params.is_object()) {
-		return set_socket_error("PARSE error: Job error 1");
+		set_socket_error("PARSE error: Job error 1");
+		return false;
 	}
 	if (params["job_id"].is_null() || !params["job_id"].is_string()) {
-		return set_socket_error("PARSE error: Job error 2");
+		set_socket_error("PARSE error: Job error 2");
+		return false;
 	}
 	if (params["blob"].is_null() || !params["blob"].is_string()) {
-		return set_socket_error("PARSE error: Job error 2");
+		set_socket_error("PARSE error: Job error 2");
+		return false;
 	}
 	if (params["target"].is_null() || !params["target"].is_string()) {
-		return set_socket_error("PARSE error: Job error 2");
+		set_socket_error("PARSE error: Job error 2");
+		return false;
 	}
 
 	const std::string job_id = params["job_id"].get<std::string>();
@@ -504,11 +321,13 @@ bool jpsock::process_pool_job_new_style(const nlohmann::json &params) {
 
 	// Note >=
 	if (job_id.length() >= sizeof(msgstruct::pool_job::job_id)) {
-		return set_socket_error("PARSE error: Job error 3");
+		set_socket_error("PARSE error: Job error 3");
+		return false;
 	}
 
 	if (blob.length() / 2 > sizeof(msgstruct::pool_job::bWorkBlob)) {
-		return set_socket_error("PARSE error: Invalid job legth. Are you sure you are mining the correct coin?");
+		set_socket_error("PARSE error: Invalid job legth. Are you sure you are mining the correct coin?");
+		return false;
 	}
 
 	msgstruct::pool_job oPoolJob;
@@ -516,7 +335,8 @@ bool jpsock::process_pool_job_new_style(const nlohmann::json &params) {
 	iJobDiff = oPoolJob.i_job_diff();
 
 	if (!hex2bin(blob.c_str(), blob.length(), oPoolJob.bWorkBlob)) {
-		return set_socket_error("PARSE error: Job error 4");
+		set_socket_error("PARSE error: Job error 4");
+		return false;
 	}
 
 	oPoolJob.iWorkLen = blob.length() / 2;

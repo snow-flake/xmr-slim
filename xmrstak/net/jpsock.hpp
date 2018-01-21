@@ -11,6 +11,7 @@
 #include "xmrstak/system_constants.hpp"
 #include "xmrstak/net/time_utils.hpp"
 #include "includes/json.hpp"
+#include "plain_socket.h"
 
 
 /* Our pool can have two kinds of errors:
@@ -26,24 +27,11 @@
 	std::string. Executor will move the buffer via an r-value ref.
 */
 
-class base_socket {
-public:
-	virtual bool set_hostname(const char *sAddr) = 0;
-
-	virtual bool connect() = 0;
-
-	virtual int recv(char *buf, unsigned int len) = 0;
-
-	virtual bool send(const char *buf) = 0;
-
-	virtual void close(bool free) = 0;
-};
-
-class jpsock {
+class jpsock: public socket_wrapper {
 public:
 	jpsock();
 
-	~jpsock();
+	virtual ~jpsock();
 
 	bool connect(std::string &sConnectError);
 
@@ -83,13 +71,7 @@ public:
 
 	bool get_current_job(msgstruct::pool_job &job);
 
-	bool set_socket_error(const char *a);
-
-	bool set_socket_error(const char *a, const char *b);
-
-	bool set_socket_error_strerr(const char *a);
-
-	bool set_socket_error_strerr(const char *a, int res);
+	virtual void set_socket_error(const std::string & err);
 
 private:
 	bool ext_motd = false;
@@ -104,13 +86,6 @@ private:
 	std::atomic<bool> bRunning;
 	std::atomic<bool> bLoggedIn;
 	std::atomic<bool> quiet_close;
-
-	uint8_t *bJsonRecvMem;
-	uint8_t *bJsonParseMem;
-	uint8_t *bJsonCallMem;
-
-	static constexpr size_t iJsonMemSize = 4096;
-	static constexpr size_t iSockBufferSize = 4096;
 
 	struct call_rsp_new_style;
 
