@@ -104,7 +104,11 @@ void jpsock::set_socket_error(const std::string & err) {
 
 void jpsock::jpsock_thread() {
 	jpsock_thd_main();
-	executor::inst()->push_event(msgstruct::ex_event(std::move(sSocketError), quiet_close));
+	msgstruct::sock_err_const_ptr_t sock_err_const_ptr = msgstruct::sock_err_const_ptr_t(
+			new msgstruct::sock_err(sSocketError, quiet_close)
+	)
+	sSocketError = "";
+	executor::inst()->push_event(msgstruct::ex_event::make_error(sock_err_const_ptr));
 
 	// If a call is wating, send an error to end it
 	bool bCallWaiting = false;

@@ -36,15 +36,15 @@ public:
 
 	void ex_main();
 
-	inline void push_event(msgstruct::ex_event&& ev) { oEventQ.push(std::move(ev)); }
-	void push_timed_event(msgstruct::ex_event&& ev, size_t sec);
+	inline void push_event(const msgstruct::ex_event_const_ptr_t & ev) { event_queue.push(ev); }
+	void push_timed_event(const msgstruct::ex_event_const_ptr_t & ev, size_t sec);
 
 private:
 	struct timed_event
 	{
-		msgstruct::ex_event event;
+		msgstruct::ex_event_const_ptr_t event;
 		size_t ticks_left;
-		timed_event(msgstruct::ex_event & ev, size_t ticks) : event(ev), ticks_left(ticks) {}
+		timed_event(const msgstruct::ex_event_const_ptr_t & ev, size_t ticks) : event(ev), ticks_left(ticks) {}
 	};
 
 	inline void set_timestamp() { dev_timestamp = get_timestamp(); };
@@ -54,7 +54,7 @@ private:
 
 	std::list<timed_event> lTimedEvents;
 	std::mutex timed_event_mutex;
-	thdq<msgstruct::ex_event> oEventQ;
+	thdq<msgstruct::ex_event_const_ptr_t> event_queue;
 
 	xmrstak::telemetry* telem;
 	std::vector<xmrstak::iBackend*>* pvThreads;

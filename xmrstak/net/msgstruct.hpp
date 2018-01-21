@@ -122,32 +122,39 @@ namespace msgstruct {
 		job_result_const_ptr_t job_result_const_ptr;
 		sock_err_const_ptr_t sock_err_const_ptr;
 
-		ex_event() {}
-
-		ex_event(const ex_event & from) :
-				iName(from.iName),
-				pool_job_const_ptr(from.pool_job_const_ptr),
-				job_result_const_ptr(from.job_result_const_ptr),
-				sock_err_const_ptr(from.sock_err_const_ptr)
-		{}
-
-		ex_event(ex_event &&from) :
-			iName(from.iName),
-			pool_job_const_ptr(from.pool_job_const_ptr),
-			job_result_const_ptr(from.job_result_const_ptr),
-			sock_err_const_ptr(from.sock_err_const_ptr)
-		{}
-
-		ex_event &operator=(ex_event &&from) {
-			assert(this != &from);
-			this->iName = from.iName;
-			this->pool_job_const_ptr = from.pool_job_const_ptr;
-			this->job_result_const_ptr = from.job_result_const_ptr;
-			this->sock_err_const_ptr = from.sock_err_const_ptr;
-			return *this;
+		static std::shared_ptr<const ex_event> make_name_event(ex_event_name name) {
+			std::shared_ptr<ex_event> event(new ex_event());
+			event->iName = name;
+			return event;
 		}
 
+		static std::shared_ptr<const ex_event> make_pool_job(pool_job_const_ptr_t pool_job_const_ptr) {
+			std::shared_ptr<ex_event> event(new ex_event());
+			event->iName = EV_POOL_HAVE_JOB;
+			event->pool_job_const_ptr = pool_job_const_ptr;
+			return event;
+		}
+
+		static std::shared_ptr<const ex_event> make_pool_result(job_result_const_ptr_t job_result_const_ptr) {
+			std::shared_ptr<ex_event> event(new ex_event());
+			event->iName = EV_MINER_HAVE_RESULT;
+			event->job_result_const_ptr= job_result_const_ptr;
+			return event;
+		}
+
+		static std::shared_ptr<const ex_event> make_error(sock_err_const_ptr_t sock_err_const_ptr) {
+			std::shared_ptr<ex_event> event(new ex_event());
+			event->iName = EV_SOCK_ERROR;
+			event->sock_err_const_ptr = sock_err_const_ptr;
+			return event;
+		}
+
+	private:
+		ex_event()
+		{}
 	};
+
+	typedef std::shared_ptr<const ex_event> ex_event_const_ptr_t;
 
 	struct miner_work {
 		char job_id[64];
