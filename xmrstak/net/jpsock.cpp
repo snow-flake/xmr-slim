@@ -104,7 +104,9 @@ void jpsock::set_socket_error(const std::string & err) {
 
 void jpsock::jpsock_thread() {
 	jpsock_thd_main();
-	executor::inst()->push_event(msgstruct::ex_event(std::move(sSocketError), quiet_close));
+
+	std::string err(std::move(sSocketError));
+	executor::inst()->push_event_error(err, quiet_close);
 
 	// If a call is wating, send an error to end it
 	bool bCallWaiting = false;
@@ -140,7 +142,7 @@ bool jpsock::jpsock_thd_main() {
 	if (!sck->connect())
 		return false;
 
-	executor::inst()->push_event(msgstruct::ex_event(msgstruct::EV_SOCK_READY));
+	executor::inst()->push_event_name(msgstruct::EV_SOCK_READY);
 
 	static constexpr size_t iSockBufferSize = 4096;
 	char buf[iSockBufferSize];
@@ -345,7 +347,7 @@ bool jpsock::process_pool_job_new_style(const nlohmann::json &params) {
 		}
 	}
 
-	executor::inst()->push_event(msgstruct::ex_event(oPoolJob));
+	executor::inst()->push_event_pool_job(oPoolJob);
 
 	std::unique_lock<std::mutex>(job_mutex);
 	oCurrentJob = oPoolJob;

@@ -333,8 +333,11 @@ void minethd::work_main()
 
 			hash_fun(oWork.bWorkBlob, oWork.iWorkSize, result.bResult, ctx);
 
-			if (*piHashVal < oWork.iTarget)
-				executor::inst()->push_event(msgstruct::ex_event(result));
+			if (*piHashVal < oWork.iTarget) {
+				executor::inst()->push_event_job_result(result);
+			} else {
+				// TODO: log the hash was abandoned
+			}
 
 			std::this_thread::yield();
 		}
@@ -491,7 +494,10 @@ void minethd::multiway_work_main(cn_hash_fun_multi hash_fun_multi)
 			{
 				if (*piHashVal[i] < oWork.iTarget)
 				{
-					executor::inst()->push_event(msgstruct::ex_event(msgstruct::job_result(oWork.job_id, iNonce - N + 1 + i, bHashOut + 32 * i)));
+					const msgstruct::job_result result(oWork.job_id, iNonce - N + 1 + i, bHashOut + 32 * i);
+					executor::inst()->push_event_job_result(result);
+				} else {
+					// TODO: Log the hash was abandoned
 				}
 			}
 

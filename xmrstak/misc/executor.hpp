@@ -12,6 +12,54 @@
 #include <array>
 #include <list>
 #include <future>
+#include <memory>
+
+
+struct timed_event {
+	std::shared_ptr<const msgstruct::ex_event> event_ptr;
+	size_t ticks_left;
+	timed_event(std::shared_ptr<const msgstruct::ex_event> ev, size_t ticks) : event_ptr(ev), ticks_left(ticks) {}
+};
+
+
+// Element zero is always the success element.
+// Keep in mind that this is a tally and not a log like above
+struct result_tally {
+	std::chrono::system_clock::time_point time;
+	std::string msg;
+	size_t count;
+
+	result_tally() : msg("[OK]"), count(0) {
+		time = std::chrono::system_clock::now();
+	}
+
+	result_tally(std::string&& err) : count(1) {
+		time = std::chrono::system_clock::now();
+		msg = err;
+		err = "";
+	}
+
+	void increment() {
+		count++;
+		time = std::chrono::system_clock::now();
+	}
+
+	bool compare(std::string& err) {
+		return msg == err;
+	}
+};
+
+
+struct sck_error_log {
+	std::chrono::system_clock::time_point time;
+	std::string msg;
+
+	sck_error_log(std::string&& err) {
+		time = std::chrono::system_clock::now();
+		msg = err;
+		err = "";
+	}
+};
 
 
 class executor
@@ -27,17 +75,40 @@ public:
 
 	void ex_main();
 
-	inline void push_event(msgstruct::ex_event&& ev) { oEventQ.push(std::move(ev)); }
-	void push_timed_event(msgstruct::ex_event&& ev, size_t sec);
+	inline void push_event(const std::shared_ptr<const msgstruct::ex_event> & ev) { oEventQ.push(ev); }
+
+	inline void push_event_name(const msgstruct::ex_event_name name) {
+		std::shared_ptr<const msgstruct::ex_event> ptr = std::shared_ptr<const msgstruct::ex_event>(
+				new msgstruct::ex_event(name)
+		);
+		oEventQ.push(ptr);
+	}
+
+	inline void push_event_error(const std::string & error, bool silent) {
+		std::shared_ptr<const msgstruct::ex_event> ptr = std::shared_ptr<const msgstruct::ex_event>(
+				new msgstruct::ex_event(error, silent)
+		);
+		oEventQ.push(ptr);
+	}
+
+	inline void push_event_job_result(const msgstruct::job_result & result) {
+		std::shared_ptr<const msgstruct::ex_event> ptr = std::shared_ptr<const msgstruct::ex_event>(
+				new msgstruct::ex_event(result)
+		);
+		oEventQ.push(ptr);
+	}
+
+
+	inline void push_event_pool_job(const msgstruct::pool_job & job) {
+		std::shared_ptr<const msgstruct::ex_event> ptr = std::shared_ptr<const msgstruct::ex_event>(
+				new msgstruct::ex_event(job)
+		);
+		oEventQ.push(ptr);
+	}
+
+	void push_timed_event(msgstruct::ex_event_name name, size_t sec);
 
 private:
-	struct timed_event
-	{
-		msgstruct::ex_event event;
-		size_t ticks_left;
-
-		timed_event(msgstruct::ex_event&& ev, size_t ticks) : event(std::move(ev)), ticks_left(ticks) {}
-	};
 
 	inline void set_timestamp() { dev_timestamp = get_timestamp(); };
 
@@ -46,7 +117,7 @@ private:
 
 	std::list<timed_event> lTimedEvents;
 	std::mutex timed_event_mutex;
-	thdq<msgstruct::ex_event> oEventQ;
+	thdq<std::shared_ptr<const msgstruct::ex_event>> oEventQ;
 
 	xmrstak::telemetry* telem;
 	std::vector<xmrstak::iBackend*>* pvThreads;
@@ -67,50 +138,7 @@ private:
 	std::string connection_report();
 	void print_report();
 
-	struct sck_error_log
-	{
-		std::chrono::system_clock::time_point time;
-		std::string msg;
-
-		sck_error_log(std::string&& err) : msg(std::move(err))
-		{
-			time = std::chrono::system_clock::now();
-		}
-	};
 	std::vector<sck_error_log> vSocketLog;
-
-	// Element zero is always the success element.
-	// Keep in mind that this is a tally and not a log like above
-	struct result_tally
-	{
-		std::chrono::system_clock::time_point time;
-		std::string msg;
-		size_t count;
-
-		result_tally() : msg("[OK]"), count(0)
-		{
-			time = std::chrono::system_clock::now();
-		}
-
-		result_tally(std::string&& err) : msg(std::move(err)), count(1)
-		{
-			time = std::chrono::system_clock::now();
-		}
-
-		void increment()
-		{
-			count++;
-			time = std::chrono::system_clock::now();
-		}
-
-		bool compare(std::string& err)
-		{
-			if(msg == err)
-				return true;
-			else
-				return false;
-		}
-	};
 	std::vector<result_tally> vMineResults;
 
 	//More result statistics
@@ -135,14 +163,14 @@ private:
 
 	double fHighestHps = 0.0;
 
-	void log_socket_error(std::string&& sError);
-	void log_result_error(std::string&& sError);
+	void log_socket_error(std::string sError);
+	void log_result_error(std::string sError);
 	void log_result_ok(uint64_t iActualDiff);
 
 	void on_sock_ready();
-	void on_sock_error(std::string&& sError, bool silent);
-	void on_pool_have_job(msgstruct::pool_job& oPoolJob);
-	void on_miner_result(msgstruct::job_result& oResult);
+	void on_sock_error(const msgstruct::sock_err &err);
+	void on_pool_have_job(const msgstruct::pool_job& oPoolJob);
+	void on_miner_result(const msgstruct::job_result& oResult);
 	bool is_pool_live();
 	void eval_pool_choice();
 

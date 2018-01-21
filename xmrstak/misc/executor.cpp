@@ -64,10 +64,14 @@ executor::executor()
 {
 }
 
-void executor::push_timed_event(msgstruct::ex_event&& ev, size_t sec)
+void executor::push_timed_event(msgstruct::ex_event_name name, size_t sec)
 {
+	std::shared_ptr<const msgstruct::ex_event> ptr = std::shared_ptr<const msgstruct::ex_event>(
+			new msgstruct::ex_event(name)
+	);
+
 	std::unique_lock<std::mutex> lck(timed_event_mutex);
-	lTimedEvents.emplace_back(std::move(ev), sec_to_ticks(sec));
+	lTimedEvents.emplace_back(ptr, sec_to_ticks(sec));
 }
 
 void executor::ex_clock_thd()
@@ -77,11 +81,11 @@ void executor::ex_clock_thd()
 	{
 		std::this_thread::sleep_for(std::chrono::milliseconds(size_t(iTickTime)));
 
-		push_event(msgstruct::ex_event(msgstruct::EV_PERF_TICK));
+		push_event_name(msgstruct::EV_PERF_TICK);
 
 		//Eval pool choice every fourth tick
 		if((tick++ & 0x03) == 0)
-			push_event(msgstruct::ex_event(msgstruct::EV_EVAL_POOL_CHOICE));
+			push_event_name(msgstruct::EV_EVAL_POOL_CHOICE);
 
 		// Service timed events
 		std::unique_lock<std::mutex> lck(timed_event_mutex);
@@ -91,7 +95,7 @@ void executor::ex_clock_thd()
 			ev->ticks_left--;
 			if(ev->ticks_left == 0)
 			{
-				push_event(std::move(ev->event));
+				push_event(ev->event_ptr);
 				ev = lTimedEvents.erase(ev);
 			}
 			else
@@ -180,7 +184,7 @@ void executor::eval_pool_choice()
 	}
 }
 
-void executor::log_socket_error(std::string&& sError)
+void executor::log_socket_error(std::string sError)
 {
 	std::string pool_name;
 	pool_name.reserve(128);
@@ -190,10 +194,10 @@ void executor::log_socket_error(std::string&& sError)
 	vSocketLog.emplace_back(std::move(sError));
 	printer::print_msg(L1, "SOCKET ERROR - %s", vSocketLog.back().msg.c_str());
 
-	push_event(msgstruct::ex_event(msgstruct::EV_EVAL_POOL_CHOICE));
+	push_event_name(msgstruct::EV_EVAL_POOL_CHOICE);
 }
 
-void executor::log_result_error(std::string&& sError)
+void executor::log_result_error(std::string sError)
 {
 	size_t i = 1, ln = vMineResults.size();
 	for(; i < ln; i++)
@@ -242,18 +246,19 @@ void executor::on_sock_ready()
 	}
 }
 
-void executor::on_sock_error(std::string&& sError, bool silent) {
+void executor::on_sock_error(const msgstruct::sock_err &err) {
 	if (pool_ptr.get()) {
 		pool_ptr.get()->disconnect();
 	}
 
 	pool_ptr = std::shared_ptr<jpsock>();
-	if(!silent) {
-		log_socket_error(std::move(sError));
+	if(!err.silent) {
+		std::string tmp_error = err.sSocketError;
+		log_socket_error(tmp_error);
 	}
 }
 
-void executor::on_pool_have_job(msgstruct::pool_job& oPoolJob) {
+void executor::on_pool_have_job(const msgstruct::pool_job& oPoolJob) {
 	jpsock* pool = pool_ptr.get();
 	if(pool == nullptr) {
 		return;
@@ -273,7 +278,7 @@ void executor::on_pool_have_job(msgstruct::pool_job& oPoolJob) {
 	printer::print_msg(L3, "New block detected.");
 }
 
-void executor::on_miner_result(msgstruct::job_result& oResult) {
+void executor::on_miner_result(const msgstruct::job_result& oResult) {
 	const std::string job_id = oResult.job_id_str();
 	const std::string nonce = oResult.nonce_str();
 	const std::string result = oResult.result_str();
@@ -316,7 +321,7 @@ void executor::on_miner_result(msgstruct::job_result& oResult) {
 				printer::print_msg(L2, "Your miner was unable to find a share in time. Either the pool difficulty is too high, or the pool timeout is too low.");
 				pool->disconnect();
 			}
-			log_result_error(std::move(error));
+			log_result_error(error);
 		}
 		else {
 			log_result_error("[NETWORK ERROR]");
@@ -357,7 +362,6 @@ void executor::ex_main()
 	set_timestamp();
 	pool_ptr = std::shared_ptr<jpsock>(new jpsock());
 
-	msgstruct::ex_event ev;
 	std::thread clock_thd(&executor::ex_clock_thd, this);
 
 	eval_pool_choice();
@@ -367,37 +371,38 @@ void executor::ex_main()
 	vMineResults.emplace_back();
 
 	// If the user requested it, start the autohash printer
-	if(system_constants::GetVerboseLevel() >= 4)
-		push_timed_event(msgstruct::ex_event(msgstruct::EV_HASHRATE_LOOP), system_constants::GetAutohashTime());
+	if(system_constants::GetVerboseLevel() >= 4) {
+		push_timed_event(msgstruct::EV_HASHRATE_LOOP, system_constants::GetAutohashTime());
+	}
 
 	size_t cnt = 0;
 	while (true)
 	{
-		ev = oEventQ.pop();
-		switch (ev.iName)
+		std::shared_ptr<const msgstruct::ex_event> ev = oEventQ.pop();
+		switch (ev->iName)
 		{
 		case msgstruct::EV_SOCK_READY:
-			statsd::statsd_increment("ev.sock_ready");
+			statsd::statsd_increment("ev->sock_ready");
 			on_sock_ready();
 			break;
 
 		case msgstruct::EV_SOCK_ERROR:
-			statsd::statsd_increment("ev.sock_error");
-			on_sock_error(std::move(ev.oSocketError.sSocketError), ev.oSocketError.silent);
+			statsd::statsd_increment("ev->sock_error");
+			on_sock_error(ev->oSocketError);
 			break;
 
 		case msgstruct::EV_POOL_HAVE_JOB:
-			statsd::statsd_increment("ev.pool_have_job");
-			on_pool_have_job(ev.oPoolJob);
+			statsd::statsd_increment("ev->pool_have_job");
+			on_pool_have_job(ev->oPoolJob);
 			break;
 
 		case msgstruct::EV_MINER_HAVE_RESULT:
-			statsd::statsd_increment("ev.miner_have_result");
-			on_miner_result(ev.oJobResult);
+			statsd::statsd_increment("ev->miner_have_result");
+			on_miner_result(ev->oJobResult);
 			break;
 
 		case msgstruct::EV_EVAL_POOL_CHOICE:
-			statsd::statsd_increment("ev.eval_pool_choice");
+			statsd::statsd_increment("ev->eval_pool_choice");
 			eval_pool_choice();
 			break;
 
@@ -442,7 +447,7 @@ void executor::ex_main()
 
 		case msgstruct::EV_HASHRATE_LOOP:
 			print_report();
-			push_timed_event(msgstruct::ex_event(msgstruct::EV_HASHRATE_LOOP), system_constants::GetAutohashTime());
+			push_timed_event(msgstruct::EV_HASHRATE_LOOP, system_constants::GetAutohashTime());
 			break;
 
 		case msgstruct::EV_INVALID_VAL:

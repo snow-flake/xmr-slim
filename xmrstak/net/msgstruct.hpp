@@ -29,7 +29,7 @@ namespace msgstruct {
 			memcpy(this->bWorkBlob, bWorkBlob, iWorkLen);
 		}
 
-		const uint64_t i_target() {
+		const uint64_t i_target() const {
 			uint64_t output = 0;
 			if (target.length() <= 8) {
 				uint32_t iTempInt = 0;
@@ -112,62 +112,24 @@ namespace msgstruct {
 			memcpy(this->bResult, bResult, sizeof(job_result::bResult));
 		}
 
-		inline const std::string job_id_str() {
+		inline const std::string job_id_str() const {
 			return std::string(job_id);
 		}
 
-		inline const std::string result_str() {
+		inline const std::string result_str() const {
 			char sResult[65];
-			bin2hex(bResult, 32, sResult);
+			msgstruct_v2::utils::bin2hex(bResult, 32, sResult);
 			sResult[64] = '\0';
 			return std::string(sResult);
 
 		}
 
-		inline const std::string nonce_str() {
+		inline const std::string nonce_str() const {
 			char sNonce[9];
-			bin2hex((unsigned char *) &iNonce, 4, sNonce);
+			msgstruct_v2::utils::bin2hex((unsigned char *) &iNonce, 4, sNonce);
 			sNonce[8] = '\0';
 			return std::string(sNonce);
 		}
-
-	private:
-
-		inline unsigned char hf_hex2bin(char c, bool &err) {
-			if (c >= '0' && c <= '9')
-				return c - '0';
-			else if (c >= 'a' && c <= 'f')
-				return c - 'a' + 0xA;
-			else if (c >= 'A' && c <= 'F')
-				return c - 'A' + 0xA;
-
-			err = true;
-			return 0;
-		}
-
-		inline bool hex2bin(const char *in, unsigned int len, unsigned char *out) {
-			bool error = false;
-			for (unsigned int i = 0; i < len; i += 2) {
-				out[i / 2] = (hf_hex2bin(in[i], error) << 4) | hf_hex2bin(in[i + 1], error);
-				if (error) return false;
-			}
-			return true;
-		}
-
-		inline char hf_bin2hex(unsigned char c) {
-			if (c <= 0x9)
-				return '0' + c;
-			else
-				return 'a' - 0xA + c;
-		}
-
-		inline void bin2hex(const unsigned char *in, unsigned int len, char *out) {
-			for (unsigned int i = 0; i < len; i++) {
-				out[i * 2] = hf_bin2hex((in[i] & 0xF0) >> 4);
-				out[i * 2 + 1] = hf_bin2hex(in[i] & 0x0F);
-			}
-		}
-
 	};
 
 	struct sock_err {
@@ -176,7 +138,7 @@ namespace msgstruct {
 
 		sock_err() {}
 
-		sock_err(std::string &&err, bool silent) : sSocketError(std::move(err)), silent(silent) {}
+		sock_err(const std::string &err, bool silent) : sSocketError(err), silent(silent) {}
 
 		sock_err(sock_err &&from) : sSocketError(std::move(from.sSocketError)), silent(from.silent) {}
 
@@ -221,7 +183,7 @@ namespace msgstruct {
 
 		ex_event() { iName = EV_INVALID_VAL; }
 
-		ex_event(std::string &&err, bool silent) : iName(EV_SOCK_ERROR), oSocketError(std::move(err), silent) {}
+		ex_event(const std::string & err, bool silent) : iName(EV_SOCK_ERROR), oSocketError(err, silent) {}
 
 		ex_event(job_result dat) : iName(EV_MINER_HAVE_RESULT), oJobResult(dat) {}
 
