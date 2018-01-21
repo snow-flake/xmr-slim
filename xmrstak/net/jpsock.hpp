@@ -81,7 +81,7 @@ public:
 
 	inline uint64_t get_current_diff() { return iJobDiff; }
 
-	bool get_current_job(pool_job &job);
+	bool get_current_job(msgstruct::pool_job &job);
 
 	bool set_socket_error(const char *a);
 
@@ -137,7 +137,7 @@ private:
 	std::thread *oRecvThd;
 
 	std::mutex job_mutex;
-	pool_job oCurrentJob;
+	msgstruct::pool_job oCurrentJob;
 
 	opaque_private_new_style *prv_new_style;
 	base_socket *sck;

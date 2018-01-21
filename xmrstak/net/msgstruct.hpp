@@ -9,191 +9,194 @@
 // Structures that we use to pass info between threads constructors are here just to make
 // the stack allocation take up less space, heap is a shared resouce that needs locks too of course
 
-struct pool_job
-{
-	char		job_id[64];
-	uint8_t		bWorkBlob[112];
-	uint32_t	iWorkLen;
-	uint32_t	iSavedNonce;
-	std::string target;
+namespace msgstruct {
 
-	pool_job() : iWorkLen(0), iSavedNonce(0) {}
-	pool_job(const char* job_id, const std::string & target, const uint8_t* bWorkBlob, uint32_t iWorkLen) :
-		iWorkLen(iWorkLen), iSavedNonce(0), target(target)
-	{
-		assert(iWorkLen <= sizeof(pool_job::bWorkBlob));
-		memcpy(this->job_id, job_id, sizeof(pool_job::job_id));
-		memcpy(this->bWorkBlob, bWorkBlob, iWorkLen);
-	}
+	struct pool_job {
+		char job_id[64];
+		uint8_t bWorkBlob[112];
+		uint32_t iWorkLen;
+		uint32_t iSavedNonce;
+		std::string target;
 
-	const uint64_t i_target() {
-		uint64_t output = 0;
-		if (target.length() <= 8) {
-			uint32_t iTempInt = 0;
-			char sTempStr[] = "00000000"; // Little-endian CPU FTW
-			memcpy(sTempStr, target.c_str(), target.length());
-			if (!hex2bin(sTempStr, 8, (unsigned char *) &iTempInt) || iTempInt == 0) {
-				throw new std::runtime_error("PARSE error: Invalid target");
+		pool_job() : iWorkLen(0), iSavedNonce(0) {}
+
+		pool_job(const char *job_id, const std::string &target, const uint8_t *bWorkBlob, uint32_t iWorkLen) :
+				iWorkLen(iWorkLen), iSavedNonce(0), target(target) {
+			assert(iWorkLen <= sizeof(pool_job::bWorkBlob));
+			memcpy(this->job_id, job_id, sizeof(pool_job::job_id));
+			memcpy(this->bWorkBlob, bWorkBlob, iWorkLen);
+		}
+
+		const uint64_t i_target() {
+			uint64_t output = 0;
+			if (target.length() <= 8) {
+				uint32_t iTempInt = 0;
+				char sTempStr[] = "00000000"; // Little-endian CPU FTW
+				memcpy(sTempStr, target.c_str(), target.length());
+				if (!hex2bin(sTempStr, 8, (unsigned char *) &iTempInt) || iTempInt == 0) {
+					throw new std::runtime_error("PARSE error: Invalid target");
+				}
+				output = t32_to_t64(iTempInt);
+			} else if (target.length() <= 16) {
+				output = 0;
+				char sTempStr[] = "0000000000000000";
+				memcpy(sTempStr, target.c_str(), target.length());
+				if (!hex2bin(sTempStr, 16, (unsigned char *) &output) || output == 0) {
+					throw new std::runtime_error("PARSE error: Invalid target");
+				}
+			} else {
+				throw new std::runtime_error("PARSE error: Job error 5");
 			}
-			output = t32_to_t64(iTempInt);
-		} else if (target.length() <= 16) {
-			output  = 0;
-			char sTempStr[] = "0000000000000000";
-			memcpy(sTempStr, target.c_str(), target.length());
-			if (!hex2bin(sTempStr, 16, (unsigned char *) &output ) || output  == 0) {
-				throw new std::runtime_error("PARSE error: Invalid target");
+			return output;
+		}
+
+		const uint64_t i_job_diff() {
+			return t64_to_diff(i_target());
+		}
+
+	private:
+		inline static uint64_t t64_to_diff(uint64_t t) { return 0xFFFFFFFFFFFFFFFFULL / t; }
+
+		inline static uint64_t t32_to_t64(uint32_t t) {
+			return 0xFFFFFFFFFFFFFFFFULL / (0xFFFFFFFFULL / ((uint64_t) t));
+		}
+
+		inline static unsigned char hf_hex2bin(char c, bool &err) {
+			if (c >= '0' && c <= '9')
+				return c - '0';
+			else if (c >= 'a' && c <= 'f')
+				return c - 'a' + 0xA;
+			else if (c >= 'A' && c <= 'F')
+				return c - 'A' + 0xA;
+
+			err = true;
+			return 0;
+		}
+
+		inline static bool hex2bin(const char *in, unsigned int len, unsigned char *out) {
+			bool error = false;
+			for (unsigned int i = 0; i < len; i += 2) {
+				out[i / 2] = (hf_hex2bin(in[i], error) << 4) | hf_hex2bin(in[i + 1], error);
+				if (error) return false;
 			}
-		} else {
-			throw new std::runtime_error("PARSE error: Job error 5");
+			return true;
 		}
-		return output;
-	}
 
-	const uint64_t i_job_diff() {
-		return t64_to_diff(i_target());
-	}
-
-private:
-	inline static uint64_t t64_to_diff(uint64_t t) { return 0xFFFFFFFFFFFFFFFFULL / t; }
-
-	inline static uint64_t t32_to_t64(uint32_t t) {
-		return 0xFFFFFFFFFFFFFFFFULL / (0xFFFFFFFFULL / ((uint64_t) t));
-	}
-
-	inline static unsigned char hf_hex2bin(char c, bool &err) {
-		if (c >= '0' && c <= '9')
-			return c - '0';
-		else if (c >= 'a' && c <= 'f')
-			return c - 'a' + 0xA;
-		else if (c >= 'A' && c <= 'F')
-			return c - 'A' + 0xA;
-
-		err = true;
-		return 0;
-	}
-
-	inline static bool hex2bin(const char *in, unsigned int len, unsigned char *out) {
-		bool error = false;
-		for (unsigned int i = 0; i < len; i += 2) {
-			out[i / 2] = (hf_hex2bin(in[i], error) << 4) | hf_hex2bin(in[i + 1], error);
-			if (error) return false;
+		inline static char hf_bin2hex(unsigned char c) {
+			if (c <= 0x9)
+				return '0' + c;
+			else
+				return 'a' - 0xA + c;
 		}
-		return true;
-	}
 
-	inline static char hf_bin2hex(unsigned char c) {
-		if (c <= 0x9)
-			return '0' + c;
-		else
-			return 'a' - 0xA + c;
-	}
-
-	inline static void bin2hex(const unsigned char *in, unsigned int len, char *out) {
-		for (unsigned int i = 0; i < len; i++) {
-			out[i * 2] = hf_bin2hex((in[i] & 0xF0) >> 4);
-			out[i * 2 + 1] = hf_bin2hex(in[i] & 0x0F);
+		inline static void bin2hex(const unsigned char *in, unsigned int len, char *out) {
+			for (unsigned int i = 0; i < len; i++) {
+				out[i * 2] = hf_bin2hex((in[i] & 0xF0) >> 4);
+				out[i * 2 + 1] = hf_bin2hex(in[i] & 0x0F);
+			}
 		}
-	}
 
-};
+	};
 
-struct job_result
-{
-	char		job_id[64];
-	uint8_t		bResult[32];
-	uint32_t	iNonce;
+	struct job_result {
+		char job_id[64];
+		uint8_t bResult[32];
+		uint32_t iNonce;
 
-	job_result() {}
-	job_result(const char* job_id, uint32_t iNonce, const uint8_t* bResult) : iNonce(iNonce)
-	{
-		memcpy(this->job_id, job_id, sizeof(job_result::job_id));
-		memcpy(this->bResult, bResult, sizeof(job_result::bResult));
-	}
+		job_result() {}
 
-	inline const std::string job_id_str() {
-		return std::string(job_id);
-	}
-
-	inline const std::string result_str() {
-		char sResult[65];
-		bin2hex(bResult, 32, sResult);
-		sResult[64] = '\0';
-		return std::string(sResult);
-
-	}
-
-	inline const std::string nonce_str() {
-		char sNonce[9];
-		bin2hex((unsigned char *) &iNonce, 4, sNonce);
-		sNonce[8] = '\0';
-		return std::string(sNonce);
-	}
-
-private:
-
-	inline unsigned char hf_hex2bin(char c, bool &err) {
-		if (c >= '0' && c <= '9')
-			return c - '0';
-		else if (c >= 'a' && c <= 'f')
-			return c - 'a' + 0xA;
-		else if (c >= 'A' && c <= 'F')
-			return c - 'A' + 0xA;
-
-		err = true;
-		return 0;
-	}
-
-	inline bool hex2bin(const char *in, unsigned int len, unsigned char *out) {
-		bool error = false;
-		for (unsigned int i = 0; i < len; i += 2) {
-			out[i / 2] = (hf_hex2bin(in[i], error) << 4) | hf_hex2bin(in[i + 1], error);
-			if (error) return false;
+		job_result(const char *job_id, uint32_t iNonce, const uint8_t *bResult) : iNonce(iNonce) {
+			memcpy(this->job_id, job_id, sizeof(job_result::job_id));
+			memcpy(this->bResult, bResult, sizeof(job_result::bResult));
 		}
-		return true;
-	}
 
-	inline char hf_bin2hex(unsigned char c) {
-		if (c <= 0x9)
-			return '0' + c;
-		else
-			return 'a' - 0xA + c;
-	}
-
-	inline void bin2hex(const unsigned char *in, unsigned int len, char *out) {
-		for (unsigned int i = 0; i < len; i++) {
-			out[i * 2] = hf_bin2hex((in[i] & 0xF0) >> 4);
-			out[i * 2 + 1] = hf_bin2hex(in[i] & 0x0F);
+		inline const std::string job_id_str() {
+			return std::string(job_id);
 		}
-	}
 
-};
+		inline const std::string result_str() {
+			char sResult[65];
+			bin2hex(bResult, 32, sResult);
+			sResult[64] = '\0';
+			return std::string(sResult);
 
-struct sock_err
-{
-	std::string sSocketError;
-	bool silent;
+		}
 
-	sock_err() {}
-	sock_err(std::string&& err, bool silent) : sSocketError(std::move(err)), silent(silent) { }
-	sock_err(sock_err&& from) : sSocketError(std::move(from.sSocketError)), silent(from.silent) {}
+		inline const std::string nonce_str() {
+			char sNonce[9];
+			bin2hex((unsigned char *) &iNonce, 4, sNonce);
+			sNonce[8] = '\0';
+			return std::string(sNonce);
+		}
 
-	sock_err& operator=(sock_err&& from)
-	{
-		assert(this != &from);
-		sSocketError = std::move(from.sSocketError);
-		silent = from.silent;
-		return *this;
-	}
+	private:
 
-	~sock_err() { }
+		inline unsigned char hf_hex2bin(char c, bool &err) {
+			if (c >= '0' && c <= '9')
+				return c - '0';
+			else if (c >= 'a' && c <= 'f')
+				return c - 'a' + 0xA;
+			else if (c >= 'A' && c <= 'F')
+				return c - 'A' + 0xA;
 
-	sock_err(sock_err const&) = delete;
-	sock_err& operator=(sock_err const&) = delete;
-};
+			err = true;
+			return 0;
+		}
 
-enum ex_event_name { EV_INVALID_VAL, EV_SOCK_READY, EV_SOCK_ERROR,
-	EV_POOL_HAVE_JOB, EV_MINER_HAVE_RESULT, EV_PERF_TICK, EV_EVAL_POOL_CHOICE,
-	EV_HASHRATE_LOOP };
+		inline bool hex2bin(const char *in, unsigned int len, unsigned char *out) {
+			bool error = false;
+			for (unsigned int i = 0; i < len; i += 2) {
+				out[i / 2] = (hf_hex2bin(in[i], error) << 4) | hf_hex2bin(in[i + 1], error);
+				if (error) return false;
+			}
+			return true;
+		}
+
+		inline char hf_bin2hex(unsigned char c) {
+			if (c <= 0x9)
+				return '0' + c;
+			else
+				return 'a' - 0xA + c;
+		}
+
+		inline void bin2hex(const unsigned char *in, unsigned int len, char *out) {
+			for (unsigned int i = 0; i < len; i++) {
+				out[i * 2] = hf_bin2hex((in[i] & 0xF0) >> 4);
+				out[i * 2 + 1] = hf_bin2hex(in[i] & 0x0F);
+			}
+		}
+
+	};
+
+	struct sock_err {
+		std::string sSocketError;
+		bool silent;
+
+		sock_err() {}
+
+		sock_err(std::string &&err, bool silent) : sSocketError(std::move(err)), silent(silent) {}
+
+		sock_err(sock_err &&from) : sSocketError(std::move(from.sSocketError)), silent(from.silent) {}
+
+		sock_err &operator=(sock_err &&from) {
+			assert(this != &from);
+			sSocketError = std::move(from.sSocketError);
+			silent = from.silent;
+			return *this;
+		}
+
+		~sock_err() {}
+
+		sock_err(sock_err const &) = delete;
+
+		sock_err &operator=(sock_err const &) = delete;
+	};
+
+	enum ex_event_name {
+		EV_INVALID_VAL, EV_SOCK_READY, EV_SOCK_ERROR,
+		EV_POOL_HAVE_JOB, EV_MINER_HAVE_RESULT, EV_PERF_TICK, EV_EVAL_POOL_CHOICE,
+		EV_HASHRATE_LOOP
+	};
 
 /*
    This is how I learned to stop worrying and love c++11 =).
@@ -205,138 +208,132 @@ enum ex_event_name { EV_INVALID_VAL, EV_SOCK_READY, EV_SOCK_ERROR,
    Also note that for non-arg events we only copy two qwords
 */
 
-struct ex_event
-{
-	ex_event_name iName;
+	struct ex_event {
+		ex_event_name iName;
 
-	union
-	{
-		pool_job oPoolJob;
-		job_result oJobResult;
-		sock_err oSocketError;
+		union {
+			pool_job oPoolJob;
+			job_result oJobResult;
+			sock_err oSocketError;
+		};
+
+		ex_event() { iName = EV_INVALID_VAL; }
+
+		ex_event(std::string &&err, bool silent) : iName(EV_SOCK_ERROR), oSocketError(std::move(err), silent) {}
+
+		ex_event(job_result dat) : iName(EV_MINER_HAVE_RESULT), oJobResult(dat) {}
+
+		ex_event(pool_job dat) : iName(EV_POOL_HAVE_JOB), oPoolJob(dat) {}
+
+		ex_event(ex_event_name ev) : iName(ev) {}
+
+		// Delete the copy operators to make sure we are moving only what is needed
+		ex_event(ex_event const &) = delete;
+
+		ex_event &operator=(ex_event const &) = delete;
+
+		ex_event(ex_event &&from) {
+			iName = from.iName;
+			switch (iName) {
+				case EV_SOCK_ERROR:
+					new(&oSocketError) sock_err(std::move(from.oSocketError));
+					break;
+				case EV_MINER_HAVE_RESULT:
+					oJobResult = from.oJobResult;
+					break;
+				case EV_POOL_HAVE_JOB:
+					oPoolJob = from.oPoolJob;
+					break;
+				default:
+					break;
+			}
+		}
+
+		ex_event &operator=(ex_event &&from) {
+			assert(this != &from);
+
+			if (iName == EV_SOCK_ERROR)
+				oSocketError.~sock_err();
+
+			iName = from.iName;
+			switch (iName) {
+				case EV_SOCK_ERROR:
+					new(&oSocketError) sock_err();
+					oSocketError = std::move(from.oSocketError);
+					break;
+				case EV_MINER_HAVE_RESULT:
+					oJobResult = from.oJobResult;
+					break;
+				case EV_POOL_HAVE_JOB:
+					oPoolJob = from.oPoolJob;
+					break;
+				default:
+					break;
+			}
+
+			return *this;
+		}
+
+		~ex_event() {
+			if (iName == EV_SOCK_ERROR)
+				oSocketError.~sock_err();
+		}
 	};
 
-	ex_event() { iName = EV_INVALID_VAL;}
-	ex_event(std::string&& err, bool silent) : iName(EV_SOCK_ERROR), oSocketError(std::move(err), silent) { }
-	ex_event(job_result dat) : iName(EV_MINER_HAVE_RESULT), oJobResult(dat) {}
-	ex_event(pool_job dat) : iName(EV_POOL_HAVE_JOB), oPoolJob(dat) {}
-	ex_event(ex_event_name ev) : iName(ev) {}
+	struct miner_work {
+		char job_id[64];
+		uint8_t bWorkBlob[112];
+		uint32_t iWorkSize;
+		uint64_t iTarget;
+		bool bStall;
 
-	// Delete the copy operators to make sure we are moving only what is needed
-	ex_event(ex_event const&) = delete;
-	ex_event& operator=(ex_event const&) = delete;
+		miner_work() : iWorkSize(0), bStall(true) {}
 
-	ex_event(ex_event&& from)
-	{
-		iName = from.iName;
-		switch(iName)
-		{
-		case EV_SOCK_ERROR:
-			new (&oSocketError) sock_err(std::move(from.oSocketError));
-			break;
-		case EV_MINER_HAVE_RESULT:
-			oJobResult = from.oJobResult;
-			break;
-		case EV_POOL_HAVE_JOB:
-			oPoolJob = from.oPoolJob;
-			break;
-		default:
-			break;
-		}
-	}
-
-	ex_event& operator=(ex_event&& from)
-	{
-		assert(this != &from);
-
-		if(iName == EV_SOCK_ERROR)
-			oSocketError.~sock_err();
-
-		iName = from.iName;
-		switch(iName)
-		{
-		case EV_SOCK_ERROR:
-			new (&oSocketError) sock_err();
-			oSocketError = std::move(from.oSocketError);
-			break;
-		case EV_MINER_HAVE_RESULT:
-			oJobResult = from.oJobResult;
-			break;
-		case EV_POOL_HAVE_JOB:
-			oPoolJob = from.oPoolJob;
-			break;
-		default:
-			break;
+		miner_work(const char *job_id, const uint8_t *bWork, uint32_t iWorkSize,
+				   uint64_t iTarget) : iWorkSize(iWorkSize),
+									   iTarget(iTarget), bStall(false) {
+			assert(iWorkSize <= sizeof(bWorkBlob));
+			memcpy(this->job_id, job_id, sizeof(miner_work::job_id));
+			memcpy(this->bWorkBlob, bWork, iWorkSize);
 		}
 
-		return *this;
-	}
+		miner_work(miner_work const &) = delete;
 
-	~ex_event()
-	{
-		if(iName == EV_SOCK_ERROR)
-			oSocketError.~sock_err();
-	}
-};
+		miner_work &operator=(miner_work const &from) {
+			assert(this != &from);
 
-struct miner_work
-{
-	char        job_id[64];
-	uint8_t     bWorkBlob[112];
-	uint32_t    iWorkSize;
-	uint64_t    iTarget;
-	bool        bStall;
+			iWorkSize = from.iWorkSize;
+			iTarget = from.iTarget;
+			bStall = from.bStall;
 
-	miner_work() : iWorkSize(0), bStall(true) { }
+			assert(iWorkSize <= sizeof(bWorkBlob));
+			memcpy(job_id, from.job_id, sizeof(job_id));
+			memcpy(bWorkBlob, from.bWorkBlob, iWorkSize);
 
-	miner_work(const char* job_id, const uint8_t* bWork, uint32_t iWorkSize,
-		uint64_t iTarget) : iWorkSize(iWorkSize),
-		iTarget(iTarget), bStall(false)
-	{
-		assert(iWorkSize <= sizeof(bWorkBlob));
-		memcpy(this->job_id, job_id, sizeof(miner_work::job_id));
-		memcpy(this->bWorkBlob, bWork, iWorkSize);
-	}
+			return *this;
+		}
 
-	miner_work(miner_work const&) = delete;
+		miner_work(miner_work &&from) : iWorkSize(from.iWorkSize), iTarget(from.iTarget),
+										bStall(from.bStall) {
+			assert(iWorkSize <= sizeof(bWorkBlob));
+			memcpy(job_id, from.job_id, sizeof(job_id));
+			memcpy(bWorkBlob, from.bWorkBlob, iWorkSize);
+		}
 
-	miner_work& operator=(miner_work const& from)
-	{
-		assert(this != &from);
+		miner_work &operator=(miner_work &&from) {
+			assert(this != &from);
 
-		iWorkSize = from.iWorkSize;
-		iTarget = from.iTarget;
-		bStall = from.bStall;
+			iWorkSize = from.iWorkSize;
+			iTarget = from.iTarget;
+			bStall = from.bStall;
 
-		assert(iWorkSize <= sizeof(bWorkBlob));
-		memcpy(job_id, from.job_id, sizeof(job_id));
-		memcpy(bWorkBlob, from.bWorkBlob, iWorkSize);
+			assert(iWorkSize <= sizeof(bWorkBlob));
+			memcpy(job_id, from.job_id, sizeof(job_id));
+			memcpy(bWorkBlob, from.bWorkBlob, iWorkSize);
 
-		return *this;
-	}
-
-	miner_work(miner_work&& from) : iWorkSize(from.iWorkSize), iTarget(from.iTarget),
-		bStall(from.bStall)
-	{
-		assert(iWorkSize <= sizeof(bWorkBlob));
-		memcpy(job_id, from.job_id, sizeof(job_id));
-		memcpy(bWorkBlob, from.bWorkBlob, iWorkSize);
-	}
-
-	miner_work& operator=(miner_work&& from)
-	{
-		assert(this != &from);
-
-		iWorkSize = from.iWorkSize;
-		iTarget = from.iTarget;
-		bStall = from.bStall;
-
-		assert(iWorkSize <= sizeof(bWorkBlob));
-		memcpy(job_id, from.job_id, sizeof(job_id));
-		memcpy(bWorkBlob, from.bWorkBlob, iWorkSize);
-
-		return *this;
-	}
-};
+			return *this;
+		}
+	};
+}
 
 #endif // XMR_SLIM_MSG_STRUCT_HPP

@@ -31,14 +31,14 @@ struct globalStates
 	}
 
 	//pool_data is in-out winapi style
-	void switch_work(miner_work& pWork, pool_data& dat);
+	void switch_work(msgstruct::miner_work& pWork, pool_data& dat);
 
 	inline void calc_start_nonce(uint32_t& nonce, uint32_t reserve_count)
 	{
 		nonce = iGlobalNonce.fetch_add(reserve_count);
 	}
 
-	miner_work oGlobalWork;
+	msgstruct::miner_work oGlobalWork;
 	std::atomic<uint64_t> iGlobalJobNo;
 	std::atomic<uint64_t> iConsumeCnt;
 	std::atomic<uint32_t> iGlobalNonce;

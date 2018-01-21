@@ -320,7 +320,7 @@ bool jpsock::set_socket_error_strerr(const char *a, int res) {
 
 void jpsock::jpsock_thread() {
 	jpsock_thd_main();
-	executor::inst()->push_event(ex_event(std::move(sSocketError), quiet_close));
+	executor::inst()->push_event(msgstruct::ex_event(std::move(sSocketError), quiet_close));
 
 	// If a call is wating, send an error to end it
 	bool bCallWaiting = false;
@@ -356,7 +356,7 @@ bool jpsock::jpsock_thd_main() {
 	if (!sck->connect())
 		return false;
 
-	executor::inst()->push_event(ex_event(EV_SOCK_READY));
+	executor::inst()->push_event(msgstruct::ex_event(msgstruct::EV_SOCK_READY));
 
 	char buf[iSockBufferSize];
 	size_t datalen = 0;
@@ -503,15 +503,15 @@ bool jpsock::process_pool_job_new_style(const nlohmann::json &params) {
 	const std::string target = params["target"].get<std::string>();
 
 	// Note >=
-	if (job_id.length() >= sizeof(pool_job::job_id)) {
+	if (job_id.length() >= sizeof(msgstruct::pool_job::job_id)) {
 		return set_socket_error("PARSE error: Job error 3");
 	}
 
-	if (blob.length() / 2 > sizeof(pool_job::bWorkBlob)) {
+	if (blob.length() / 2 > sizeof(msgstruct::pool_job::bWorkBlob)) {
 		return set_socket_error("PARSE error: Invalid job legth. Are you sure you are mining the correct coin?");
 	}
 
-	pool_job oPoolJob;
+	msgstruct::pool_job oPoolJob;
 	oPoolJob.target = target;
 	iJobDiff = oPoolJob.i_job_diff();
 
@@ -520,7 +520,7 @@ bool jpsock::process_pool_job_new_style(const nlohmann::json &params) {
 	}
 
 	oPoolJob.iWorkLen = blob.length() / 2;
-	memset(oPoolJob.job_id, 0, sizeof(pool_job::job_id));
+	memset(oPoolJob.job_id, 0, sizeof(msgstruct::pool_job::job_id));
 	strcpy(oPoolJob.job_id, job_id.c_str());
 
 
@@ -542,7 +542,7 @@ bool jpsock::process_pool_job_new_style(const nlohmann::json &params) {
 		}
 	}
 
-	executor::inst()->push_event(ex_event(oPoolJob));
+	executor::inst()->push_event(msgstruct::ex_event(oPoolJob));
 
 	std::unique_lock<std::mutex>(job_mutex);
 	oCurrentJob = oPoolJob;
@@ -714,7 +714,7 @@ bool jpsock::cmd_submit(const std::string job_id, std::string nonce, const std::
 	return success;
 }
 
-bool jpsock::get_current_job(pool_job &job) {
+bool jpsock::get_current_job(msgstruct::pool_job &job) {
 	std::unique_lock<std::mutex>(job_mutex);
 
 	if (oCurrentJob.iWorkLen == 0)

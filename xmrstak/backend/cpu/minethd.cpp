@@ -72,7 +72,7 @@ bool minethd::thd_setaffinity(std::thread::native_handle_type h, uint64_t cpu_id
 #endif
 }
 
-minethd::minethd(miner_work& pWork, size_t iNo, int iMultiway, bool no_prefetch, int64_t affinity)
+minethd::minethd(msgstruct::miner_work& pWork, size_t iNo, int iMultiway, bool no_prefetch, int64_t affinity)
 {
 	oWork = pWork;
 	bQuit = 0;
@@ -206,7 +206,7 @@ bool minethd::self_test()
 	return bResult;
 }
 
-std::vector<iBackend*> minethd::thread_starter(uint32_t threadOffset, miner_work& pWork)
+std::vector<iBackend*> minethd::thread_starter(uint32_t threadOffset, msgstruct::miner_work& pWork)
 {
 	std::vector<iBackend*> pvThreads;
 
@@ -241,7 +241,7 @@ std::vector<iBackend*> minethd::thread_starter(uint32_t threadOffset, miner_work
 
 void minethd::consume_work()
 {
-	memcpy(&oWork, &globalStates::inst().inst().oGlobalWork, sizeof(miner_work));
+	memcpy(&oWork, &globalStates::inst().inst().oGlobalWork, sizeof(msgstruct::miner_work));
 	iJobNo++;
 	globalStates::inst().inst().iConsumeCnt++;
 }
@@ -284,7 +284,7 @@ void minethd::work_main()
 	uint64_t iCount = 0;
 	uint64_t* piHashVal;
 	uint32_t* piNonce;
-	job_result result;
+	msgstruct::job_result result;
 
 	hash_fun = func_selector(::system_constants::HaveHardwareAes(), bNoPrefetch);
 	ctx = minethd_alloc_ctx();
@@ -312,8 +312,8 @@ void minethd::work_main()
 		size_t nonce_ctr = 0;
 		constexpr size_t nonce_chunk = 4096; // Needs to be a power of 2
 
-		assert(sizeof(job_result::job_id) == sizeof(pool_job::job_id));
-		memcpy(result.job_id, oWork.job_id, sizeof(job_result::job_id));
+		assert(sizeof(msgstruct::job_result::job_id) == sizeof(msgstruct::pool_job::job_id));
+		memcpy(result.job_id, oWork.job_id, sizeof(msgstruct::job_result::job_id));
 
 		while(globalStates::inst().iGlobalJobNo.load(std::memory_order_relaxed) == iJobNo)
 		{
@@ -334,7 +334,7 @@ void minethd::work_main()
 			hash_fun(oWork.bWorkBlob, oWork.iWorkSize, result.bResult, ctx);
 
 			if (*piHashVal < oWork.iTarget)
-				executor::inst()->push_event(ex_event(result));
+				executor::inst()->push_event(msgstruct::ex_event(result));
 
 			std::this_thread::yield();
 		}
@@ -429,9 +429,9 @@ void minethd::multiway_work_main(cn_hash_fun_multi hash_fun_multi)
 	uint64_t *piHashVal[MAX_N];
 	uint32_t *piNonce[MAX_N];
 	uint8_t bHashOut[MAX_N * 32];
-	uint8_t bWorkBlob[sizeof(miner_work::bWorkBlob) * MAX_N];
+	uint8_t bWorkBlob[sizeof(msgstruct::miner_work::bWorkBlob) * MAX_N];
 	uint32_t iNonce;
-	job_result res;
+	msgstruct::job_result res;
 
 	for (size_t i = 0; i < N; i++)
 	{
@@ -464,7 +464,7 @@ void minethd::multiway_work_main(cn_hash_fun_multi hash_fun_multi)
 		constexpr uint32_t nonce_chunk = 4096;
 		int64_t nonce_ctr = 0;
 
-		assert(sizeof(job_result::job_id) == sizeof(pool_job::job_id));
+		assert(sizeof(msgstruct::job_result::job_id) == sizeof(msgstruct::pool_job::job_id));
 
 		while (globalStates::inst().iGlobalJobNo.load(std::memory_order_relaxed) == iJobNo)
 		{
@@ -491,7 +491,7 @@ void minethd::multiway_work_main(cn_hash_fun_multi hash_fun_multi)
 			{
 				if (*piHashVal[i] < oWork.iTarget)
 				{
-					executor::inst()->push_event(ex_event(job_result(oWork.job_id, iNonce - N + 1 + i, bHashOut + 32 * i)));
+					executor::inst()->push_event(msgstruct::ex_event(msgstruct::job_result(oWork.job_id, iNonce - N + 1 + i, bHashOut + 32 * i)));
 				}
 			}
 

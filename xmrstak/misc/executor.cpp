@@ -43,7 +43,7 @@
 #include <assert.h>
 
 
-std::vector<xmrstak::iBackend*>* thread_starter(miner_work& pWork)
+std::vector<xmrstak::iBackend*>* thread_starter(msgstruct::miner_work& pWork)
 {
 	xmrstak::globalStates::inst().iGlobalJobNo = 0;
 	xmrstak::globalStates::inst().iConsumeCnt = 0;
@@ -64,7 +64,7 @@ executor::executor()
 {
 }
 
-void executor::push_timed_event(ex_event&& ev, size_t sec)
+void executor::push_timed_event(msgstruct::ex_event&& ev, size_t sec)
 {
 	std::unique_lock<std::mutex> lck(timed_event_mutex);
 	lTimedEvents.emplace_back(std::move(ev), sec_to_ticks(sec));
@@ -77,11 +77,11 @@ void executor::ex_clock_thd()
 	{
 		std::this_thread::sleep_for(std::chrono::milliseconds(size_t(iTickTime)));
 
-		push_event(ex_event(EV_PERF_TICK));
+		push_event(msgstruct::ex_event(msgstruct::EV_PERF_TICK));
 
 		//Eval pool choice every fourth tick
 		if((tick++ & 0x03) == 0)
-			push_event(ex_event(EV_EVAL_POOL_CHOICE));
+			push_event(msgstruct::ex_event(msgstruct::EV_EVAL_POOL_CHOICE));
 
 		// Service timed events
 		std::unique_lock<std::mutex> lck(timed_event_mutex);
@@ -167,7 +167,7 @@ void executor::eval_pool_choice()
 
 	if(goal->is_logged_in())
 	{
-		pool_job oPoolJob;
+		msgstruct::pool_job oPoolJob;
 		if(!goal->get_current_job(oPoolJob)) {
 			goal->disconnect();
 			return;
@@ -190,7 +190,7 @@ void executor::log_socket_error(std::string&& sError)
 	vSocketLog.emplace_back(std::move(sError));
 	printer::print_msg(L1, "SOCKET ERROR - %s", vSocketLog.back().msg.c_str());
 
-	push_event(ex_event(EV_EVAL_POOL_CHOICE));
+	push_event(msgstruct::ex_event(msgstruct::EV_EVAL_POOL_CHOICE));
 }
 
 void executor::log_result_error(std::string&& sError)
@@ -253,13 +253,13 @@ void executor::on_sock_error(std::string&& sError, bool silent) {
 	}
 }
 
-void executor::on_pool_have_job(pool_job& oPoolJob) {
+void executor::on_pool_have_job(msgstruct::pool_job& oPoolJob) {
 	jpsock* pool = pool_ptr.get();
 	if(pool == nullptr) {
 		return;
 	}
 
-	miner_work oWork(oPoolJob.job_id, oPoolJob.bWorkBlob, oPoolJob.iWorkLen, oPoolJob.i_target());
+	msgstruct::miner_work oWork(oPoolJob.job_id, oPoolJob.bWorkBlob, oPoolJob.iWorkLen, oPoolJob.i_target());
 	xmrstak::pool_data dat;
 	dat.iSavedNonce = oPoolJob.iSavedNonce;
 
@@ -273,7 +273,7 @@ void executor::on_pool_have_job(pool_job& oPoolJob) {
 	printer::print_msg(L3, "New block detected.");
 }
 
-void executor::on_miner_result(job_result& oResult) {
+void executor::on_miner_result(msgstruct::job_result& oResult) {
 	const std::string job_id = oResult.job_id_str();
 	const std::string nonce = oResult.nonce_str();
 	const std::string result = oResult.result_str();
@@ -341,7 +341,7 @@ void executor::ex_main()
 
 	assert(1000 % iTickTime == 0);
 
-	miner_work oWork = miner_work();
+	msgstruct::miner_work oWork;
 
 	// \todo collect all backend threads
 	pvThreads = thread_starter(oWork);
@@ -357,7 +357,7 @@ void executor::ex_main()
 	set_timestamp();
 	pool_ptr = std::shared_ptr<jpsock>(new jpsock());
 
-	ex_event ev;
+	msgstruct::ex_event ev;
 	std::thread clock_thd(&executor::ex_clock_thd, this);
 
 	eval_pool_choice();
@@ -368,7 +368,7 @@ void executor::ex_main()
 
 	// If the user requested it, start the autohash printer
 	if(system_constants::GetVerboseLevel() >= 4)
-		push_timed_event(ex_event(EV_HASHRATE_LOOP), system_constants::GetAutohashTime());
+		push_timed_event(msgstruct::ex_event(msgstruct::EV_HASHRATE_LOOP), system_constants::GetAutohashTime());
 
 	size_t cnt = 0;
 	while (true)
@@ -376,33 +376,33 @@ void executor::ex_main()
 		ev = oEventQ.pop();
 		switch (ev.iName)
 		{
-		case EV_SOCK_READY:
+		case msgstruct::EV_SOCK_READY:
 			statsd::statsd_increment("ev.sock_ready");
 			on_sock_ready();
 			break;
 
-		case EV_SOCK_ERROR:
+		case msgstruct::EV_SOCK_ERROR:
 			statsd::statsd_increment("ev.sock_error");
 			on_sock_error(std::move(ev.oSocketError.sSocketError), ev.oSocketError.silent);
 			break;
 
-		case EV_POOL_HAVE_JOB:
+		case msgstruct::EV_POOL_HAVE_JOB:
 			statsd::statsd_increment("ev.pool_have_job");
 			on_pool_have_job(ev.oPoolJob);
 			break;
 
-		case EV_MINER_HAVE_RESULT:
+		case msgstruct::EV_MINER_HAVE_RESULT:
 			statsd::statsd_increment("ev.miner_have_result");
 			on_miner_result(ev.oJobResult);
 			break;
 
-		case EV_EVAL_POOL_CHOICE:
+		case msgstruct::EV_EVAL_POOL_CHOICE:
 			statsd::statsd_increment("ev.eval_pool_choice");
 			eval_pool_choice();
 			break;
 
 
-		case EV_PERF_TICK:
+		case msgstruct::EV_PERF_TICK:
 			statsd::statsd_increment("ev.perf_tick");
 			for (int i = 0; i < pvThreads->size(); i++) {
 				uint64_t iHashCount = pvThreads->at(i)->iHashCount.load(std::memory_order_relaxed);
@@ -440,12 +440,12 @@ void executor::ex_main()
 			}
 			break;
 
-		case EV_HASHRATE_LOOP:
+		case msgstruct::EV_HASHRATE_LOOP:
 			print_report();
-			push_timed_event(ex_event(EV_HASHRATE_LOOP), system_constants::GetAutohashTime());
+			push_timed_event(msgstruct::ex_event(msgstruct::EV_HASHRATE_LOOP), system_constants::GetAutohashTime());
 			break;
 
-		case EV_INVALID_VAL:
+		case msgstruct::EV_INVALID_VAL:
 		default:
 			assert(false);
 			break;

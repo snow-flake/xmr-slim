@@ -17,7 +17,7 @@ namespace cpu
 class minethd : public iBackend
 {
 public:
-	static std::vector<iBackend*> thread_starter(uint32_t threadOffset, miner_work& pWork);
+	static std::vector<iBackend*> thread_starter(uint32_t threadOffset, msgstruct::miner_work& pWork);
 	static bool self_test();
 
 	typedef void (*cn_hash_fun)(const void*, size_t, void*, cryptonight_ctx*);
@@ -31,7 +31,7 @@ private:
 	typedef void (*cn_hash_fun_multi)(const void*, size_t, void*, cryptonight_ctx**);
 	static cn_hash_fun_multi func_multi_selector(size_t N, bool bHaveAes, bool bNoPrefetch);
 
-	minethd(miner_work& pWork, size_t iNo, int iMultiway, bool no_prefetch, int64_t affinity);
+	minethd(msgstruct::miner_work& pWork, size_t iNo, int iMultiway, bool no_prefetch, int64_t affinity);
 
 	template<size_t N>
 	void multiway_work_main(cn_hash_fun_multi hash_fun_multi);
@@ -49,8 +49,8 @@ private:
 
 	uint64_t iJobNo;
 
-	static miner_work oGlobalWork;
-	miner_work oWork;
+	static msgstruct::miner_work oGlobalWork;
+	msgstruct::miner_work oWork;
 
 	std::promise<void> order_fix;
 	std::mutex thd_aff_set;
