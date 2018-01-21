@@ -6,7 +6,7 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <iostream>
-#include <string>
+#include <cstring>
 
 
 // on MSVC sizeof(long int) = 4, gcc sizeof(long int) = 8, this is the workaround
