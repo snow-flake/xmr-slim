@@ -1,6 +1,6 @@
 #pragma once
 
-#include "miner_work.hpp"
+#include "xmrstak/net/msgstruct.hpp"
 #include "xmrstak/misc/environment.hpp"
 #include "xmrstak/misc/console.hpp"
 

@@ -4,25 +4,59 @@
 #include <string>
 #include <string.h>
 #include <assert.h>
+#include <array>
 
 // Structures that we use to pass info between threads constructors are here just to make
 // the stack allocation take up less space, heap is a shared resouce that needs locks too of course
 
-struct pool_job
-{
-	char		job_id[64];
-	uint8_t		bWorkBlob[112];
-	uint32_t	iWorkLen;
-	uint32_t	iSavedNonce;
-	std::string target;
+typedef std::array<char, 64> job_id_t;
+typedef std::array<uint8_t, 112> work_blob_t;
 
-	pool_job() : iWorkLen(0), iSavedNonce(0) {}
-	pool_job(const char* job_id, const std::string & target, const uint8_t* bWorkBlob, uint32_t iWorkLen) :
-		iWorkLen(iWorkLen), iSavedNonce(0), target(target)
-	{
-		assert(iWorkLen <= sizeof(pool_job::bWorkBlob));
-		memcpy(this->job_id, job_id, sizeof(pool_job::job_id));
-		memcpy(this->bWorkBlob, bWorkBlob, iWorkLen);
+struct pool_job {
+private:
+	job_id_t job_id;
+	work_blob_t work_blob;
+	uint32_t iWorkLen;
+	uint32_t iSavedNonce;
+	std::string target, blob;
+
+public:
+	pool_job() : iSavedNonce(0), iWorkLen(0) {
+		job_id.fill(0);
+		work_blob.fill(0);
+	}
+
+	pool_job(
+			const std::string &job_id,
+			const std::string &target,
+			const std::string &blob
+	) : iSavedNonce(0), target(target), blob(blob) {
+
+		assert(sizeof(uint8_t) == sizeof(char));
+
+		this->job_id.fill(0);
+		std::copy(job_id.begin(), job_id.end(), this->job_id.data());
+
+		if (blob.length() / 2 > sizeof(pool_job::work_blob)) {
+			throw new std::runtime_error("PARSE error: Invalid job legth. Are you sure you are mining the correct coin?");
+		}
+
+		iWorkLen = blob.length() / 2;
+		assert(iWorkLen <= sizeof(pool_job::work_blob));
+
+		if (!hex2bin(blob.c_str(), blob.length(), work_blob)) {
+			throw new std::runtime_error("PARSE error: Job error 4");
+		}
+	}
+
+	const work_blob_t get_blob() {
+		work_blob_t tmp;
+		tmp = work_blob;
+		return tmp;
+	}
+
+	const uint64_t i_work_len() {
+		return iWorkLen;
 	}
 
 	const uint64_t i_target() {
@@ -36,10 +70,10 @@ struct pool_job
 			}
 			output = t32_to_t64(iTempInt);
 		} else if (target.length() <= 16) {
-			output  = 0;
+			output = 0;
 			char sTempStr[] = "0000000000000000";
 			memcpy(sTempStr, target.c_str(), target.length());
-			if (!hex2bin(sTempStr, 16, (unsigned char *) &output ) || output  == 0) {
+			if (!hex2bin(sTempStr, 16, (unsigned char *) &output) || output == 0) {
 				throw new std::runtime_error("PARSE error: Invalid target");
 			}
 		} else {
@@ -51,6 +85,8 @@ struct pool_job
 	const uint64_t i_job_diff() {
 		return t64_to_diff(i_target());
 	}
+
+	const uint32_t i_saved_nonce() { return iSavedNonce; }
 
 private:
 	inline static uint64_t t64_to_diff(uint64_t t) { return 0xFFFFFFFFFFFFFFFFULL / t; }
@@ -71,7 +107,7 @@ private:
 		return 0;
 	}
 
-	inline static bool hex2bin(const char *in, unsigned int len, unsigned char *out) {
+	inline static bool hex2bin(const char *in, const unsigned int len, work_blob_t & out) {
 		bool error = false;
 		for (unsigned int i = 0; i < len; i += 2) {
 			out[i / 2] = (hf_hex2bin(in[i], error) << 4) | hf_hex2bin(in[i + 1], error);
@@ -96,21 +132,20 @@ private:
 
 };
 
-struct job_result
-{
-	char		job_id[64];
-	uint8_t		bResult[32];
-	uint32_t	iNonce;
+struct job_result {
+	job_id_t job_id;
+	uint8_t bResult[32];
+	uint32_t iNonce;
 
 	job_result() {}
-	job_result(const char* job_id, uint32_t iNonce, const uint8_t* bResult) : iNonce(iNonce)
-	{
-		memcpy(this->job_id, job_id, sizeof(job_result::job_id));
+
+	job_result(const job_id_t & job_id, uint32_t iNonce, const uint8_t *bResult) : iNonce(iNonce) {
+		this->job_id = job_id;
 		memcpy(this->bResult, bResult, sizeof(job_result::bResult));
 	}
 
 	inline const std::string job_id_str() {
-		return std::string(job_id);
+		return std::string(std::begin(job_id),std::end(job_id));
 	}
 
 	inline const std::string result_str() {
@@ -167,32 +202,96 @@ private:
 
 };
 
-struct sock_err
+struct miner_work
 {
+	job_id_t job_id;
+	work_blob_t work_blob;
+	uint32_t    iWorkSize;
+	uint64_t    iTarget;
+	bool        bStall;
+
+	miner_work() : iWorkSize(0), bStall(true) { }
+
+	miner_work(const job_id_t & job_id, const work_blob_t & work_blob, uint32_t iWorkSize,
+			   uint64_t iTarget) : iWorkSize(iWorkSize),
+								   iTarget(iTarget), bStall(false)
+	{
+		assert(iWorkSize <= sizeof(work_blob));
+		this->job_id = job_id;
+		this->work_blob = work_blob;
+	}
+
+	miner_work(miner_work const&) = delete;
+
+	miner_work& operator=(miner_work const& from)
+	{
+		assert(this != &from);
+
+		iWorkSize = from.iWorkSize;
+		iTarget = from.iTarget;
+		bStall = from.bStall;
+
+		assert(iWorkSize <= sizeof(bWorkBlob));
+		job_id = from.job_id;
+		work_blob = from.work_blob;
+
+		return *this;
+	}
+
+	miner_work(miner_work&& from) : iWorkSize(from.iWorkSize), iTarget(from.iTarget),
+									bStall(from.bStall)
+	{
+		assert(iWorkSize <= sizeof(work_blob));
+		job_id = from.job_id;
+		work_blob = from.work_blob;
+	}
+
+	miner_work& operator=(miner_work&& from)
+	{
+		assert(this != &from);
+
+		iWorkSize = from.iWorkSize;
+		iTarget = from.iTarget;
+		bStall = from.bStall;
+
+		assert(iWorkSize <= sizeof(bWorkBlob));
+		job_id = from.job_id;
+		work_blob = from.work_blob;
+
+		return *this;
+	}
+};
+
+
+struct sock_err {
 	std::string sSocketError;
 	bool silent;
 
 	sock_err() {}
-	sock_err(std::string&& err, bool silent) : sSocketError(std::move(err)), silent(silent) { }
-	sock_err(sock_err&& from) : sSocketError(std::move(from.sSocketError)), silent(from.silent) {}
 
-	sock_err& operator=(sock_err&& from)
-	{
+	sock_err(std::string &&err, bool silent) : sSocketError(std::move(err)), silent(silent) {}
+
+	sock_err(sock_err &&from) : sSocketError(std::move(from.sSocketError)), silent(from.silent) {}
+
+	sock_err &operator=(sock_err &&from) {
 		assert(this != &from);
 		sSocketError = std::move(from.sSocketError);
 		silent = from.silent;
 		return *this;
 	}
 
-	~sock_err() { }
+	~sock_err() {}
 
-	sock_err(sock_err const&) = delete;
-	sock_err& operator=(sock_err const&) = delete;
+	sock_err(sock_err const &) = delete;
+
+	sock_err &operator=(sock_err const &) = delete;
 };
 
-enum ex_event_name { EV_INVALID_VAL, EV_SOCK_READY, EV_SOCK_ERROR,
+enum ex_event_name {
+	EV_INVALID_VAL, EV_SOCK_READY, EV_SOCK_ERROR,
 	EV_POOL_HAVE_JOB, EV_MINER_HAVE_RESULT, EV_PERF_TICK, EV_EVAL_POOL_CHOICE,
-	EV_HASHRATE_LOOP };
+	EV_HASHRATE_LOOP
+};
 
 /*
    This is how I learned to stop worrying and love c++11 =).
@@ -204,76 +303,74 @@ enum ex_event_name { EV_INVALID_VAL, EV_SOCK_READY, EV_SOCK_ERROR,
    Also note that for non-arg events we only copy two qwords
 */
 
-struct ex_event
-{
+struct ex_event {
 	ex_event_name iName;
 
-	union
-	{
+	union {
 		pool_job oPoolJob;
 		job_result oJobResult;
 		sock_err oSocketError;
 	};
 
-	ex_event() { iName = EV_INVALID_VAL;}
-	ex_event(std::string&& err, bool silent) : iName(EV_SOCK_ERROR), oSocketError(std::move(err), silent) { }
+	ex_event() { iName = EV_INVALID_VAL; }
+
+	ex_event(std::string &&err, bool silent) : iName(EV_SOCK_ERROR), oSocketError(std::move(err), silent) {}
+
 	ex_event(job_result dat) : iName(EV_MINER_HAVE_RESULT), oJobResult(dat) {}
+
 	ex_event(pool_job dat) : iName(EV_POOL_HAVE_JOB), oPoolJob(dat) {}
+
 	ex_event(ex_event_name ev) : iName(ev) {}
 
 	// Delete the copy operators to make sure we are moving only what is needed
-	ex_event(ex_event const&) = delete;
-	ex_event& operator=(ex_event const&) = delete;
+	ex_event(ex_event const &) = delete;
 
-	ex_event(ex_event&& from)
-	{
+	ex_event &operator=(ex_event const &) = delete;
+
+	ex_event(ex_event &&from) {
 		iName = from.iName;
-		switch(iName)
-		{
-		case EV_SOCK_ERROR:
-			new (&oSocketError) sock_err(std::move(from.oSocketError));
-			break;
-		case EV_MINER_HAVE_RESULT:
-			oJobResult = from.oJobResult;
-			break;
-		case EV_POOL_HAVE_JOB:
-			oPoolJob = from.oPoolJob;
-			break;
-		default:
-			break;
+		switch (iName) {
+			case EV_SOCK_ERROR:
+				new(&oSocketError) sock_err(std::move(from.oSocketError));
+				break;
+			case EV_MINER_HAVE_RESULT:
+				oJobResult = from.oJobResult;
+				break;
+			case EV_POOL_HAVE_JOB:
+				oPoolJob = from.oPoolJob;
+				break;
+			default:
+				break;
 		}
 	}
 
-	ex_event& operator=(ex_event&& from)
-	{
+	ex_event &operator=(ex_event &&from) {
 		assert(this != &from);
 
-		if(iName == EV_SOCK_ERROR)
+		if (iName == EV_SOCK_ERROR)
 			oSocketError.~sock_err();
 
 		iName = from.iName;
-		switch(iName)
-		{
-		case EV_SOCK_ERROR:
-			new (&oSocketError) sock_err();
-			oSocketError = std::move(from.oSocketError);
-			break;
-		case EV_MINER_HAVE_RESULT:
-			oJobResult = from.oJobResult;
-			break;
-		case EV_POOL_HAVE_JOB:
-			oPoolJob = from.oPoolJob;
-			break;
-		default:
-			break;
+		switch (iName) {
+			case EV_SOCK_ERROR:
+				new(&oSocketError) sock_err();
+				oSocketError = std::move(from.oSocketError);
+				break;
+			case EV_MINER_HAVE_RESULT:
+				oJobResult = from.oJobResult;
+				break;
+			case EV_POOL_HAVE_JOB:
+				oPoolJob = from.oPoolJob;
+				break;
+			default:
+				break;
 		}
 
 		return *this;
 	}
 
-	~ex_event()
-	{
-		if(iName == EV_SOCK_ERROR)
+	~ex_event() {
+		if (iName == EV_SOCK_ERROR)
 			oSocketError.~sock_err();
 	}
 };

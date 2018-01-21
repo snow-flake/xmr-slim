@@ -1,7 +1,7 @@
 #pragma once
 
 #include "c_cryptonight/cryptonight.hpp"
-#include "xmrstak/backend/miner_work.hpp"
+#include "xmrstak/net/msgstruct.hpp"
 #include "xmrstak/backend/iBackend.hpp"
 
 #include <iostream>

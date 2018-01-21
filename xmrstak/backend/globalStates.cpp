@@ -21,12 +21,19 @@
   *
   */
 
-#include "miner_work.hpp"
 #include "globalStates.hpp"
+
 
 #include <assert.h>
 #include <cmath>
 #include <chrono>
+#include <cstring>
+#include <thread>
+#include <atomic>
+#include <mutex>
+#include <cstdint>
+#include <iostream>
+#include <cassert>
 #include <cstring>
 
 

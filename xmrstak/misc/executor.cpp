@@ -25,7 +25,7 @@
 #include "xmrstak/net/jpsock.hpp"
 
 #include "telemetry.hpp"
-#include "xmrstak/backend/miner_work.hpp"
+#include "xmrstak/net/msgstruct.hpp"
 #include "xmrstak/backend/globalStates.hpp"
 #include "xmrstak/backend/iBackend.hpp"
 #include "xmrstak/backend/iBackend.hpp"
@@ -44,7 +44,7 @@
 #include <time.h>
 
 
-std::vector<xmrstak::iBackend*>* thread_starter(xmrstak::miner_work& pWork)
+std::vector<xmrstak::iBackend*>* thread_starter(miner_work& pWork)
 {
 	xmrstak::globalStates::inst().iGlobalJobNo = 0;
 	xmrstak::globalStates::inst().iConsumeCnt = 0;
@@ -260,9 +260,9 @@ void executor::on_pool_have_job(pool_job& oPoolJob) {
 		return;
 	}
 
-	xmrstak::miner_work oWork(oPoolJob.job_id, oPoolJob.bWorkBlob, oPoolJob.iWorkLen, oPoolJob.i_target());
+	miner_work oWork(oPoolJob.job_id, oPoolJob.bWorkBlob, oPoolJob.iWorkLen, oPoolJob.i_target());
 	xmrstak::pool_data dat;
-	dat.iSavedNonce = oPoolJob.iSavedNonce;
+	dat.iSavedNonce = oPoolJob.i_saved_nonce();
 
 	xmrstak::globalStates::inst().switch_work(oWork, dat);
 
@@ -342,7 +342,7 @@ void executor::ex_main()
 
 	assert(1000 % iTickTime == 0);
 
-	xmrstak::miner_work oWork = xmrstak::miner_work();
+	miner_work oWork = miner_work();
 
 	// \todo collect all backend threads
 	pvThreads = thread_starter(oWork);

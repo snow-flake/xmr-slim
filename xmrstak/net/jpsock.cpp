@@ -502,27 +502,8 @@ bool jpsock::process_pool_job_new_style(const nlohmann::json &params) {
 	const std::string blob = params["blob"].get<std::string>();
 	const std::string target = params["target"].get<std::string>();
 
-	// Note >=
-	if (job_id.length() >= sizeof(pool_job::job_id)) {
-		return set_socket_error("PARSE error: Job error 3");
-	}
-
-	if (blob.length() / 2 > sizeof(pool_job::bWorkBlob)) {
-		return set_socket_error("PARSE error: Invalid job legth. Are you sure you are mining the correct coin?");
-	}
-
-	pool_job oPoolJob;
-	oPoolJob.target = target;
+	pool_job oPoolJob { job_id, target, blob };
 	iJobDiff = oPoolJob.i_job_diff();
-
-	if (!hex2bin(blob.c_str(), blob.length(), oPoolJob.bWorkBlob)) {
-		return set_socket_error("PARSE error: Job error 4");
-	}
-
-	oPoolJob.iWorkLen = blob.length() / 2;
-	memset(oPoolJob.job_id, 0, sizeof(pool_job::job_id));
-	strcpy(oPoolJob.job_id, job_id.c_str());
-
 
 	if (params.find("motd") != params.end()) {
 		auto raw_motd = params["motd"];
@@ -717,7 +698,7 @@ bool jpsock::cmd_submit(const std::string job_id, std::string nonce, const std::
 bool jpsock::get_current_job(pool_job &job) {
 	std::unique_lock<std::mutex>(job_mutex);
 
-	if (oCurrentJob.iWorkLen == 0)
+	if (oCurrentJob.i_work_len() == 0)
 		return false;
 
 	job = oCurrentJob;
