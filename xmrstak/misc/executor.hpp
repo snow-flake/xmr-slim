@@ -44,8 +44,7 @@ private:
 	{
 		msgstruct::ex_event event;
 		size_t ticks_left;
-
-		timed_event(msgstruct::ex_event&& ev, size_t ticks) : event(std::move(ev)), ticks_left(ticks) {}
+		timed_event(msgstruct::ex_event & ev, size_t ticks) : event(ev), ticks_left(ticks) {}
 	};
 
 	inline void set_timestamp() { dev_timestamp = get_timestamp(); };
@@ -151,8 +150,8 @@ private:
 	void on_sock_ready();
 
 	void on_sock_error(std::string&& sError, bool silent);
-	void on_pool_have_job(msgstruct::pool_job& oPoolJob);
-	void on_miner_result(msgstruct::job_result& oResult);
+	void on_pool_have_job(const msgstruct::pool_job_const_ptr_t oPoolJob);
+	void on_miner_result(const msgstruct::job_result_const_ptr_t oResult);
 
 	bool is_pool_live();
 	void eval_pool_choice();

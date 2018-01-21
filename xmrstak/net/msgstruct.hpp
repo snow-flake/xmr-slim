@@ -30,76 +30,16 @@ namespace msgstruct {
 			memcpy(this->bWorkBlob, bWorkBlob, iWorkLen);
 		}
 
-		const uint64_t i_target() {
-			uint64_t output = 0;
-			if (target.length() <= 8) {
-				uint32_t iTempInt = 0;
-				char sTempStr[] = "00000000"; // Little-endian CPU FTW
-				memcpy(sTempStr, target.c_str(), target.length());
-				if (!hex2bin(sTempStr, 8, (unsigned char *) &iTempInt) || iTempInt == 0) {
-					throw new std::runtime_error("PARSE error: Invalid target");
-				}
-				output = t32_to_t64(iTempInt);
-			} else if (target.length() <= 16) {
-				output = 0;
-				char sTempStr[] = "0000000000000000";
-				memcpy(sTempStr, target.c_str(), target.length());
-				if (!hex2bin(sTempStr, 16, (unsigned char *) &output) || output == 0) {
-					throw new std::runtime_error("PARSE error: Invalid target");
-				}
-			} else {
-				throw new std::runtime_error("PARSE error: Job error 5");
-			}
-			return output;
+		const uint64_t i_target() const {
+			return msgstruct_v2::target_str_to_int(target);
 		}
 
-		const uint64_t i_job_diff() {
-			return t64_to_diff(i_target());
+		const uint64_t i_job_diff() const {
+			return msgstruct_v2::utils::t64_to_diff(i_target());
 		}
-
-	private:
-		inline static uint64_t t64_to_diff(uint64_t t) { return 0xFFFFFFFFFFFFFFFFULL / t; }
-
-		inline static uint64_t t32_to_t64(uint32_t t) {
-			return 0xFFFFFFFFFFFFFFFFULL / (0xFFFFFFFFULL / ((uint64_t) t));
-		}
-
-		inline static unsigned char hf_hex2bin(char c, bool &err) {
-			if (c >= '0' && c <= '9')
-				return c - '0';
-			else if (c >= 'a' && c <= 'f')
-				return c - 'a' + 0xA;
-			else if (c >= 'A' && c <= 'F')
-				return c - 'A' + 0xA;
-
-			err = true;
-			return 0;
-		}
-
-		inline static bool hex2bin(const char *in, unsigned int len, unsigned char *out) {
-			bool error = false;
-			for (unsigned int i = 0; i < len; i += 2) {
-				out[i / 2] = (hf_hex2bin(in[i], error) << 4) | hf_hex2bin(in[i + 1], error);
-				if (error) return false;
-			}
-			return true;
-		}
-
-		inline static char hf_bin2hex(unsigned char c) {
-			if (c <= 0x9)
-				return '0' + c;
-			else
-				return 'a' - 0xA + c;
-		}
-
-		inline static void bin2hex(const unsigned char *in, unsigned int len, char *out) {
-			for (unsigned int i = 0; i < len; i++) {
-				out[i * 2] = hf_bin2hex((in[i] & 0xF0) >> 4);
-				out[i * 2 + 1] = hf_bin2hex(in[i] & 0x0F);
-			}
-		}
-
 	};
+
+	typedef std::shared_ptr<const pool_job> pool_job_const_ptr_t;
 
 	struct job_result {
 		char job_id[64];
@@ -131,6 +71,8 @@ namespace msgstruct {
 		}
 	};
 
+	typedef std::shared_ptr<const job_result> job_result_const_ptr_t;
+
 	struct sock_err {
 		std::string sSocketError;
 		bool silent;
@@ -154,6 +96,8 @@ namespace msgstruct {
 
 		sock_err &operator=(sock_err const &) = delete;
 	};
+	typedef std::shared_ptr<const sock_err> sock_err_const_ptr_t;
+
 
 	enum ex_event_name {
 		EV_INVALID_VAL, EV_SOCK_READY, EV_SOCK_ERROR,
@@ -172,75 +116,37 @@ namespace msgstruct {
 */
 
 	struct ex_event {
+	public:
 		ex_event_name iName;
+		pool_job_const_ptr_t pool_job_const_ptr;
+		job_result_const_ptr_t job_result_const_ptr;
+		sock_err_const_ptr_t sock_err_const_ptr;
 
-		union {
-			pool_job oPoolJob;
-			job_result oJobResult;
-			sock_err oSocketError;
-		};
+		ex_event() {}
 
-		ex_event() { iName = EV_INVALID_VAL; }
+		ex_event(const ex_event & from) :
+				iName(from.iName),
+				pool_job_const_ptr(from.pool_job_const_ptr),
+				job_result_const_ptr(from.job_result_const_ptr),
+				sock_err_const_ptr(from.sock_err_const_ptr)
+		{}
 
-		ex_event(std::string &&err, bool silent) : iName(EV_SOCK_ERROR), oSocketError(std::move(err), silent) {}
-
-		ex_event(job_result dat) : iName(EV_MINER_HAVE_RESULT), oJobResult(dat) {}
-
-		ex_event(pool_job dat) : iName(EV_POOL_HAVE_JOB), oPoolJob(dat) {}
-
-		ex_event(ex_event_name ev) : iName(ev) {}
-
-		// Delete the copy operators to make sure we are moving only what is needed
-		ex_event(ex_event const &) = delete;
-
-		ex_event &operator=(ex_event const &) = delete;
-
-		ex_event(ex_event &&from) {
-			iName = from.iName;
-			switch (iName) {
-				case EV_SOCK_ERROR:
-					new(&oSocketError) sock_err(std::move(from.oSocketError));
-					break;
-				case EV_MINER_HAVE_RESULT:
-					oJobResult = from.oJobResult;
-					break;
-				case EV_POOL_HAVE_JOB:
-					oPoolJob = from.oPoolJob;
-					break;
-				default:
-					break;
-			}
-		}
+		ex_event(ex_event &&from) :
+			iName(from.iName),
+			pool_job_const_ptr(from.pool_job_const_ptr),
+			job_result_const_ptr(from.job_result_const_ptr),
+			sock_err_const_ptr(from.sock_err_const_ptr)
+		{}
 
 		ex_event &operator=(ex_event &&from) {
 			assert(this != &from);
-
-			if (iName == EV_SOCK_ERROR)
-				oSocketError.~sock_err();
-
-			iName = from.iName;
-			switch (iName) {
-				case EV_SOCK_ERROR:
-					new(&oSocketError) sock_err();
-					oSocketError = std::move(from.oSocketError);
-					break;
-				case EV_MINER_HAVE_RESULT:
-					oJobResult = from.oJobResult;
-					break;
-				case EV_POOL_HAVE_JOB:
-					oPoolJob = from.oPoolJob;
-					break;
-				default:
-					break;
-			}
-
+			this->iName = from.iName;
+			this->pool_job_const_ptr = from.pool_job_const_ptr;
+			this->job_result_const_ptr = from.job_result_const_ptr;
+			this->sock_err_const_ptr = from.sock_err_const_ptr;
 			return *this;
 		}
 
-		~ex_event() {
-			if (iName == EV_SOCK_ERROR)
-				oSocketError.~sock_err();
-		}
 	};
 
 	struct miner_work {

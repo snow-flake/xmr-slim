@@ -77,11 +77,18 @@ void executor::ex_clock_thd()
 	{
 		std::this_thread::sleep_for(std::chrono::milliseconds(size_t(iTickTime)));
 
-		push_event(msgstruct::ex_event(msgstruct::EV_PERF_TICK));
+		{
+			msgstruct::ex_event event;
+			event.iName = msgstruct::EV_PERF_TICK;
+			push_event(event);
+		}
 
 		//Eval pool choice every fourth tick
-		if((tick++ & 0x03) == 0)
-			push_event(msgstruct::ex_event(msgstruct::EV_EVAL_POOL_CHOICE));
+		if((tick++ & 0x03) == 0) {
+			msgstruct::ex_event event;
+			event.iName = msgstruct::EV_EVAL_POOL_CHOICE;
+			push_event(event);
+		}
 
 		// Service timed events
 		std::unique_lock<std::mutex> lck(timed_event_mutex);
@@ -253,7 +260,7 @@ void executor::on_sock_error(std::string&& sError, bool silent) {
 	}
 }
 
-void executor::on_pool_have_job(msgstruct::pool_job& oPoolJob) {
+void executor::on_pool_have_job(const msgstruct::pool_job_const_ptr_t oPoolJob) {
 	jpsock* pool = pool_ptr.get();
 	if(pool == nullptr) {
 		return;
@@ -273,10 +280,10 @@ void executor::on_pool_have_job(msgstruct::pool_job& oPoolJob) {
 	printer::print_msg(L3, "New block detected.");
 }
 
-void executor::on_miner_result(msgstruct::job_result& oResult) {
-	const std::string job_id = oResult.job_id_str();
-	const std::string nonce = oResult.nonce_str();
-	const std::string result = oResult.result_str();
+void executor::on_miner_result(const msgstruct::job_result_const_ptr_t oResult) {
+	const std::string job_id = oResult->job_id_str();
+	const std::string nonce = oResult->nonce_str();
+	const std::string result = oResult->result_str();
 
 	std::cout << __FILE__ << ":" << __LINE__ << ":executor::on_miner_result: Miner result: "
 			  << "nonce=" << nonce << ", "
@@ -367,8 +374,11 @@ void executor::ex_main()
 	vMineResults.emplace_back();
 
 	// If the user requested it, start the autohash printer
-	if(system_constants::GetVerboseLevel() >= 4)
-		push_timed_event(msgstruct::ex_event(msgstruct::EV_HASHRATE_LOOP), system_constants::GetAutohashTime());
+	if(system_constants::GetVerboseLevel() >= 4) {
+		msgstruct::ex_event event;
+		event.iName = msgstruct::EV_HASHRATE_LOOP;
+		push_timed_event(event, system_constants::GetAutohashTime());
+	}
 
 	size_t cnt = 0;
 	while (true)
@@ -383,17 +393,17 @@ void executor::ex_main()
 
 		case msgstruct::EV_SOCK_ERROR:
 			statsd::statsd_increment("ev.sock_error");
-			on_sock_error(std::move(ev.oSocketError.sSocketError), ev.oSocketError.silent);
+			on_sock_error(ev.sock_err_const_ptr->sSocketError, ev.sock_err_const_ptr->silent);
 			break;
 
 		case msgstruct::EV_POOL_HAVE_JOB:
 			statsd::statsd_increment("ev.pool_have_job");
-			on_pool_have_job(ev.oPoolJob);
+			on_pool_have_job(ev.pool_job_const_ptr);
 			break;
 
 		case msgstruct::EV_MINER_HAVE_RESULT:
 			statsd::statsd_increment("ev.miner_have_result");
-			on_miner_result(ev.oJobResult);
+			on_miner_result(ev.job_result_const_ptr);
 			break;
 
 		case msgstruct::EV_EVAL_POOL_CHOICE:

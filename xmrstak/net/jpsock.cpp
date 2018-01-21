@@ -345,7 +345,11 @@ bool jpsock::process_pool_job_new_style(const nlohmann::json &params) {
 		}
 	}
 
-	executor::inst()->push_event(msgstruct::ex_event(oPoolJob));
+	msgstruct::ex_event event;
+	event.iName = msgstruct::EV_POOL_HAVE_JOB;
+	event.pool_job_const_ptr = msgstruct::pool_job_const_ptr_t(new msgstruct::pool_job(oPoolJob));
+
+	executor::inst()->push_event(event);
 
 	std::unique_lock<std::mutex>(job_mutex);
 	oCurrentJob = oPoolJob;
