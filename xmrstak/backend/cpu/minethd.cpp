@@ -32,6 +32,7 @@
 #include "xmrstak/system_constants.hpp"
 #include "xmrstak/net/time_utils.hpp"
 #include "xmrstak/net/msgstruct.hpp"
+#include "xmrstak/cli/statsd.hpp"
 
 
 #include <cmath>
@@ -337,6 +338,7 @@ void minethd::work_main()
 				executor::inst()->push_event_job_result(result);
 			} else {
 				// TODO: log the hash was abandoned
+				statsd::statsd_increment("ev.hash_abandoned");
 			}
 
 			std::this_thread::yield();
@@ -499,6 +501,7 @@ void minethd::multiway_work_main(cn_hash_fun_multi hash_fun_multi)
 					executor::inst()->push_event_job_result(result);
 				} else {
 					// TODO: Log the hash was abandoned
+					statsd::statsd_increment("ev.hash_abandoned");
 				}
 			}
 
