@@ -1,14 +1,13 @@
 #pragma once
 
 #include "c_cryptonight/cryptonight.hpp"
-#include "xmrstak/backend/miner_work.hpp"
 #include "xmrstak/backend/iBackend.hpp"
+#include "xmrstak/net/msgstruct.hpp"
 
 #include <iostream>
 #include <thread>
 #include <vector>
 #include <atomic>
-#include <future>
 
 namespace xmrstak
 {

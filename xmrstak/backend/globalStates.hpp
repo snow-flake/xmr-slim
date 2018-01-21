@@ -1,10 +1,14 @@
 #pragma once
 
-#include "miner_work.hpp"
 #include "xmrstak/misc/environment.hpp"
 #include "xmrstak/misc/console.hpp"
-
+#include "xmrstak/net/msgstruct.hpp"
+#include <thread>
 #include <atomic>
+#include <mutex>
+#include <cstdint>
+#include <iostream>
+#include <cstring>
 
 namespace xmrstak
 {
