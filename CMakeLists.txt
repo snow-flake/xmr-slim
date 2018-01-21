@@ -337,6 +337,8 @@ file(
         "xmrstak/misc/*.cpp"
         "xmrstak/net/msgstruct.hpp"
         "xmrstak/net/msgstruct_v2.hpp"
+        "xmrstak/net/plain_socket.h"
+        "xmrstak/net/plain_socket.cpp"
         "xmrstak/net/*.hpp"
         "xmrstak/net/*.cpp"
         "includes/StatsdClient.cpp"
@@ -344,7 +346,7 @@ file(
 )
 set_source_files_properties(${SRCFILES_CPP} PROPERTIES LANGUAGE CXX)
 
-add_executable(xmr-stak ${SRCFILES_CPP} ${BACKEND_CPP} xmrstak/net/plain_socket.cpp xmrstak/net/plain_socket.h)
+add_executable(xmr-stak ${SRCFILES_CPP} ${BACKEND_CPP} )
 
 set(EXECUTABLE_OUTPUT_PATH "bin")
 set(LIBRARY_OUTPUT_PATH "bin")
