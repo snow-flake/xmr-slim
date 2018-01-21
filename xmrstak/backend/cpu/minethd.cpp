@@ -33,7 +33,7 @@
 #include "xmrstak/net/time_utils.hpp"
 #include "xmrstak/net/msgstruct.hpp"
 
-
+#include <memory>
 #include <cmath>
 #include <chrono>
 #include <cstring>
