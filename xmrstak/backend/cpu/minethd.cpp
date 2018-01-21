@@ -289,7 +289,7 @@ void minethd::work_main()
 	hash_fun = func_selector(::system_constants::HaveHardwareAes(), bNoPrefetch);
 	ctx = minethd_alloc_ctx();
 
-	piHashVal = (uint64_t*)(result.bResult + 24);
+	piHashVal = (uint64_t*)(&result.result_data[0] + 24);
 	piNonce = (uint32_t*)(oWork.bWorkBlob + 39);
 	globalStates::inst().inst().iConsumeCnt++;
 
@@ -330,7 +330,8 @@ void minethd::work_main()
 
 			*piNonce = ++result.iNonce;
 
-			hash_fun(oWork.bWorkBlob, oWork.iWorkSize, result.bResult, ctx);
+			// TODO: be specific about the data size
+			hash_fun(oWork.bWorkBlob, oWork.iWorkSize, &result.result_data[0], ctx);
 
 			if (*piHashVal < oWork.iTarget) {
 				executor::inst()->push_event_job_result(result);
@@ -491,7 +492,10 @@ void minethd::multiway_work_main(cn_hash_fun_multi hash_fun_multi)
 			{
 				if (*piHashVal[i] < oWork.iTarget)
 				{
-					const msgstruct::job_result result(oWork.job_id_data, iNonce - N + 1 + i, bHashOut + 32 * i);
+					msgstruct_v2::result_int_t result_data;
+					memcpy(&result_data[0], bHashOut + 32 * i, sizeof(msgstruct_v2::result_int_t));
+
+					const msgstruct::job_result result(oWork.job_id_data, iNonce - N + 1 + i, result_data);
 					executor::inst()->push_event_job_result(result);
 				} else {
 					// TODO: Log the hash was abandoned

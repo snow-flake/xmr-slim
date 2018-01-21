@@ -25,7 +25,7 @@ namespace msgstruct {
 		pool_job(const char *job_id, const std::string &target, const uint8_t *bWorkBlob, uint32_t iWorkLen) :
 				iWorkLen(iWorkLen), iSavedNonce(0), target(target) {
 			assert(iWorkLen <= sizeof(pool_job::bWorkBlob));
-			assert(strlen(job_id) <= sizeof(pool_job::job_id_data));
+			assert(strlen(job_id) < sizeof(pool_job::job_id_data));
 
 			strcpy(&job_id_data[0], job_id);
 			memcpy(this->bWorkBlob, bWorkBlob, iWorkLen);
@@ -104,15 +104,17 @@ namespace msgstruct {
 
 	struct job_result {
 		msgstruct_v2::job_id_str_t job_id_data;
-		uint8_t bResult[32];
+		msgstruct_v2::result_int_t result_data;
 		uint32_t iNonce;
 
 		job_result() {}
 
-		job_result(const msgstruct_v2::job_id_str_t & job_id_data, uint32_t iNonce, const uint8_t *bResult) : iNonce(iNonce) {
+		job_result(const msgstruct_v2::job_id_str_t & job_id_data, uint32_t iNonce, const msgstruct_v2::result_int_t & result_data) : iNonce(iNonce) {
 			this->job_id_data.fill(0);
 			this->job_id_data = job_id_data;
-			memcpy(this->bResult, bResult, sizeof(job_result::bResult));
+
+			this->result_data.fill(0);
+			this->result_data = result_data;
 		}
 
 		inline const std::string job_id_str() const {
@@ -122,7 +124,7 @@ namespace msgstruct {
 
 		inline const std::string result_str() const {
 			char sResult[65];
-			msgstruct_v2::utils::bin2hex(bResult, 32, sResult);
+			msgstruct_v2::utils::bin2hex(&result_data[0], 32, sResult);
 			sResult[64] = '\0';
 			return std::string(sResult);
 
