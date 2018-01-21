@@ -25,25 +25,8 @@
 #include <algorithm>
 #include "jpsock.hpp"
 #include "xmrstak/misc/executor.hpp"
-#include <sys/socket.h> /* Assume that any non-Windows platform uses POSIX-style sockets instead. */
-#include <arpa/inet.h>
-#include <netdb.h>  /* Needed for getaddrinfo() and freeaddrinfo() */
 #include "xmrstak/cli/statsd.hpp"
 
-#if defined(__FreeBSD__)
-#include <netinet/in.h> /* Needed for IPPROTO_TCP */
-#endif
-
-
-typedef int SOCKET;
-
-#define SOCKET_ERROR    (-1)
-
-
-inline const char *sock_gai_strerror(int err, char *buf, size_t len) {
-	buf[0] = '\0';
-	return gai_strerror(err);
-}
 
 struct jpsock::call_rsp_new_style {
 	const bool bHaveResponse;
