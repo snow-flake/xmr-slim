@@ -324,7 +324,7 @@ bool jpsock::process_pool_job_new_style(const nlohmann::json &params) {
 		return false;
 	}
 
-	oPoolJob.iWorkLen = blob.length() / 2;
+	oPoolJob.work_blob_len = blob.length() / 2;
 	oPoolJob.job_id_data.fill(0);
 	strcpy(&oPoolJob.job_id_data[0], job_id.c_str());
 
@@ -522,7 +522,7 @@ bool jpsock::cmd_submit(const std::string job_id, std::string nonce, const std::
 bool jpsock::get_current_job(msgstruct::pool_job &job) {
 	std::unique_lock<std::mutex>(job_mutex);
 
-	if (oCurrentJob.iWorkLen == 0)
+	if (oCurrentJob.work_blob_len == 0)
 		return false;
 
 	job = oCurrentJob;

@@ -16,15 +16,15 @@ namespace msgstruct {
 	struct pool_job {
 		msgstruct_v2::job_id_str_t job_id_data;
 		msgstruct_v2::work_blob_byte_t work_blob_data;
-		uint32_t iWorkLen;
+		uint32_t work_blob_len;
 		uint32_t iSavedNonce;
 		std::string target;
 
-		pool_job() : iWorkLen(0), iSavedNonce(0) {}
+		pool_job() : work_blob_len(0), iSavedNonce(0) {}
 
-		pool_job(const char *job_id, const std::string &target, const msgstruct_v2::work_blob_byte_t & work_blob_data, uint32_t iWorkLen) :
-				iWorkLen(iWorkLen), iSavedNonce(0), target(target) {
-			assert(iWorkLen <= sizeof(msgstruct_v2::work_blob_byte_t));
+		pool_job(const char *job_id, const std::string &target, const msgstruct_v2::work_blob_byte_t & work_blob_data, uint32_t work_blob_len) :
+				work_blob_len(work_blob_len), iSavedNonce(0), target(target) {
+			assert(work_blob_len <= sizeof(msgstruct_v2::work_blob_byte_t));
 			assert(strlen(job_id) < sizeof(pool_job::job_id_data));
 
 			strcpy(&job_id_data[0], job_id);
@@ -244,17 +244,17 @@ namespace msgstruct {
 	struct miner_work {
 		msgstruct_v2::job_id_str_t job_id_data;
 		msgstruct_v2::work_blob_byte_t work_blob_data;
-		uint32_t iWorkSize;
-		uint64_t iTarget;
+		uint32_t work_blob_len;
+		uint64_t target_data;
 		bool bStall;
 
-		miner_work() : iWorkSize(0), bStall(true) {}
+		miner_work() : work_blob_len(0), bStall(true) {}
 
-		miner_work(const msgstruct_v2::job_id_str_t & job_id_data, const msgstruct_v2::work_blob_byte_t & work_blob_data, uint32_t iWorkSize,
-				   uint64_t iTarget) : iWorkSize(iWorkSize), iTarget(iTarget), bStall(false) {
+		miner_work(const msgstruct_v2::job_id_str_t & job_id_data, const msgstruct_v2::work_blob_byte_t & work_blob_data, uint32_t work_blob_len,
+				   uint64_t target_data) : work_blob_len(work_blob_len), target_data(target_data), bStall(false) {
 			this->job_id_data = job_id_data;
 
-			assert(iWorkSize <= sizeof(msgstruct_v2::work_blob_byte_t));
+			assert(work_blob_len <= sizeof(msgstruct_v2::work_blob_byte_t));
 			this->work_blob_data.fill(0);
 			this->work_blob_data = work_blob_data;
 		}
@@ -264,20 +264,20 @@ namespace msgstruct {
 		miner_work &operator=(miner_work const &from) {
 			assert(this != &from);
 
-			iWorkSize = from.iWorkSize;
-			iTarget = from.iTarget;
+			work_blob_len = from.work_blob_len;
+			target_data = from.target_data;
 			bStall = from.bStall;
 
-			assert(iWorkSize <= sizeof(msgstruct_v2::work_blob_byte_t));
+			assert(work_blob_len <= sizeof(msgstruct_v2::work_blob_byte_t));
 			job_id_data = from.job_id_data;
 			work_blob_data = from.work_blob_data;
 
 			return *this;
 		}
 
-		miner_work(miner_work &&from) : iWorkSize(from.iWorkSize), iTarget(from.iTarget),
+		miner_work(miner_work &&from) : work_blob_len(from.work_blob_len), target_data(from.target_data),
 										bStall(from.bStall) {
-			assert(iWorkSize <= sizeof(msgstruct_v2::work_blob_byte_t));
+			assert(work_blob_len <= sizeof(msgstruct_v2::work_blob_byte_t));
 			job_id_data = from.job_id_data;
 			work_blob_data = from.work_blob_data;
 		}
@@ -285,11 +285,11 @@ namespace msgstruct {
 		miner_work &operator=(miner_work &&from) {
 			assert(this != &from);
 
-			iWorkSize = from.iWorkSize;
-			iTarget = from.iTarget;
+			work_blob_len = from.work_blob_len;
+			target_data = from.target_data;
 			bStall = from.bStall;
 
-			assert(iWorkSize <= sizeof(msgstruct_v2::work_blob_byte_t));
+			assert(work_blob_len <= sizeof(msgstruct_v2::work_blob_byte_t));
 			job_id_data = from.job_id_data;
 			work_blob_data = from.work_blob_data;
 
