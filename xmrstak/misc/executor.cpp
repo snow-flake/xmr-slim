@@ -264,9 +264,15 @@ void executor::on_pool_have_job(const msgstruct::pool_job& oPoolJob) {
 		return;
 	}
 
-	msgstruct::miner_work oWork(oPoolJob.job_id_data, oPoolJob.work_blob_data, oPoolJob.work_blob_len, oPoolJob.i_target());
+	msgstruct::miner_work oWork(
+			oPoolJob.get_job_id_data(),
+			oPoolJob.get_work_blob_data(),
+			oPoolJob.get_work_blob_len(),
+			oPoolJob.i_target()
+	);
+
 	xmrstak::pool_data dat;
-	dat.iSavedNonce = oPoolJob.iSavedNonce;
+	dat.iSavedNonce = oPoolJob.get_iSavedNonce();
 
 	xmrstak::globalStates::inst().switch_work(oWork, dat);
 
