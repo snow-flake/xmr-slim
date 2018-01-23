@@ -99,7 +99,7 @@ public:
 	}
 
 
-	inline void push_event_pool_job(const msgstruct::pool_job & job) {
+	inline void push_event_pool_job(const std::shared_ptr<const msgstruct::pool_job> & job) {
 		std::shared_ptr<const msgstruct::ex_event> ptr = std::shared_ptr<const msgstruct::ex_event>(
 				new msgstruct::ex_event(job)
 		);
@@ -169,7 +169,7 @@ private:
 
 	void on_sock_ready();
 	void on_sock_error(const msgstruct::sock_err &err);
-	void on_pool_have_job(const msgstruct::pool_job& oPoolJob);
+	void on_pool_have_job(const std::shared_ptr<const msgstruct::pool_job> & o_pool_job);
 	void on_miner_result(const msgstruct::job_result& oResult);
 	bool is_pool_live();
 	void eval_pool_choice();

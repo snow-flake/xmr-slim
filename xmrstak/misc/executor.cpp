@@ -171,14 +171,14 @@ void executor::eval_pool_choice()
 
 	if(goal->is_logged_in())
 	{
-		msgstruct::pool_job oPoolJob;
-		if(!goal->get_current_job(oPoolJob)) {
+		std::shared_ptr<const msgstruct::pool_job> o_pool_job = goal->get_current_job();
+		if(o_pool_job.get() == nullptr) {
 			goal->disconnect();
 			return;
 		}
 		pool_ptr = goal;
 
-		on_pool_have_job(oPoolJob);
+		on_pool_have_job(o_pool_job);
 		reset_stats();
 		return;
 	}
@@ -258,15 +258,20 @@ void executor::on_sock_error(const msgstruct::sock_err &err) {
 	}
 }
 
-void executor::on_pool_have_job(const msgstruct::pool_job& oPoolJob) {
+void executor::on_pool_have_job(const std::shared_ptr<const msgstruct::pool_job> & o_pool_job) {
 	jpsock* pool = pool_ptr.get();
 	if(pool == nullptr) {
 		return;
 	}
 
-	msgstruct::miner_work oWork(oPoolJob.job_id_data, oPoolJob.work_blob_data, oPoolJob.work_blob_len, oPoolJob.i_target());
+	const msgstruct::pool_job * job = o_pool_job.get();
+	if (job == nullptr) {
+		return;;
+	}
+
+	msgstruct::miner_work oWork(job->job_id_data, job->work_blob_data, job->work_blob_len, job->i_target());
 	xmrstak::pool_data dat;
-	dat.iSavedNonce = oPoolJob.iSavedNonce;
+	dat.iSavedNonce = job->iSavedNonce;
 
 	xmrstak::globalStates::inst().switch_work(oWork, dat);
 
@@ -393,7 +398,7 @@ void executor::ex_main()
 
 		case msgstruct::EV_POOL_HAVE_JOB:
 			statsd::statsd_increment("ev.pool_have_job");
-			on_pool_have_job(ev->oPoolJob);
+			on_pool_have_job(ev->o_pool_job);
 			break;
 
 		case msgstruct::EV_MINER_HAVE_RESULT:
@@ -482,16 +487,6 @@ std::string executor::hashrate_report()
 {
 	std::string out;
 	out.reserve(2048 + pvThreads->size() * 64);
-
-	if(system_constants::PrintMotd() && pool_ptr.get() != nullptr) {
-		std::string motd;
-		motd.empty();
-		if(pool_ptr->get_pool_motd(motd) && motd_filter_console(motd)) {
-			out.append("Message from ").append(system_constants::get_pool_pool_address()).append(":\n");
-			out.append(motd).append("\n");
-			out.append("-----------------------------------------------------\n");
-		}
-	}
 
 	char num[32];
 	double fTotal[3] = { 0.0, 0.0, 0.0};

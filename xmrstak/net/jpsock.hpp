@@ -41,7 +41,6 @@ public:
 
 	bool cmd_submit(const std::string job_id, const std::string nonce, const std::string result);
 
-
 	inline size_t can_connect() { return get_timestamp() != connect_time; }
 
 	inline bool is_running() { return bRunning; }
@@ -54,8 +53,6 @@ public:
 		return false && true;
 	}
 
-	bool get_pool_motd(std::string &strin);
-
 	std::string get_call_error();
 
 	bool have_sock_error() { return bHaveSocketError; }
@@ -66,16 +63,11 @@ public:
 
 	inline uint64_t get_current_diff() { return iJobDiff; }
 
-	bool get_current_job(msgstruct::pool_job &job);
+	std::shared_ptr<const msgstruct::pool_job> get_current_job();
 
 	virtual void set_socket_error(const std::string & err);
 
 private:
-	bool ext_motd = false;
-
-	std::string pool_motd;
-	std::mutex motd_mutex;
-
 	size_t connect_time = 0;
 	std::atomic<size_t> connect_attempts;
 	std::atomic<size_t> disconnect_time;
@@ -109,7 +101,7 @@ private:
 	std::thread *oRecvThd;
 
 	std::mutex job_mutex;
-	msgstruct::pool_job oCurrentJob;
+	std::shared_ptr<const msgstruct::pool_job> o_current_job;
 
 	opaque_private_new_style *prv_new_style;
 	base_socket *sck;

@@ -16,23 +16,52 @@ namespace msgstruct {
 	struct pool_job {
 		msgstruct_v2::job_id_str_t job_id_data;
 		msgstruct_v2::work_blob_byte_t work_blob_data;
+		uint32_t job_id_len;
 		uint32_t work_blob_len;
 		uint32_t iSavedNonce;
 		std::string target;
 
-		pool_job() : work_blob_len(0), iSavedNonce(0) {}
+		static inline std::shared_ptr<const pool_job> create(
+				const std::string & job_id,
+				const std::string & blob,
+				const std::string & target
+		) {
+			// Note >=
+			if (job_id.length() >= sizeof(msgstruct::pool_job::job_id_data)) {
+				throw new std::runtime_error("PARSE error: Job error 3");
+			}
+			if (blob.length() / 2 > sizeof(msgstruct::pool_job::work_blob_data)) {
+				throw new std::runtime_error("PARSE error: Invalid job legth. Are you sure you are mining the correct coin?");
+			}
 
-		pool_job(const char *job_id, const std::string &target, const msgstruct_v2::work_blob_byte_t & work_blob_data, uint32_t work_blob_len) :
-				work_blob_len(work_blob_len), iSavedNonce(0), target(target) {
-			assert(work_blob_len <= sizeof(msgstruct_v2::work_blob_byte_t));
-			assert(strlen(job_id) < sizeof(pool_job::job_id_data));
+			msgstruct_v2::work_blob_byte_t tmp;
+			if (!msgstruct_v2::utils::hex2bin(blob.c_str(), blob.length(), &tmp[0])) {
+				throw new std::runtime_error("PARSE error: Job error 4");
+			}
 
-			strcpy(&job_id_data[0], job_id);
-			this->work_blob_data.fill(0);
-			this->work_blob_data = work_blob_data;
+			std::shared_ptr<pool_job> output = std::shared_ptr<pool_job>(new pool_job());
+			pool_job *ptr = output.get();
+			ptr->job_id_len = job_id.length();
+			ptr->work_blob_len = blob.length() / 2;
+			std::copy(job_id.begin(), job_id.end(), ptr->job_id_data.data());
+			std::copy(tmp.begin(), tmp.end(), ptr->work_blob_data.data());
+			return output;
 		}
 
+	private:
+
+		pool_job() : job_id_len(0), work_blob_len(0), iSavedNonce(0) {
+			job_id_data.fill(0);
+			work_blob_data.fill(0);
+		}
+
+	public:
+
 		const uint64_t i_target() const {
+			if (target == "") {
+				return 0;
+			}
+
 			uint64_t output = 0;
 			if (target.length() <= 8) {
 				uint32_t iTempInt = 0;
@@ -55,7 +84,11 @@ namespace msgstruct {
 			return output;
 		}
 
-		const uint64_t i_job_diff() {
+		const uint64_t i_job_diff() const {
+			if (target == "") {
+				return 0;
+			}
+
 			return t64_to_diff(i_target());
 		}
 
@@ -171,9 +204,9 @@ namespace msgstruct {
 
 	struct ex_event {
 		ex_event_name iName;
+		std::shared_ptr<const msgstruct::pool_job> o_pool_job;
 
 		union {
-			pool_job oPoolJob;
 			job_result oJobResult;
 			sock_err oSocketError;
 		};
@@ -184,7 +217,7 @@ namespace msgstruct {
 
 		ex_event(job_result dat) : iName(EV_MINER_HAVE_RESULT), oJobResult(dat) {}
 
-		ex_event(pool_job dat) : iName(EV_POOL_HAVE_JOB), oPoolJob(dat) {}
+		ex_event(const std::shared_ptr<const msgstruct::pool_job> & dat) : iName(EV_POOL_HAVE_JOB), o_pool_job(dat) {}
 
 		ex_event(ex_event_name ev) : iName(ev) {}
 
@@ -203,7 +236,7 @@ namespace msgstruct {
 					oJobResult = from.oJobResult;
 					break;
 				case EV_POOL_HAVE_JOB:
-					oPoolJob = from.oPoolJob;
+					o_pool_job = from.o_pool_job;
 					break;
 				default:
 					break;
@@ -226,7 +259,7 @@ namespace msgstruct {
 					oJobResult = from.oJobResult;
 					break;
 				case EV_POOL_HAVE_JOB:
-					oPoolJob = from.oPoolJob;
+					o_pool_job = from.o_pool_job;
 					break;
 				default:
 					break;

@@ -79,7 +79,6 @@ add_definitions("-DCONFIG_GIVEUP_LIMIT=0")
 # print_motd    - Display messages from your pool operator in the hashrate result.
 #
 add_definitions("-DCONFIG_VERBOSE_LEVEL=3")  # Set the log verbosity
-add_definitions("-DCONFIG_PRINT_MOTD=true")  # Enable or disable messages from the pool
 
 
 # Automatic hashrate report

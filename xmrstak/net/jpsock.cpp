@@ -75,8 +75,6 @@ jpsock::jpsock() : connect_time(0), connect_attempts(0), disconnect_time(0), qui
 	bRunning = false;
 	bLoggedIn = false;
 	iJobDiff = 0;
-
-	memset(&oCurrentJob, 0, sizeof(oCurrentJob));
 }
 
 jpsock::~jpsock() {
@@ -134,7 +132,7 @@ void jpsock::jpsock_thread() {
 		disconnect_time = 0;
 
 	std::unique_lock<std::mutex>(job_mutex);
-	memset(&oCurrentJob, 0, sizeof(oCurrentJob));
+	o_current_job = std::shared_ptr<const msgstruct::pool_job>();
 	bRunning = false;
 }
 
@@ -303,36 +301,18 @@ bool jpsock::process_pool_job_new_style(const nlohmann::json &params) {
 	const std::string job_id = params["job_id"].get<std::string>();
 	const std::string blob = params["blob"].get<std::string>();
 	const std::string target = params["target"].get<std::string>();
-
-	// Note >=
-	if (job_id.length() >= sizeof(msgstruct::pool_job::job_id_data)) {
-		set_socket_error("PARSE error: Job error 3");
-		return false;
-	}
-
-	if (blob.length() / 2 > sizeof(msgstruct::pool_job::work_blob_data)) {
-		set_socket_error("PARSE error: Invalid job legth. Are you sure you are mining the correct coin?");
-		return false;
-	}
-
-	msgstruct::pool_job oPoolJob;
-	oPoolJob.target = target;
-	iJobDiff = oPoolJob.i_job_diff();
-
-	if (!msgstruct_v2::utils::hex2bin(blob.c_str(), blob.length(), &oPoolJob.work_blob_data[0])) {
-		set_socket_error("PARSE error: Job error 4");
-		return false;
-	}
-
-	oPoolJob.work_blob_len = blob.length() / 2;
-	oPoolJob.job_id_data.fill(0);
-	strcpy(&oPoolJob.job_id_data[0], job_id.c_str());
-
+	std::shared_ptr<const msgstruct::pool_job> o_pool_job = msgstruct::pool_job::create(
+			job_id,
+			blob,
+			target
+	);
+	iJobDiff = o_pool_job->i_job_diff();
 
 	if (params.find("motd") != params.end()) {
 		auto raw_motd = params["motd"];
 		if (!raw_motd.is_null() && raw_motd.is_string()) {
 			const std::string motd = params["motd"].get<std::string>();
+			std::string pool_motd;
 			if ((motd.length() & 0x01) == 0) {
 				std::unique_lock<std::mutex>(motd_mutex);
 				if (motd.length() > 0) {
@@ -344,18 +324,21 @@ bool jpsock::process_pool_job_new_style(const nlohmann::json &params) {
 					pool_motd.clear();
 				}
 			}
+
+			if (pool_motd != "") {
+				std::cout << __FILE__ << ":" << __LINE__ << ": motd=" << pool_motd << std::endl;
+			}
 		}
 	}
 
-	executor::inst()->push_event_pool_job(oPoolJob);
+	executor::inst()->push_event_pool_job(o_pool_job);
 
 	std::unique_lock<std::mutex>(job_mutex);
-	oCurrentJob = oPoolJob;
+	o_current_job = o_pool_job;
 	return true;
 }
 
 bool jpsock::connect(std::string &sConnectError) {
-	ext_motd = false;
 	bHaveSocketError = false;
 	sSocketError.clear();
 	iJobDiff = 0;
@@ -475,19 +458,6 @@ bool jpsock::cmd_login() {
 	memset(sMinerId, 0, sizeof(sMinerId));
 	strcpy(sMinerId, id.c_str());
 
-	if (!data["extensions"].is_null() && data["extensions"].is_array()) {
-		for (auto &element: data["extensions"]) {
-			if (!element.is_string()) {
-				continue;
-			}
-
-			std::string tmp = element.get<std::string>();
-			std::transform(tmp.begin(), tmp.end(), tmp.begin(), ::tolower);
-			if (tmp == "motd")
-				ext_motd = true;
-		}
-	}
-
 	auto params = data["job"];
 	if (!process_pool_job_new_style(params)) {
 		disconnect();
@@ -519,25 +489,7 @@ bool jpsock::cmd_submit(const std::string job_id, std::string nonce, const std::
 	return success;
 }
 
-bool jpsock::get_current_job(msgstruct::pool_job &job) {
+std::shared_ptr<const msgstruct::pool_job>  jpsock::get_current_job() {
 	std::unique_lock<std::mutex>(job_mutex);
-
-	if (oCurrentJob.work_blob_len == 0)
-		return false;
-
-	job = oCurrentJob;
-	return true;
-}
-
-bool jpsock::get_pool_motd(std::string &strin) {
-	if (!ext_motd)
-		return false;
-
-	std::unique_lock<std::mutex>(motd_mutex);
-	if (pool_motd.size() > 0) {
-		strin.assign(pool_motd);
-		return true;
-	}
-
-	return false;
+	return o_current_job;
 }
