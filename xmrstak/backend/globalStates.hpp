@@ -38,6 +38,10 @@ struct globalStates
 		nonce = iGlobalNonce.fetch_add(reserve_count);
 	}
 
+	inline uint32_t calc_start_nonce(uint32_t reserve_count) {
+		return iGlobalNonce.fetch_add(reserve_count);
+	}
+
 	msgstruct::miner_work oGlobalWork;
 	std::atomic<uint64_t> iGlobalJobNo;
 	std::atomic<uint64_t> iConsumeCnt;

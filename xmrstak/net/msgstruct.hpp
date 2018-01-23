@@ -118,9 +118,19 @@ namespace msgstruct {
 	};
 
 	struct job_result {
+	private:
 		msgstruct_v2::job_id_str_t job_id_data;
 		msgstruct_v2::result_int_t result_data;
 		uint32_t iNonce;
+	public:
+		const msgstruct_v2::job_id_str_t & get_job_id_data() const { return job_id_data; };
+		void set_job_id_data(const msgstruct_v2::job_id_str_t & input) { job_id_data = input; };
+
+		const msgstruct_v2::result_int_t & get_result_data() const { return result_data; };
+		void set_result_data(const msgstruct_v2::result_int_t & input) { result_data = input; };
+
+		const uint32_t get_iNonce() const { return iNonce; };
+		void set_iNonce(const uint32_t input) { iNonce = input; };
 
 		job_result() {}
 

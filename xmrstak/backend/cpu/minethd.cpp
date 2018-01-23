@@ -283,14 +283,13 @@ void minethd::work_main()
 	cn_hash_fun hash_fun;
 	cryptonight_ctx* ctx;
 	uint64_t iCount = 0;
-	uint64_t* piHashVal;
 	uint32_t* piNonce;
 	msgstruct::job_result result;
 
 	hash_fun = func_selector(::system_constants::HaveHardwareAes(), bNoPrefetch);
 	ctx = minethd_alloc_ctx();
 
-	piHashVal = (uint64_t*)(&result.result_data[0] + 24);
+	const uint64_t* piHashVal = (const uint64_t*)(&result.get_result_data()[0] + 24);
 	piNonce = (uint32_t*)(&oWork.work_blob_data[0] + 39);
 	globalStates::inst().inst().iConsumeCnt++;
 
@@ -313,7 +312,7 @@ void minethd::work_main()
 		size_t nonce_ctr = 0;
 		constexpr size_t nonce_chunk = 4096; // Needs to be a power of 2
 
-		result.job_id_data = oWork.job_id_data;
+		result.set_job_id_data(oWork.job_id_data);
 
 		while(globalStates::inst().iGlobalJobNo.load(std::memory_order_relaxed) == iJobNo)
 		{
@@ -326,10 +325,11 @@ void minethd::work_main()
 
 			if((nonce_ctr++ & (nonce_chunk-1)) == 0)
 			{
-				globalStates::inst().calc_start_nonce(result.iNonce, nonce_chunk);
+				result.set_iNonce(globalStates::inst().calc_start_nonce(nonce_chunk));
 			}
 
-			*piNonce = ++result.iNonce;
+			result.set_iNonce(result.get_iNonce()+1);
+			*piNonce = result.get_iNonce();
 
 			// TODO: be specific about the data size
 			hash_fun(&oWork.work_blob_data[0], oWork.work_blob_len, &result.result_data[0], ctx);

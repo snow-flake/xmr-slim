@@ -315,7 +315,7 @@ void executor::on_miner_result(const msgstruct::job_result& oResult) {
 	iPoolCallTimes.push_back((uint16_t)t_len);
 
 	if(bResult) {
-		uint64_t* targets = (uint64_t*)&oResult.result_data[0];
+		const uint64_t* targets = (const uint64_t*)&oResult.get_result_data()[0];
 		log_result_ok(jpsock::t64_to_diff(targets[3]));
 		printer::print_msg(L3, "Result accepted by the pool.");
 	} else {
