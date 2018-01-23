@@ -334,10 +334,12 @@ void minethd::work_main()
 			// TODO: be specific about the data size
 			hash_fun(&oWork.work_blob_data[0], oWork.work_blob_len, &result.result_data[0], ctx);
 
-			if (*piHashVal < oWork.target_data) {
+			const auto hashVal = *piHashVal;
+			if (hashVal < oWork.target_data) {
 				executor::inst()->push_event_job_result(result);
 			} else {
 				// TODO: log the hash was abandoned
+				std::cout << __FILE__ << ":" << __LINE__ << ": hashVal=" << hashVal << ", target_data = " << oWork.target_data << std::endl;
 				statsd::statsd_increment("ev.hash_abandoned");
 			}
 
@@ -492,7 +494,8 @@ void minethd::multiway_work_main(cn_hash_fun_multi hash_fun_multi)
 
 			for (size_t i = 0; i < N; i++)
 			{
-				if (*piHashVal[i] < oWork.target_data)
+				const auto hashVal = *piHashVal[i];
+				if (hashVal < oWork.target_data)
 				{
 					msgstruct_v2::result_int_t result_data;
 					memcpy(&result_data[0], bHashOut + 32 * i, sizeof(msgstruct_v2::result_int_t));
@@ -500,6 +503,7 @@ void minethd::multiway_work_main(cn_hash_fun_multi hash_fun_multi)
 					const msgstruct::job_result result(oWork.job_id_data, iNonce - N + 1 + i, result_data);
 					executor::inst()->push_event_job_result(result);
 				} else {
+					std::cout << __FILE__ << ":" << __LINE__ << ": hashVal=" << hashVal << ", target_data = " << oWork.target_data << std::endl;
 					// TODO: Log the hash was abandoned
 					statsd::statsd_increment("ev.hash_abandoned");
 				}
