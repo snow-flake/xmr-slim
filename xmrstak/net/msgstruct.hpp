@@ -14,23 +14,37 @@
 namespace msgstruct {
 
 	struct pool_job {
+	private:
 		msgstruct_v2::job_id_str_t job_id_data;
 		msgstruct_v2::work_blob_byte_t work_blob_data;
-		uint32_t work_blob_len;
+		uint32_t job_id_len, work_blob_len;
 		uint32_t iSavedNonce;
 		std::string target;
 
-		pool_job() : work_blob_len(0), iSavedNonce(0) {}
+	public:
+		pool_job() : work_blob_len(0), iSavedNonce(0), job_id_len(0) {}
 
-		pool_job(const char *job_id, const std::string &target, const msgstruct_v2::work_blob_byte_t & work_blob_data, uint32_t work_blob_len) :
-				work_blob_len(work_blob_len), iSavedNonce(0), target(target) {
-			assert(work_blob_len <= sizeof(msgstruct_v2::work_blob_byte_t));
-			assert(strlen(job_id) < sizeof(pool_job::job_id_data));
-
-			strcpy(&job_id_data[0], job_id);
-			this->work_blob_data.fill(0);
-			this->work_blob_data = work_blob_data;
+		const msgstruct_v2::job_id_str_t & get_job_id_data() const { return job_id_data; }
+		void set_job_id(const std::string & input) {
+			job_id_data.fill(0);
+			strcpy(&job_id_data[0], input.c_str());
 		}
+
+		const msgstruct_v2::work_blob_byte_t & get_work_blob_data() const { return work_blob_data; }
+		const uint32_t get_work_blob_len() const { return work_blob_len; };
+		bool set_blob(const std::string & input) {
+			if (!msgstruct_v2::utils::hex2bin(input.c_str(), input.length(), &work_blob_data[0])) {
+				return false;
+			}
+
+			work_blob_len = input.length() / 2;
+			return true;
+		}
+
+		const std::string & get_target() const { return target; }
+		void set_target(const std::string & input) { target = input; }
+
+		const uint32_t get_iSavedNonce() const { return iSavedNonce; }
 
 		const uint64_t i_target() const {
 			uint64_t output = 0;
