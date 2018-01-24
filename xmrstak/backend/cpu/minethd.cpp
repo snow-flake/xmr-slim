@@ -33,6 +33,7 @@
 #include "xmrstak/net/time_utils.hpp"
 #include "xmrstak/net/msgstruct.hpp"
 #include "xmrstak/cli/statsd.hpp"
+#include "c_cryptonight/minethed_self_test.h"
 
 
 #include <cmath>
@@ -152,6 +153,13 @@ cryptonight_ctx* minethd::minethd_alloc_ctx()
 static constexpr size_t MAX_N = 5;
 bool minethd::self_test()
 {
+	if (!minethed_self_test::test_func_selector()) {
+		return false;
+	}
+	if (!minethed_self_test::test_func_multi_selector()) {
+		return false;
+	}
+
 	cryptonight_ctx *ctx[MAX_N] = {0};
 	for (int i = 0; i < MAX_N; i++)
 	{
