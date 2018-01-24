@@ -323,8 +323,8 @@ file(
         "c_keccak/*.cpp"
         "c_hwlock/*.hpp"
         "c_hwlock/*.cpp"
-        "c_cryptonight/*.hpp"
-        "c_cryptonight/*.cpp"
+        "c_cryptonight/cryptonight_common.cpp"
+        "c_cryptonight/minethed_self_test.cpp"
         "xmrstak/*.hpp"
         "xmrstak/*.cpp"
         "xmrstak/cli/cli-miner.cpp"
@@ -353,6 +353,29 @@ set(LIBRARY_OUTPUT_PATH "bin")
 
 target_link_libraries(xmr-stak ${LIBS})
 
+
+# compile final binary
+file(GLOB
+        MINETHED_SELF_TEST_MAIN_CPP
+        "c_blake/*.hpp"
+        "c_blake/*.cpp"
+        "c_skein/*.hpp"
+        "c_skein/*.cpp"
+        "c_groestl/*.hpp"
+        "c_groestl/*.cpp"
+        "c_jh/*.hpp"
+        "c_jh/*.cpp"
+        "c_keccak/*.hpp"
+        "c_keccak/*.cpp"
+        "c_hwlock/*.hpp"
+        "c_hwlock/*.cpp"
+        "c_cryptonight/*.hpp"
+        "c_cryptonight/*.cpp"
+        "c_cryptonight/minethed_self_test_main.cpp"
+)
+set_source_files_properties(${MINETHED_SELF_TEST_MAIN_CPP} PROPERTIES LANGUAGE CXX)
+add_executable(minethed-self-test ${MINETHED_SELF_TEST_MAIN_CPP})
+target_link_libraries(minethed-self-test ${LIBS})
 
 
 # compile final binary
