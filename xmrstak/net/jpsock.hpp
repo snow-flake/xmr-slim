@@ -101,6 +101,7 @@ private:
 	char sMinerId[64];
 	std::atomic<uint64_t> iJobDiff;
 
+	std::string sSocketAction;
 	std::string sSocketError;
 	std::atomic<bool> bHaveSocketError;
 

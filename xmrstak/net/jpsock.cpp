@@ -105,8 +105,9 @@ void jpsock::set_socket_error(const std::string & err) {
 void jpsock::jpsock_thread() {
 	jpsock_thd_main();
 
+	std::string action(std::move(sSocketAction));
 	std::string err(std::move(sSocketError));
-	executor::inst()->push_event_error(err, quiet_close);
+	executor::inst()->push_event_error(action, err, quiet_close);
 
 	// If a call is wating, send an error to end it
 	bool bCallWaiting = false;
@@ -137,6 +138,9 @@ void jpsock::jpsock_thread() {
 	memset(&oCurrentJob, 0, sizeof(oCurrentJob));
 	bRunning = false;
 }
+
+
+
 
 bool jpsock::jpsock_thd_main() {
 	if (!sck->connect())
@@ -357,6 +361,7 @@ bool jpsock::connect(std::string &sConnectError) {
 	ext_motd = false;
 	bHaveSocketError = false;
 	sSocketError.clear();
+	sSocketAction.clear();
 	iJobDiff = 0;
 	connect_attempts++;
 	connect_time = get_timestamp();

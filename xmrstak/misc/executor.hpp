@@ -84,9 +84,9 @@ public:
 		oEventQ.push(ptr);
 	}
 
-	inline void push_event_error(const std::string & error, bool silent) {
+	inline void push_event_error(const std::string & action, const std::string & error, bool silent) {
 		std::shared_ptr<const msgstruct::ex_event> ptr = std::shared_ptr<const msgstruct::ex_event>(
-				new msgstruct::ex_event(error, silent)
+				new msgstruct::ex_event(action, error, silent)
 		);
 		oEventQ.push(ptr);
 	}
@@ -163,7 +163,7 @@ private:
 
 	double fHighestHps = 0.0;
 
-	void log_socket_error(std::string sError);
+	void log_socket_error(const std::string & action, const std::string & sError);
 	void log_result_error(std::string sError);
 	void log_result_ok(uint64_t iActualDiff);
 

@@ -154,19 +154,21 @@ namespace msgstruct {
 	};
 
 	struct sock_err {
+		std::string action;
 		std::string sSocketError;
 		bool silent;
 
 		sock_err() {}
 
-		sock_err(const std::string &err, bool silent) : sSocketError(err), silent(silent) {}
+		sock_err(const std::string & action, const std::string &err, bool silent) : action(action), sSocketError(err), silent(silent) {}
 
-		sock_err(sock_err &&from) : sSocketError(std::move(from.sSocketError)), silent(from.silent) {}
+		sock_err(sock_err &&from) : action(std::move(from.action)), sSocketError(std::move(from.sSocketError)), silent(from.silent) {}
 
 		sock_err &operator=(sock_err &&from) {
 			assert(this != &from);
 			sSocketError = std::move(from.sSocketError);
 			silent = from.silent;
+			action = from.action;
 			return *this;
 		}
 
@@ -194,7 +196,7 @@ namespace msgstruct {
 
 		ex_event() { iName = EV_INVALID_VAL; }
 
-		ex_event(const std::string & err, bool silent) : iName(EV_SOCK_ERROR), oSocketError(err, silent) {}
+		ex_event(const std::string & action, const std::string & err, bool silent) : iName(EV_SOCK_ERROR), oSocketError(action, err, silent) {}
 
 		ex_event(job_result dat) : iName(EV_MINER_HAVE_RESULT), oJobResult(dat) {}
 

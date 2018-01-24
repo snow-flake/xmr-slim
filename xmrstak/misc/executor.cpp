@@ -41,6 +41,7 @@
 #include <algorithm>
 #include <functional>
 #include <assert.h>
+#include <iostream>
 
 
 std::vector<xmrstak::iBackend*>* thread_starter(msgstruct::miner_work& pWork)
@@ -148,7 +149,7 @@ void executor::eval_pool_choice()
 			printer::print_msg(L1, "Fast-connecting to %s pool ...", pool_address.c_str());
 			std::string error;
 			if(!pool->connect(error))
-				log_socket_error(std::move(error));
+				log_socket_error("connect", std::move(error));
 			else
 				pool_ptr = pool;
 		}
@@ -163,7 +164,7 @@ void executor::eval_pool_choice()
 
 		std::string error;
 		if(!goal->connect(error))
-			log_socket_error(std::move(error));
+			log_socket_error("connect", std::move(error));
 		else
 			pool_ptr = goal;
 		return;
@@ -184,16 +185,10 @@ void executor::eval_pool_choice()
 	}
 }
 
-void executor::log_socket_error(std::string sError)
+void executor::log_socket_error(const std::string & action, const std::string & sError)
 {
-	std::string pool_name;
-	pool_name.reserve(128);
-	pool_name.append("[").append(system_constants::get_pool_pool_address()).append("] ");
-	sError.insert(0, pool_name);
-
-	vSocketLog.emplace_back(std::move(sError));
-	printer::print_msg(L1, "SOCKET ERROR - %s", vSocketLog.back().msg.c_str());
-
+	std::cout << __FILE__ << ":" << __LINE__ << ": " << action << ": " << "Socket error, error = " << sError << std::endl;
+	statsd::statsd_increment("socket.error." + action);
 	push_event_name(msgstruct::EV_EVAL_POOL_CHOICE);
 }
 
@@ -240,7 +235,7 @@ void executor::on_sock_ready()
 	{
 		if(!pool->have_sock_error())
 		{
-			log_socket_error(pool->get_call_error());
+			log_socket_error("login", pool->get_call_error());
 			pool->disconnect();
 		}
 	}
@@ -253,8 +248,7 @@ void executor::on_sock_error(const msgstruct::sock_err &err) {
 
 	pool_ptr = std::shared_ptr<jpsock>();
 	if(!err.silent) {
-		std::string tmp_error = err.sSocketError;
-		log_socket_error(tmp_error);
+		log_socket_error(err.action, err.sSocketError);
 	}
 }
 
