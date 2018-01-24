@@ -475,29 +475,11 @@ inline const char* hps_format(double h, char* buf, size_t l)
 		return "   (na)";
 }
 
-bool executor::motd_filter_console(std::string& motd)
-{
-	if(motd.size() > motd_max_length)
-		return false;
-
-	motd.erase(std::remove_if(motd.begin(), motd.end(), [](int chr)->bool { return !((chr >= 0x20 && chr <= 0x7e) || chr == '\n');}), motd.end());
-	return motd.size() > 0;
-}
 
 std::string executor::hashrate_report()
 {
 	std::string out;
 	out.reserve(2048 + pvThreads->size() * 64);
-
-	if(system_constants::PrintMotd() && pool_ptr.get() != nullptr) {
-		std::string motd;
-		motd.empty();
-		if(pool_ptr->get_pool_motd(motd) && motd_filter_console(motd)) {
-			out.append("Message from ").append(system_constants::get_pool_pool_address()).append(":\n");
-			out.append(motd).append("\n");
-			out.append("-----------------------------------------------------\n");
-		}
-	}
 
 	char num[32];
 	double fTotal[3] = { 0.0, 0.0, 0.0};

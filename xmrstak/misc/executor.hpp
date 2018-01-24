@@ -131,8 +131,6 @@ private:
 
 	void ex_clock_thd();
 
-	constexpr static size_t motd_max_length = 512;
-	bool motd_filter_console(std::string& motd);
 	std::string hashrate_report();
 	std::string result_report();
 	std::string connection_report();
