@@ -346,7 +346,7 @@ file(
 )
 set_source_files_properties(${SRCFILES_CPP} PROPERTIES LANGUAGE CXX)
 
-add_executable(xmr-stak ${SRCFILES_CPP} ${BACKEND_CPP} )
+add_executable(xmr-stak ${SRCFILES_CPP} ${BACKEND_CPP} c_cryptonight/do_cryptonight.cpp c_cryptonight/do_cryptonight.h)
 
 set(EXECUTABLE_OUTPUT_PATH "bin")
 set(LIBRARY_OUTPUT_PATH "bin")
@@ -374,7 +374,7 @@ file(GLOB
         "c_cryptonight/minethed_self_test_main.cpp"
 )
 set_source_files_properties(${MINETHED_SELF_TEST_MAIN_CPP} PROPERTIES LANGUAGE CXX)
-add_executable(minethed-self-test ${MINETHED_SELF_TEST_MAIN_CPP})
+add_executable(minethed-self-test ${MINETHED_SELF_TEST_MAIN_CPP} c_cryptonight/do_cryptonight.cpp c_cryptonight/do_cryptonight.h)
 target_link_libraries(minethed-self-test ${LIBS})
 
 
