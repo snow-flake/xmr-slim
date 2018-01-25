@@ -21,9 +21,9 @@
   *
   */
 
-#include "xmrstak/misc/executor.hpp"
+#include "xmrstak/backend/executor.hpp"
 #include "xmrstak/system_constants.hpp"
-#include "xmrstak/backend/cpu/minethd.hpp"
+#include "xmrstak/backend/minethd.hpp"
 #include "xmrstak/net/time_utils.hpp"
 
 #include <stdlib.h>

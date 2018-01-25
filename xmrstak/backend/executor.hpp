@@ -4,7 +4,7 @@
 #include "telemetry.hpp"
 #include "xmrstak/backend/iBackend.hpp"
 #include "xmrstak/backend/globalStates.hpp"
-#include "xmrstak/misc/environment.hpp"
+#include "environment.hpp"
 #include "xmrstak/net/msgstruct.hpp"
 #include "xmrstak/net/time_utils.hpp"
 #include "xmrstak/net/jpsock.hpp"

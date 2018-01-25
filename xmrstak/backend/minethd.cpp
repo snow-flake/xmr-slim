@@ -22,10 +22,10 @@
   */
 
 #include "c_cryptonight/cryptonight_aesni.hpp"
-#include "xmrstak/misc/console.hpp"
+#include "console.hpp"
 #include "xmrstak/backend/iBackend.hpp"
 #include "xmrstak/backend//globalStates.hpp"
-#include "xmrstak/misc/executor.hpp"
+#include "executor.hpp"
 #include "minethd.hpp"
 #include "c_hwlock/do_hwlock.hpp"
 #include "autoAdjust.hpp"

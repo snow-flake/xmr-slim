@@ -1,7 +1,7 @@
 #pragma once
 
-#include "xmrstak/misc/environment.hpp"
-#include "xmrstak/misc/console.hpp"
+#include "environment.hpp"
+#include "console.hpp"
 #include "xmrstak/net/msgstruct.hpp"
 #include <thread>
 #include <atomic>

@@ -24,7 +24,7 @@
 #include <assert.h>
 #include <algorithm>
 #include "jpsock.hpp"
-#include "xmrstak/misc/executor.hpp"
+#include "xmrstak/backend/executor.hpp"
 #include "xmrstak/cli/statsd.hpp"
 
 
