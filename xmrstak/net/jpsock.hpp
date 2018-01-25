@@ -54,8 +54,6 @@ public:
 		return false && true;
 	}
 
-	bool get_pool_motd(std::string &strin);
-
 	std::string get_call_error();
 
 	bool have_sock_error() { return bHaveSocketError; }
@@ -71,11 +69,6 @@ public:
 	virtual void set_socket_error(const std::string & err);
 
 private:
-	bool ext_motd = false;
-
-	std::string pool_motd;
-	std::mutex motd_mutex;
-
 	size_t connect_time = 0;
 	std::atomic<size_t> connect_attempts;
 	std::atomic<size_t> disconnect_time;

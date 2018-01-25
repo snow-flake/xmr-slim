@@ -34,8 +34,6 @@ namespace system_constants {
 
 	inline uint64_t GetVerboseLevel() { return CONFIG_VERBOSE_LEVEL; }
 
-	inline bool PrintMotd() { return CONFIG_PRINT_MOTD; }
-
 	inline uint64_t GetAutohashTime() { return CONFIG_H_PRINT_TIME; }
 
 	inline uint64_t GetCallTimeout() { return CONFIG_CALL_TIMEOUT; }

@@ -327,7 +327,6 @@ bool jpsock::process_pool_job_new_style(const nlohmann::json &params) {
 
 	oPoolJob.set_job_id(job_id);
 
-
 	if (params.find("motd") != params.end()) {
 		auto raw_motd = params["motd"];
 		if (!raw_motd.is_null() && raw_motd.is_string()) {
@@ -335,12 +334,12 @@ bool jpsock::process_pool_job_new_style(const nlohmann::json &params) {
 			if ((motd.length() & 0x01) == 0) {
 				std::unique_lock<std::mutex>(motd_mutex);
 				if (motd.length() > 0) {
+					std::string pool_motd;
 					pool_motd.resize(motd.length() / 2 + 1);
 					if (!msgstruct_v2::utils::hex2bin(motd.c_str(), motd.length(), (unsigned char *) &pool_motd.front())) {
 						pool_motd.clear();
 					}
-				} else {
-					pool_motd.clear();
+					std::cout << __FILE__ << ":" << __LINE__ << ": Pool MOTD=" << pool_motd << std::endl;
 				}
 			}
 		}
@@ -354,7 +353,6 @@ bool jpsock::process_pool_job_new_style(const nlohmann::json &params) {
 }
 
 bool jpsock::connect(std::string &sConnectError) {
-	ext_motd = false;
 	bHaveSocketError = false;
 	sSocketError.clear();
 	iJobDiff = 0;
@@ -482,8 +480,9 @@ bool jpsock::cmd_login() {
 
 			std::string tmp = element.get<std::string>();
 			std::transform(tmp.begin(), tmp.end(), tmp.begin(), ::tolower);
-			if (tmp == "motd")
-				ext_motd = true;
+			if (tmp == "motd") {
+				std::cout << __FILE__ ":" << __LINE__ << ": Warning Pool MOTD is on" << std::endl;
+			}
 		}
 	}
 
@@ -528,15 +527,3 @@ bool jpsock::get_current_job(msgstruct::pool_job &job) {
 	return true;
 }
 
-bool jpsock::get_pool_motd(std::string &strin) {
-	if (!ext_motd)
-		return false;
-
-	std::unique_lock<std::mutex>(motd_mutex);
-	if (pool_motd.size() > 0) {
-		strin.assign(pool_motd);
-		return true;
-	}
-
-	return false;
-}

@@ -76,10 +76,8 @@ add_definitions("-DCONFIG_GIVEUP_LIMIT=0")
 #                 3 - All of level 1, and new job (block) event in all cases, result submission event.
 #                 4 - All of level 3, and automatic hashrate report printing
 #
-# print_motd    - Display messages from your pool operator in the hashrate result.
 #
 add_definitions("-DCONFIG_VERBOSE_LEVEL=3")  # Set the log verbosity
-add_definitions("-DCONFIG_PRINT_MOTD=true")  # Enable or disable messages from the pool
 
 
 # Automatic hashrate report
