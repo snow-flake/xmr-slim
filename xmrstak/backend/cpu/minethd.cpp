@@ -101,7 +101,7 @@ minethd::minethd(msgstruct::miner_work& pWork, size_t iNo, int iMultiway, int64_
 		break;
 	case 1:
 	default:
-		oWorkThd = std::thread(&minethd::work_main, this);
+		oWorkThd = std::thread(&minethd::single_work_main, this);
 		break;
 	}
 
@@ -201,87 +201,11 @@ void minethd::consume_work()
 	globalStates::inst().inst().iConsumeCnt++;
 }
 
-void minethd::work_main()
-{
-	if(affinity >= 0) //-1 means no affinity
-		do_hwlock(affinity);
-
-	order_fix.set_value();
-	std::unique_lock<std::mutex> lck(thd_aff_set);
-	lck.release();
-	std::this_thread::yield();
-
-	cn_hash_fun hash_fun;
-	cryptonight_ctx* ctx;
-	uint64_t iCount = 0;
-	uint64_t* piHashVal;
-	uint32_t* piNonce;
-	msgstruct::job_result result;
-
-	hash_fun = cryptonight_hash<MONERO_MASK, MONERO_ITER, MONERO_MEMORY, !CONFIG_AES_OVERRIDE, false>;
-	ctx = minethd_alloc_ctx();
-
-	piHashVal = (uint64_t*)(&result.result_data[0] + 24);
-	piNonce = (uint32_t*)(&oWork.work_blob_data[0] + 39);
-	globalStates::inst().inst().iConsumeCnt++;
-
-	while (bQuit == 0)
-	{
-		if (oWork.bStall)
-		{
-			/* We are stalled here because the executor didn't find a job for us yet,
-			 * either because of network latency, or a socket problem. Since we are
-			 * raison d'etre of this software it us sensible to just wait until we have something
-			 */
-
-			while (globalStates::inst().iGlobalJobNo.load(std::memory_order_relaxed) == iJobNo)
-				std::this_thread::sleep_for(std::chrono::milliseconds(100));
-
-			consume_work();
-			continue;
-		}
-
-		size_t nonce_ctr = 0;
-		constexpr size_t nonce_chunk = 4096; // Needs to be a power of 2
-
-		result.job_id_data = oWork.job_id_data;
-
-		while(globalStates::inst().iGlobalJobNo.load(std::memory_order_relaxed) == iJobNo)
-		{
-			if ((iCount++ & 0xF) == 0) //Store stats every 16 hashes
-			{
-				uint64_t iStamp = get_timestamp_ms();
-				iHashCount.store(iCount, std::memory_order_relaxed);
-				iTimestamp.store(iStamp, std::memory_order_relaxed);
-			}
-
-			if((nonce_ctr++ & (nonce_chunk-1)) == 0)
-			{
-				globalStates::inst().calc_start_nonce(result.iNonce, nonce_chunk);
-			}
-
-			*piNonce = ++result.iNonce;
-
-			// TODO: be specific about the data size
-			hash_fun(&oWork.work_blob_data[0], oWork.work_blob_len, &result.result_data[0], ctx);
-
-			if (*piHashVal < oWork.target_data) {
-				executor::inst()->push_event_job_result(result);
-			} else {
-				// TODO: log the hash was abandoned
-				statsd::statsd_increment("ev.hash_abandoned");
-			}
-
-			std::this_thread::yield();
-		}
-
-		consume_work();
-	}
-
-	cryptonight_free_ctx(ctx);
+void minethd::single_work_main() {
+	multiway_work_main<1>(cryptonight_double_hash<MONERO_MASK, MONERO_ITER, MONERO_MEMORY, !CONFIG_AES_OVERRIDE, false>);
 }
 
-void minethd::double_work_main() {
+	void minethd::double_work_main() {
 	multiway_work_main<2>(cryptonight_double_hash<MONERO_MASK, MONERO_ITER, MONERO_MEMORY, !CONFIG_AES_OVERRIDE, false>);
 }
 

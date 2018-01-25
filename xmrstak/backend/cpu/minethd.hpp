@@ -19,11 +19,7 @@ class minethd : public iBackend
 public:
 	static std::vector<iBackend*> thread_starter(uint32_t threadOffset, msgstruct::miner_work& pWork);
 	static bool self_test();
-
-	typedef void (*cn_hash_fun)(const void*, size_t, void*, cryptonight_ctx*);
-
 	static bool thd_setaffinity(std::thread::native_handle_type h, uint64_t cpu_id);
-
 	static cryptonight_ctx* minethd_alloc_ctx();
 
 private:
@@ -37,7 +33,7 @@ private:
 	template<size_t N>
 	void prep_multiway_work(uint8_t *bWorkBlob, uint32_t **piNonce);
 
-	void work_main();
+	void single_work_main();
 	void double_work_main();
 	void triple_work_main();
 	void quad_work_main();
