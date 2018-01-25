@@ -201,25 +201,6 @@ void minethd::consume_work()
 	globalStates::inst().inst().iConsumeCnt++;
 }
 
-minethd::cn_hash_fun minethd::func_selector(bool bHaveAes) {
-	// We have two independent flag bits in the functions
-	// therefore we will build a binary digit and select the
-	// function as a two digit binary
-	// Digit order SOFT_AES, NO_PREFETCH, MINER_ALGO
-
-	static const cn_hash_fun func_table[] = {
-		cryptonight_hash<MONERO_MASK, MONERO_ITER, MONERO_MEMORY, false, false>,
-		cryptonight_hash<MONERO_MASK, MONERO_ITER, MONERO_MEMORY, true, false>
-	};
-
-	std::bitset<3> digit;
-	digit.set(0, !bHaveAes);
-
-	// ignore 3rd bit if only one currency is active
-	digit.set(2, 0);
-	return func_table[digit.to_ulong()];
-}
-
 void minethd::work_main()
 {
 	if(affinity >= 0) //-1 means no affinity
@@ -237,7 +218,7 @@ void minethd::work_main()
 	uint32_t* piNonce;
 	msgstruct::job_result result;
 
-	hash_fun = func_selector(::system_constants::HaveHardwareAes());
+	hash_fun = cryptonight_hash<MONERO_MASK, MONERO_ITER, MONERO_MEMORY, !CONFIG_AES_OVERRIDE, false>;
 	ctx = minethd_alloc_ctx();
 
 	piHashVal = (uint64_t*)(&result.result_data[0] + 24);
@@ -300,62 +281,29 @@ void minethd::work_main()
 	cryptonight_free_ctx(ctx);
 }
 
-minethd::cn_hash_fun_multi minethd::func_multi_selector(size_t N, bool bHaveAes)
-{
-	// We have two independent flag bits in the functions
-	// therefore we will build a binary digit and select the
-	// function as a two digit binary
-	// Digit order SOFT_AES, NO_PREFETCH
-
-	static const cn_hash_fun_multi func_table[] = {
-		cryptonight_double_hash<MONERO_MASK, MONERO_ITER, MONERO_MEMORY, false, false>,
-		cryptonight_double_hash<MONERO_MASK, MONERO_ITER, MONERO_MEMORY, true, false>,
-		cryptonight_triple_hash<MONERO_MASK, MONERO_ITER, MONERO_MEMORY, false, false>,
-		cryptonight_triple_hash<MONERO_MASK, MONERO_ITER, MONERO_MEMORY, true, false>,
-		cryptonight_quad_hash<MONERO_MASK, MONERO_ITER, MONERO_MEMORY, false, false>,
-		cryptonight_quad_hash<MONERO_MASK, MONERO_ITER, MONERO_MEMORY, true, false>,
-		cryptonight_penta_hash<MONERO_MASK, MONERO_ITER, MONERO_MEMORY, false, false>,
-		cryptonight_penta_hash<MONERO_MASK, MONERO_ITER, MONERO_MEMORY, true, false>
-	};
-
-	std::bitset<2> digit;
-	digit.set(0, !bHaveAes);
-
-	// ignore miner algo if only one currency is active
-	size_t miner_algo_base = 0;
-
-	N = (N<2) ? 2 : (N>MAX_N) ? MAX_N : N;
-	return func_table[miner_algo_base + 4*(N-2) + digit.to_ulong()];
+void minethd::double_work_main() {
+	multiway_work_main<2>(cryptonight_double_hash<MONERO_MASK, MONERO_ITER, MONERO_MEMORY, !CONFIG_AES_OVERRIDE, false>);
 }
 
-void minethd::double_work_main()
-{
-	multiway_work_main<2>(func_multi_selector(2, ::system_constants::HaveHardwareAes()));
+void minethd::triple_work_main() {
+	multiway_work_main<3>(cryptonight_triple_hash<MONERO_MASK, MONERO_ITER, MONERO_MEMORY, !CONFIG_AES_OVERRIDE, false>);
 }
 
-void minethd::triple_work_main()
-{
-	multiway_work_main<3>(func_multi_selector(3, ::system_constants::HaveHardwareAes()));
+void minethd::quad_work_main() {
+	multiway_work_main<4>(cryptonight_quad_hash<MONERO_MASK, MONERO_ITER, MONERO_MEMORY, !CONFIG_AES_OVERRIDE, false>);
 }
 
-void minethd::quad_work_main()
-{
-	multiway_work_main<4>(func_multi_selector(4, ::system_constants::HaveHardwareAes()));
-}
-
-void minethd::penta_work_main()
-{
-	multiway_work_main<5>(func_multi_selector(5, ::system_constants::HaveHardwareAes()));
+void minethd::penta_work_main() {
+	multiway_work_main<5>(cryptonight_penta_hash<MONERO_MASK, MONERO_ITER, MONERO_MEMORY, !CONFIG_AES_OVERRIDE, false>);
 }
 
 template<size_t N>
-void minethd::prep_multiway_work(uint8_t *bWorkBlob, uint32_t **piNonce)
-{
-	for (size_t i = 0; i < N; i++)
-	{
+void minethd::prep_multiway_work(uint8_t *bWorkBlob, uint32_t **piNonce) {
+	for (size_t i = 0; i < N; i++) {
 		memcpy(bWorkBlob + oWork.work_blob_len * i, &oWork.work_blob_data[0], oWork.work_blob_len);
-		if (i > 0)
+		if (i > 0) {
 			piNonce[i] = (uint32_t*)(bWorkBlob + oWork.work_blob_len * i + 39);
+		}
 	}
 }
 
