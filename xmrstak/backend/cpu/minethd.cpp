@@ -284,6 +284,8 @@ void minethd::multiway_work_main(cn_hash_fun_multi hash_fun_multi)
 
 		while (globalStates::inst().iGlobalJobNo.load(std::memory_order_relaxed) == iJobNo)
 		{
+			statsd::statsd_increment("ev.hash_iter");
+
 			if ((iCount++ & 0x7) == 0)  //Store stats every 8*N hashes
 			{
 				uint64_t iStamp = get_timestamp_ms();

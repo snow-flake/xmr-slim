@@ -1,7 +1,6 @@
 #pragma once
 
 #include "thdq.hpp"
-#include "telemetry.hpp"
 #include "xmrstak/backend/iBackend.hpp"
 #include "xmrstak/backend/globalStates.hpp"
 #include "xmrstak/misc/environment.hpp"
@@ -119,7 +118,6 @@ private:
 	std::mutex timed_event_mutex;
 	thdq<std::shared_ptr<const msgstruct::ex_event>> oEventQ;
 
-	xmrstak::telemetry* telem;
 	std::vector<xmrstak::iBackend*>* pvThreads;
 
 	size_t dev_timestamp;
@@ -133,7 +131,6 @@ private:
 
 	constexpr static size_t motd_max_length = 512;
 	bool motd_filter_console(std::string& motd);
-	std::string hashrate_report();
 	std::string result_report();
 	std::string connection_report();
 	void print_report();

@@ -6,6 +6,8 @@ cmake_minimum_required(VERSION 3.1.0)
 # Compile time options
 ################################################################################
 
+set(CMAKE_C_FLAGS_DEBUG "-DDEBUG_LOGGING")
+
 if(DEFINED ENV{CONFIG_STATSD_ADDRESS})
     add_definitions("-DCONFIG_STATSD_ADDRESS=\"$ENV{CONFIG_STATSD_ADDRESS}\"")
 else()

@@ -24,7 +24,6 @@
 #include "executor.hpp"
 #include "xmrstak/net/jpsock.hpp"
 
-#include "telemetry.hpp"
 #include "xmrstak/backend/globalStates.hpp"
 #include "xmrstak/backend/iBackend.hpp"
 #include "xmrstak/backend/iBackend.hpp"
@@ -363,8 +362,6 @@ void executor::ex_main()
 		std::exit(1);
 	}
 
-	telem = new xmrstak::telemetry(pvThreads->size());
-
 	set_timestamp();
 	pool_ptr = std::shared_ptr<jpsock>(new jpsock());
 
@@ -418,33 +415,15 @@ void executor::ex_main()
 			for (int i = 0; i < pvThreads->size(); i++) {
 				uint64_t iHashCount = pvThreads->at(i)->iHashCount.load(std::memory_order_relaxed);
 				uint64_t iTimestamp = pvThreads->at(i)->iTimestamp.load(std::memory_order_relaxed);
-				telem->push_perf_value(i, iHashCount, iTimestamp);
 				statsd::statsd_gauge("i_hash_count", iHashCount);
 			}
 
 			if((cnt++ & 0xF) == 0) //Every 16 ticks
 			{
 				double fHps = 0.0;
-				double fTelem;
-				bool normal = true;
-
-				for (int i = 0; i < pvThreads->size(); i++)
-				{
-					fTelem = telem->calc_telemetry_data(10000, i);
-					if(std::isnormal(fTelem))
-					{
-						fHps += fTelem;
-
-					}
-					else
-					{
-						normal = false;
-						break;
-					}
-				}
-
-				if(normal && fHighestHps < fHps)
+				if(fHighestHps < fHps) {
 					fHighestHps = fHps;
+				}
 
 				statsd::statsd_gauge("f_hps", fHps);
 				statsd::statsd_gauge("max_f_hps", fHighestHps);
@@ -482,85 +461,6 @@ bool executor::motd_filter_console(std::string& motd)
 
 	motd.erase(std::remove_if(motd.begin(), motd.end(), [](int chr)->bool { return !((chr >= 0x20 && chr <= 0x7e) || chr == '\n');}), motd.end());
 	return motd.size() > 0;
-}
-
-std::string executor::hashrate_report()
-{
-	std::string out;
-	out.reserve(2048 + pvThreads->size() * 64);
-
-	if(system_constants::PrintMotd() && pool_ptr.get() != nullptr) {
-		std::string motd;
-		motd.empty();
-		if(pool_ptr->get_pool_motd(motd) && motd_filter_console(motd)) {
-			out.append("Message from ").append(system_constants::get_pool_pool_address()).append(":\n");
-			out.append(motd).append("\n");
-			out.append("-----------------------------------------------------\n");
-		}
-	}
-
-	char num[32];
-	double fTotal[3] = { 0.0, 0.0, 0.0};
-
-	{
-		std::vector<xmrstak::iBackend*> backEnds;
-		std::copy_if(pvThreads->begin(), pvThreads->end(), std::back_inserter(backEnds), [&](xmrstak::iBackend* backend) { return true; });
-
-		size_t nthd = backEnds.size();
-		if(nthd != 0)
-		{
-			size_t i;
-			std::string name("cpu");
-			std::transform(name.begin(), name.end(), name.begin(), ::toupper);
-			
-			out.append("HASHRATE REPORT - ").append(name).append("\n");
-			out.append("| ID |    10s |    60s |    15m |");
-			if(nthd != 1)
-				out.append(" ID |    10s |    60s |    15m |\n");
-			else
-				out.append(1, '\n');
-
-			for (i = 0; i < nthd; i++)
-			{
-				double fHps[3];
-
-				uint32_t tid = backEnds[i]->iThreadNo;
-				fHps[0] = telem->calc_telemetry_data(10000, tid);
-				fHps[1] = telem->calc_telemetry_data(60000, tid);
-				fHps[2] = telem->calc_telemetry_data(900000, tid);
-
-				snprintf(num, sizeof(num), "| %2u |", (unsigned int)i);
-				out.append(num);
-				out.append(hps_format(fHps[0], num, sizeof(num))).append(" |");
-				out.append(hps_format(fHps[1], num, sizeof(num))).append(" |");
-				out.append(hps_format(fHps[2], num, sizeof(num))).append(1, ' ');
-
-				fTotal[0] += fHps[0];
-				fTotal[1] += fHps[1];
-				fTotal[2] += fHps[2];
-
-				if((i & 0x1) == 1) //Odd i's
-					out.append("|\n");
-			}
-
-			if((i & 0x1) == 1) //We had odd number of threads
-				out.append("|\n");
-
-			if(nthd != 1)
-				out.append("-----------------------------------------------------\n");
-			else
-				out.append("---------------------------\n");
-		}
-	}
-
-	out.append("Totals:  ");
-	out.append(hps_format(fTotal[0], num, sizeof(num)));
-	out.append(hps_format(fTotal[1], num, sizeof(num)));
-	out.append(hps_format(fTotal[2], num, sizeof(num)));
-	out.append(" H/s\nHighest: ");
-	out.append(hps_format(fHighestHps, num, sizeof(num)));
-	out.append(" H/s\n");
-	return out;
 }
 
 char* time_format(char* buf, size_t len, std::chrono::system_clock::time_point time)
@@ -692,7 +592,6 @@ std::string executor::connection_report()
 
 void executor::print_report()
 {
-	std::cout << hashrate_report() << std::endl;
 	std::cout << result_report() << std::endl;
 	std::cout << connection_report() << std::endl;
 }
