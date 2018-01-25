@@ -10,7 +10,6 @@ namespace xmrstak
 
 		struct auto_thd_cfg {
 			int low_power_mode;
-			bool no_prefetch;
 			long long affine_to_cpu;
 		};
 

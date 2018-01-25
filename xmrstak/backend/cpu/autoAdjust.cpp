@@ -108,7 +108,6 @@ xmrstak::cpu::auto_threads::auto_threads() :
 	for (uint32_t i = 0; i < processors_count; i++) {
 		auto_thd_cfg config = auto_thd_cfg();
 		config.low_power_mode = low_power_mode;
-		config.no_prefetch = true;
 		config.affine_to_cpu = affine_to_cpu;
 		configs[i] = config;
 
