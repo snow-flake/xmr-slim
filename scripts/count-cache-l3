@@ -3,8 +3,10 @@
 set -e
 
 if [ -e '/usr/bin/lscpu' ]; then
-  /usr/bin/lscpu | grep 'L3 cache' | awk '{print $3}' | sed 's!K$!*1024!'
+  result=$(/usr/bin/lscpu | grep 'L3 cache' | awk '{print $3}' | sed 's!K$!*1024!')
+  echo $(($result * 1))
 else
-  system_profiler SPHardwareDataType | grep 'L3 Cache' | awk '{print $3$4}' | sed 's!KB$!*1024!;s!MB$!*1024*1024!'
+  result=$(system_profiler SPHardwareDataType | grep 'L3 Cache' | awk '{print $3$4}' | sed 's!KB$!*1024!;s!MB$!*1024*1024!')
+  echo $(($result * 1))
 fi
 

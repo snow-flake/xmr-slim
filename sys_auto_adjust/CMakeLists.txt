@@ -1,49 +1,10 @@
 project(sys-auto-adjust)
 cmake_minimum_required(VERSION 3.1.0)
 
-# Set the number of threads in the system
-execute_process(
-        COMMAND ../scripts/count-nproc
-        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-        OUTPUT_VARIABLE SYSTEM_NPROC
-        OUTPUT_STRIP_TRAILING_WHITESPACE
-)
-execute_process(
-        COMMAND ../scripts/count-cache-l2
-        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-        OUTPUT_VARIABLE SYSTEM_CACHE_L2
-        OUTPUT_STRIP_TRAILING_WHITESPACE
-)
-execute_process(
-        COMMAND ../scripts/count-cache-l3
-        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-        OUTPUT_VARIABLE SYSTEM_CACHE_L3
-        OUTPUT_STRIP_TRAILING_WHITESPACE
-)
+add_definitions("-DCONFIG_SYSTEM_NPROC=$ENV{SYSTEM_NPROC}")
+add_definitions("-DCONFIG_SYSTEM_CACHE_L2=$ENV{SYSTEM_CACHE_L2}")
+add_definitions("-DCONFIG_SYSTEM_CACHE_L3=$ENV{SYSTEM_CACHE_L3}")
 
-if(NOT "$ENV{SYSTEM_NPROC}" STREQUAL "")
-    add_definitions("-DCONFIG_SYSTEM_NPROC=$ENV{SYSTEM_NPROC}")
-elseif(NOT SYSTEM_NPROC STREQUAL "")
-    add_definitions("-DCONFIG_SYSTEM_NPROC=${SYSTEM_NPROC}")
-else()
-    message(FATAL_ERROR "Failed to detect number of cores")
-endif()
-
-if(NOT SYSTEM_CACHE_L2 STREQUAL "")
-    add_definitions("-DCONFIG_SYSTEM_CACHE_L2=${SYSTEM_CACHE_L2}")
-elseif(NOT "$ENV{SYSTEM_CACHE_L2}" STREQUAL "")
-    add_definitions("-DCONFIG_SYSTEM_CACHE_L2=$ENV{SYSTEM_CACHE_L2}")
-else()
-    message(FATAL_ERROR "Failed to detect amount of L2 cache")
-endif()
-
-if(NOT SYSTEM_CACHE_L3 STREQUAL "")
-    add_definitions("-DCONFIG_SYSTEM_CACHE_L3=${SYSTEM_CACHE_L3}")
-elseif(NOT "$ENV{SYSTEM_CACHE_L3}" STREQUAL "")
-    add_definitions("-DCONFIG_SYSTEM_CACHE_L3=$ENV{SYSTEM_CACHE_L3}")
-else()
-    message(FATAL_ERROR "Failed to detect amount of L3 cache")
-endif()
 
 ################################################################################
 # Compiler settings
@@ -155,12 +116,13 @@ file(
         GLOB
         SYS_AUTO_ADJUST_CPP
         "autoAdjust.cpp"
+        "sys_auto_adjust_main.cpp"
 )
 set_source_files_properties(${SYS_AUTO_ADJUST_CPP} PROPERTIES LANGUAGE CXX)
 add_executable(sys-auto-adjust ${SYS_AUTO_ADJUST_CPP})
 
-set(EXECUTABLE_OUTPUT_PATH "../bin")
-set(LIBRARY_OUTPUT_PATH "../bin")
+set(EXECUTABLE_OUTPUT_PATH "./bin")
+set(LIBRARY_OUTPUT_PATH "./bin")
 target_link_libraries(sys-auto-adjust ${LIBS})
 
 ################################################################################
