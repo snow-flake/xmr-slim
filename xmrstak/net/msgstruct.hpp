@@ -19,24 +19,34 @@ namespace msgstruct {
 		msgstruct_v2::work_blob_byte_t work_blob_data;
 		uint32_t job_id_len, work_blob_len;
 		uint32_t iSavedNonce;
-		std::string target;
+		std::string target, work_blob_str;
 
 	public:
 		pool_job() : work_blob_len(0), iSavedNonce(0), job_id_len(0) {}
 
 		const msgstruct_v2::job_id_str_t & get_job_id_data() const { return job_id_data; }
+
+		const std::string get_job_id_str() const {
+			std::string output(&job_id_data[0], job_id_len);
+			return output;
+		}
+
 		void set_job_id(const std::string & input) {
 			job_id_data.fill(0);
+			job_id_len = input.length();
 			strcpy(&job_id_data[0], input.c_str());
 		}
 
 		const msgstruct_v2::work_blob_byte_t & get_work_blob_data() const { return work_blob_data; }
+		const std::string & get_work_blob_str() {
+			return work_blob_str;
+		}
 		const uint32_t get_work_blob_len() const { return work_blob_len; };
 		bool set_blob(const std::string & input) {
 			if (!msgstruct_v2::utils::hex2bin(input.c_str(), input.length(), &work_blob_data[0])) {
 				return false;
 			}
-
+			work_blob_str = input;
 			work_blob_len = input.length() / 2;
 			return true;
 		}

@@ -29,3 +29,4 @@ cpu.txt
 venv
 *.log
 install_manifest.txt
+.DS_Store

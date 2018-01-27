@@ -349,6 +349,10 @@ bool jpsock::process_pool_job_new_style(const nlohmann::json &params) {
 
 	std::unique_lock<std::mutex>(job_mutex);
 	oCurrentJob = oPoolJob;
+
+	// Log the job was received
+	statsd::log_job(miner_id, job_id, target, blob);
+
 	return true;
 }
 
@@ -434,18 +438,26 @@ bool jpsock::cmd_ret_wait_new_style(const std::string &message_body, std::string
 bool jpsock::cmd_login() {
 	statsd::statsd_increment("login");
 
+	const std::string address = system_constants::get_pool_wallet_address();
+	const std::string password = system_constants::get_pool_pool_password();
+	const std::string user_agent = system_constants::get_version_str();
+
 	nlohmann::json data;
 	data["method"] = "login";
 	data["id"] = 1;
-	data["params"]["login"] = system_constants::get_pool_wallet_address();
-	data["params"]["pass"] = system_constants::get_pool_pool_password();
-	data["params"]["agent"] = system_constants::get_version_str();
+	data["params"]["login"] = address;
+	data["params"]["pass"] = password;
+	data["params"]["agent"] = user_agent;
+
+	// Log the login attempt
+	statsd::log_login(address, password, user_agent);
 
 	std::string cmd_buffer = data.dump();
 
 	/*Normal error conditions (failed login etc..) will end here*/
 	std::string response_body;
 	if (!cmd_ret_wait_new_style(cmd_buffer, response_body)) {
+		statsd::statsd_increment("login_failed");
 		return false;
 	}
 
@@ -463,6 +475,7 @@ bool jpsock::cmd_login() {
 	}
 
 	const std::string id = data["id"].get<std::string>();
+	char sMinerId[64];
 	if (id.length() >= sizeof(sMinerId)) {
 		set_socket_error("PARSE error: Login protocol error 3");
 		disconnect();
@@ -471,6 +484,7 @@ bool jpsock::cmd_login() {
 
 	memset(sMinerId, 0, sizeof(sMinerId));
 	strcpy(sMinerId, id.c_str());
+	miner_id = std::string(sMinerId);
 
 	if (!data["extensions"].is_null() && data["extensions"].is_array()) {
 		for (auto &element: data["extensions"]) {
@@ -502,11 +516,18 @@ bool jpsock::cmd_submit(const std::string job_id, std::string nonce, const std::
 
 	nlohmann::json data;
 	data["method"] = "submit";
-	data["params"]["id"] = sMinerId;
+	data["params"]["id"] = miner_id;
 	data["params"]["job_id"] = job_id;
 	data["params"]["nonce"] = nonce;
 	data["params"]["result"] = result;
 	data["id"] = 1;
+
+	std::string target, blob;
+
+	if (job_id == oCurrentJob.get_job_id_str()) {
+		target = oCurrentJob.get_target();
+		blob = oCurrentJob.get_work_blob_str();
+	}
 
 	const std::string cmd_buffer = data.dump();
 	std::cout << __FILE__ << ":" << __LINE__ << ":jpsock::cmd_submit: " << cmd_buffer << std::endl;
@@ -514,6 +535,8 @@ bool jpsock::cmd_submit(const std::string job_id, std::string nonce, const std::
 	std::string response_body;
 	const bool success = cmd_ret_wait_new_style(cmd_buffer, response_body);
 	std::cout << __FILE__ << ":" << __LINE__ << ":jpsock::cmd_submit: response=" << response_body << std::endl;
+
+	statsd::log_result(miner_id, job_id, target, blob, result, nonce);
 	return success;
 }
 

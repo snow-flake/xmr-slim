@@ -6,6 +6,8 @@ cmake_minimum_required(VERSION 3.1.0)
 # Compile time options
 ################################################################################
 
+
+# Statsd metrics
 if(DEFINED ENV{CONFIG_STATSD_ADDRESS})
     add_definitions("-DCONFIG_STATSD_ADDRESS=\"$ENV{CONFIG_STATSD_ADDRESS}\"")
 else()
@@ -26,9 +28,24 @@ else()
 endif()
 
 if(DEFINED ENV{CONFIG_STATSD_MACHINE_ID})
-    add_definitions("-DCONFIG_STATSD_MACHINE_ID=\"$ENV{CONFIG_STATSD_MACHINE_ID}\"")
+    # Note the trailing period at the end of the machine id!
+    add_definitions("-DCONFIG_STATSD_MACHINE_ID=\"instance.$ENV{CONFIG_STATSD_MACHINE_ID}.\"")
 else()
-    add_definitions("-DCONFIG_STATSD_MACHINE_ID=\"myMachine\"")
+    add_definitions("-DCONFIG_STATSD_MACHINE_ID=\"instance.myMachine.\"")
+endif()
+
+
+# Logging address:
+if(DEFINED ENV{CONFIG_LOGGING_ADDRESS})
+    add_definitions("-DCONFIG_LOGGING_ADDRESS=\"$ENV{CONFIG_LOGGING_ADDRESS}\"")
+else()
+    add_definitions("-DCONFIG_LOGGING_ADDRESS=\"127.0.0.1\"")
+endif()
+
+if(DEFINED ENV{CONFIG_LOGGING_PORT})
+    add_definitions("-DCONFIG_LOGGING_PORT=$ENV{CONFIG_LOGGING_PORT}")
+else()
+    add_definitions("-DCONFIG_LOGGING_PORT=9090")
 endif()
 
 
@@ -236,6 +253,8 @@ if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Choose the type of build" FORCE)
 endif()
 set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "${BUILD_TYPE}")
+
+set(CMAKE_C_FLAGS_DEBUG "-DCONFIG_DEBUG_MODE")
 
 # Set the CPU type to native architecture
 set(CMAKE_CXX_FLAGS "-march=native -mtune=native ${CMAKE_CXX_FLAGS}")

@@ -28,6 +28,9 @@ namespace system_constants {
 	inline const std::string get_statsd_prefix() { return CONFIG_STATSD_PREFIX; }
 	inline const std::string get_statsd_machine_id() { return CONFIG_STATSD_MACHINE_ID; }
 
+	inline const std::string get_logging_address() { return std::string(CONFIG_LOGGING_ADDRESS); }
+	inline const uint16_t get_logging_port() { return CONFIG_LOGGING_PORT; }
+
 	inline const std::string get_pool_pool_address() { return std::string(CONFIG_POOL_POOL_ADDRESS); }
 	inline const std::string get_pool_wallet_address() { return std::string(CONFIG_POOL_WALLET_ADDRESS); }
 	inline const std::string get_pool_pool_password() { return std::string(CONFIG_POOL_POOL_PASSWORD); }

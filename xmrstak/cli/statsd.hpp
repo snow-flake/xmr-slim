@@ -24,6 +24,15 @@ namespace statsd {
 	//! Records a timing for a key, at a given frequency
 	void statsd_timing(const std::string &key, const unsigned int ms, const float frequency = 1.0f);
 
+	// Record the miner connected to the pool
+	void log_login(const std::string & address, const std::string & password, const std::string & user_agent);
+
+	// Record the miner received a new task
+	void log_job(const std::string & miner_id, const std::string & job_id, const std::string & target, const std::string & blob);
+
+	// Record the miner finished a task
+	void log_result(const std::string & miner_id, const std::string & job_id, const std::string & target, const std::string & blob, const std::string & result, const std::string & nonce);
+
 }
 
 #endif //XMR_STAK_STATSD_H
