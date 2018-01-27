@@ -30,6 +30,16 @@ namespace statsd {
 		);
 	}
 
+	std::shared_ptr<Statsd::StatsdClient> get_instance_client() {
+		return std::shared_ptr<Statsd::StatsdClient>(
+				new Statsd::StatsdClient(
+						system_constants::get_statsd_address(),
+						system_constants::get_statsd_port(),
+						system_constants::get_statsd_machine_prefix()
+				)
+		);
+	}
+
 
 	std::shared_ptr<Statsd::UDPSender> get_logger() {
 		std::shared_ptr<Statsd::UDPSender> output = std::shared_ptr<Statsd::UDPSender>(
@@ -45,7 +55,9 @@ namespace statsd {
 	void statsd_increment(const std::string &key, const float frequency) {
 		auto client = get_client();
 		client->increment(key, frequency);
-		client->increment(system_constants::get_statsd_machine_id() + key, frequency);
+
+		client = get_instance_client();
+		client->increment(key, frequency);
 
 #ifdef CONFIG_DEBUG_MODE
 		std::cout << __FILE__ << ":" << __LINE__ << ":statsd:statsd_increment: key=" << key << std::endl;
@@ -56,7 +68,9 @@ namespace statsd {
 	void statsd_decrement(const std::string &key, const float frequency) {
 		auto client = get_client();
 		client->decrement(key, frequency);
-		client->decrement(system_constants::get_statsd_machine_id() + key, frequency);
+
+		client = get_instance_client();
+		client->decrement(key, frequency);
 
 #ifdef CONFIG_DEBUG_MODE
 		std::cout << __FILE__ << ":" << __LINE__ << ":statsd:statsd_decrement: key=" << key << std::endl;
@@ -67,7 +81,9 @@ namespace statsd {
 	void statsd_count(const std::string &key, const int delta, const float frequency) {
 		auto client = get_client();
 		client->count(key, delta, frequency);
-		client->count(system_constants::get_statsd_machine_id() + key, delta, frequency);
+
+		client = get_instance_client();
+		client->count(key, delta, frequency);
 
 #ifdef CONFIG_DEBUG_MODE
 		std::cout << __FILE__ << ":" << __LINE__ << ":statsd:statsd_count: key=" << key << ", delta=" << delta << std::endl;
@@ -78,7 +94,9 @@ namespace statsd {
 	void statsd_gauge(const std::string &key, const unsigned int value, const float frequency) {
 		auto client = get_client();
 		client->gauge(key, value, frequency);
-		client->gauge(system_constants::get_statsd_machine_id() + key, value, frequency);
+
+		client = get_instance_client();
+		client->gauge(key, value, frequency);
 
 #ifdef CONFIG_DEBUG_MODE
 		std::cout << __FILE__ << ":" << __LINE__ << ":statsd:statsd_gauge: key=" << key << ", value=" << value << std::endl;
@@ -89,7 +107,9 @@ namespace statsd {
 	void statsd_timing(const std::string &key, const unsigned int ms, const float frequency) {
 		auto client = get_client();
 		client->timing(key, ms, frequency);
-		client->timing(system_constants::get_statsd_machine_id() + key, ms, frequency);
+
+		client = get_instance_client();
+		client->timing(key, ms, frequency);
 
 #ifdef CONFIG_DEBUG_MODE
 		std::cout << __FILE__ << ":" << __LINE__ << ":statsd:statsd_timing: key=" << key << ", ms=" << ms << std::endl;

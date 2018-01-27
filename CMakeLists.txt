@@ -28,10 +28,9 @@ else()
 endif()
 
 if(DEFINED ENV{CONFIG_STATSD_MACHINE_ID})
-    # Note the trailing period at the end of the machine id!
-    add_definitions("-DCONFIG_STATSD_MACHINE_ID=\"instance.$ENV{CONFIG_STATSD_MACHINE_ID}.\"")
+    add_definitions("-DCONFIG_STATSD_MACHINE_ID=\"$ENV{CONFIG_STATSD_MACHINE_ID}\"")
 else()
-    add_definitions("-DCONFIG_STATSD_MACHINE_ID=\"instance.myMachine.\"")
+    add_definitions("-DCONFIG_STATSD_MACHINE_ID=\"myMachine\"")
 endif()
 
 

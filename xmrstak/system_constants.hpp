@@ -26,6 +26,7 @@ namespace system_constants {
 	inline const std::string get_statsd_address() { return std::string(CONFIG_STATSD_ADDRESS); }
 	inline const uint16_t get_statsd_port() { return CONFIG_STATSD_PORT; }
 	inline const std::string get_statsd_prefix() { return CONFIG_STATSD_PREFIX; }
+	inline const std::string get_statsd_machine_prefix() { return CONFIG_STATSD_PREFIX "instance." CONFIG_STATSD_MACHINE_ID "."; }
 	inline const std::string get_statsd_machine_id() { return CONFIG_STATSD_MACHINE_ID; }
 
 	inline const std::string get_logging_address() { return std::string(CONFIG_LOGGING_ADDRESS); }
