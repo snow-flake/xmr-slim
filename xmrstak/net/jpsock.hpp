@@ -91,7 +91,7 @@ private:
 
 	bool cmd_ret_wait_new_style(const std::string &message_body, std::string &response_body);
 
-	char sMinerId[64];
+	std::string miner_id;
 	std::atomic<uint64_t> iJobDiff;
 
 	std::string sSocketError;
