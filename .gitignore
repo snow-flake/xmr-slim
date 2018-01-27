@@ -29,3 +29,8 @@ cpu.txt
 venv
 *.log
 install_manifest.txt
+
+
+.env
+xmrstak/build_constants.hpp
+sys_auto_adjust/sys_auto_adjust.hpp

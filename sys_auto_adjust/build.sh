@@ -2,15 +2,15 @@
 
 set -e 
 
+rm -f sys_auto_adjust.hpp
 
 export SYSTEM_NPROC=`../scripts/count-nproc`;
 export SYSTEM_CACHE_L2=`../scripts/count-cache-l2`;
 export SYSTEM_CACHE_L3=`../scripts/count-cache-l3`;
 
-echo SYSTEM_NPROC=$SYSTEM_NPROC;
-echo SYSTEM_CACHE_L2=$SYSTEM_CACHE_L2;
-echo SYSTEM_CACHE_L3=$SYSTEM_CACHE_L3;
+rm -rf ./CMakeFiles ./CMakeCache.txt
 
-rm -rf ./CMakeFiles
+cmake . && make
 
-cmake -DCONFIG_SYSTEM_NPROC=$SYSTEM_NPROC -DCONFIG_SYSTEM_CACHE_L2=$SYSTEM_CACHE_L2 -DCONFIG_SYSTEM_CACHE_L3=$SYSTEM_CACHE_L3 . && make
+./bin/sys-auto-adjust | grep '#' > ../xmrstak/build_constants.hpp
+./bin/sys-auto-adjust | grep 'export' > ../.env

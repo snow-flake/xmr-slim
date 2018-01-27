@@ -4,6 +4,7 @@
 #include <cpuid.h>
 #include <iostream>
 #include <exception>
+#include <vector>
 
 
 // Mask bits between h and l and return the value
@@ -79,17 +80,17 @@ xmrstak::cpu::auto_threads::auto_threads() :
 		//		L3KB_size = calc_authentic_amd(cpu_info);
 		old_amd = is_old_amd(cpu_info);
 	} else {
-		std::cerr << __FILE__ << ":" << __LINE__ << ":" << "Autoconf failed: Unknown CPU type: " << cpustr << std::endl;
+		std::cout << __FILE__ << ":" << __LINE__ << ":" << "Autoconf failed: Unknown CPU type: " << cpustr << std::endl;
 		throw new std::runtime_error("Failed to detect CPU type");
 	}
 
 	const bool isLessThanMem = L3KB_size < halfHashMemSize;
 	const bool isMoreThan100u = L3KB_size > (halfHashMemSize * 100u);
 	if (isLessThanMem) {
-		std::cerr << __FILE__ << ":" << __LINE__ << ":" << " Autoconf failed: L3 size sanity check failed " << L3KB_size << " KB" << " vs halfHashMemSize=" << halfHashMemSize << std::endl;
+		std::cout << __FILE__ << ":" << __LINE__ << ":" << " Autoconf failed: L3 size sanity check failed " << L3KB_size << " KB" << " vs halfHashMemSize=" << halfHashMemSize << std::endl;
 		// throw new std::runtime_error("L3 size sanity check failed");
 	} else if (isMoreThan100u) {
-		std::cerr << __FILE__ << ":" << __LINE__ << ":" << " Autoconf failed: L3 size sanity check failed " << L3KB_size << " KB" << " vs halfHashMemSize * 100u = " << halfHashMemSize * 100u << std::endl;
+		std::cout << __FILE__ << ":" << __LINE__ << ":" << " Autoconf failed: L3 size sanity check failed " << L3KB_size << " KB" << " vs halfHashMemSize * 100u = " << halfHashMemSize * 100u << std::endl;
 		// throw new std::runtime_error("L3 size sanity check failed");
 	}
 
@@ -118,6 +119,30 @@ xmrstak::cpu::auto_threads::auto_threads() :
 			affine_to_cpu++;
 		}
 	}
+
+	std::cout << "#pragma once" << std::endl;
+	std::cout << "#define CONFIG_MINE_PARALLEL_LEVEL " << low_power_mode << std::endl;
+	std::cout << "#define CONFIG_MINE_CPU_COUNT " << CONFIG_SYSTEM_NPROC << std::endl;
+	std::cout << "#define CONFIG_MINE_CPU_IDS ";
+	for (uint32_t i = 0; i < processors_count; i++) {
+		std::cout << configs[i].affine_to_cpu;
+		if (i < processors_count-1) {
+			std::cout << ",";
+		}
+	}
+	std::cout << "" << std::endl;
+	std::cout << "" << std::endl;
+
+	std::cout << "export CONFIG_MINE_PARALLEL_LEVEL=" << low_power_mode << std::endl;
+	std::cout << "export CONFIG_MINE_CPU_COUNT=" << CONFIG_SYSTEM_NPROC << std::endl;
+	std::cout << "export CONFIG_MINE_CPU_IDS=\"";
+	for (uint32_t i = 0; i < processors_count; i++) {
+		std::cout << configs[i].affine_to_cpu;
+		if (i < processors_count-1) {
+			std::cout << ",";
+		}
+	}
+	std::cout << "\"" << std::endl;
 }
 
 

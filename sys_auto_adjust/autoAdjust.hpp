@@ -3,7 +3,7 @@
 #include <unistd.h>
 #include <vector>
 #include <cstdint>
-
+#include "sys_auto_adjust.hpp"
 
 // define xmr settings
 #define MONERO_MEMORY 2097152llu

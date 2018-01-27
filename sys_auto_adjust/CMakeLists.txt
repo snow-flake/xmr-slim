@@ -1,9 +1,13 @@
 project(sys-auto-adjust)
 cmake_minimum_required(VERSION 3.1.0)
 
-add_definitions("-DCONFIG_SYSTEM_NPROC=$ENV{SYSTEM_NPROC}")
-add_definitions("-DCONFIG_SYSTEM_CACHE_L2=$ENV{SYSTEM_CACHE_L2}")
-add_definitions("-DCONFIG_SYSTEM_CACHE_L3=$ENV{SYSTEM_CACHE_L3}")
+option(CONFIG_SYSTEM_ENABLE "Enable CONFIG_SYSTEM" ON)
+if(CONFIG_SYSTEM_ENABLE)
+    set(CONFIG_SYSTEM_NPROC $ENV{SYSTEM_NPROC})
+    set(CONFIG_SYSTEM_CACHE_L2 $ENV{SYSTEM_CACHE_L2})
+    set(CONFIG_SYSTEM_CACHE_L3 $ENV{SYSTEM_CACHE_L3})
+endif()
+configure_file(sys_auto_adjust.hpp.in sys_auto_adjust.hpp @ONLY)
 
 
 ################################################################################
